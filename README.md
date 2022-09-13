@@ -1,2 +1,2 @@
-# decor
+# Decor
 DeusEx Complementary Render

@@ -1,0 +1,9 @@
+[Public]
+Object=(Name=Decor.D3D11RenderDevice,Class=Class,MetaClass=Engine.RenderDevice,Autodetect=)
+Preferences=(Caption="Rendering",Parent="Advanced Options")
+Preferences=(Caption="DECOR support",Parent="Rendering",Class=Decor.D3D11RenderDevice,Immediate=True)
+
+[D3D11RenderDevice]
+ClassCaption="DECOR Support"
+AskInstalled=Do you want to use DECOR?
+AskUse=
