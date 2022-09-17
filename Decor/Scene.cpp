@@ -2715,7 +2715,7 @@ bool Scene::Load(IRenderingContext& ctx)
         return false;
 
     //AddScaleToRoots(100.0);
-    AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0    
+    //AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0    
     //AddRotationQuaternionToRoots({ 0.000, 0.259, 0.000, 0.966 }); // 30°y
 
     const float amb = 0.35f;
@@ -2784,20 +2784,21 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
 
     //Create projection matrix with swapped near/far for better accuracy
     static const float fZNear = 32760.0f;
-    static const float fZFar = 1.0f;
+    static const float fZFar = 1.0f;    
 
     const float fAspect = SceneNode.FX / SceneNode.FY;
     const float fFovVert = SceneNode.Viewport->Actor->FovAngle / fAspect * static_cast<float>(PI) / 180.0f;
 
-    auto cameraPos = SceneNode.Viewport->Actor->Location;    
-    auto cameraRotV = SceneNode.Viewport->Actor->ViewRotation.Vector();
-
-    mViewData.eye = XMVectorSet(cameraPos.X, cameraPos.Z, cameraPos.Y, 1.0f);
-    mViewData.at = XMVectorSet(cameraPos.X + cameraRotV.X, cameraPos.Z + cameraRotV.Z, cameraPos.Y + cameraRotV.Y, 1.0f);
-    mViewData.up = XMVectorSet(0.0f, -1.0f, 0.0f, 1.0f);
-
+    const auto& cameraPosition = SceneNode.Coords.Origin;
+    const auto& cameraToVector = SceneNode.Viewport->Actor->ViewRotation.Vector();
+    const auto& cameraUpVector = SceneNode.Coords.YAxis;
+    
+    mViewData.eye = XMVectorSet(cameraPosition.X, cameraPosition.Z, cameraPosition.Y, 1.0f);
+    mViewData.at = XMVectorSet(cameraToVector.X, cameraToVector.Z, cameraToVector.Y, 1.0f);
+    mViewData.up = XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
+    
     // Matrices
-    mViewMtrx = XMMatrixLookAtLH(mViewData.eye, mViewData.at, mViewData.up);
+    mViewMtrx = XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
     mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
     mProjectionMtrx.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
