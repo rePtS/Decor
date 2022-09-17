@@ -28,6 +28,8 @@ namespace Log
         eInfo
     };
 
+    static std::wstringstream wstream;
+
     extern ELoggingLevel sLoggingLevel = Log::eInfo;
 
     const wchar_t* LogLevelToString(ELoggingLevel level)
@@ -47,16 +49,27 @@ namespace Log
         }
     }
 
+    void Flush()
+    {
+        std::wofstream outFile("Decor.log");
+        outFile << wstream.str();
+        outFile.close();
+        wstream.clear();
+    }
+
     template <typename... Args>
     void Write(ELoggingLevel msgLevel, const wchar_t* msg, Args... args)
     {
         if (sLoggingLevel < msgLevel)
             return;
 
-        wchar_t tmpBuff1[100000] = {};
+        wchar_t tmpBuff1[1024] = {};
         swprintf_s(tmpBuff1, msg, args...);
+
+        wchar_t tmpBuff2[1024] = {};
+        swprintf_s(tmpBuff2, L"[% 7s] %s\n", LogLevelToString(msgLevel), tmpBuff1);
         
-        //LOGMESSAGEF(L"[% 7s] %s\n", LogLevelToString(msgLevel), tmpBuff1);
+        wstream << tmpBuff2;
     }
 
 
@@ -569,6 +582,7 @@ Scene::Scene(const std::wstring sceneFilePath) :
 Scene::~Scene()
 {
     Destroy();
+    Log::Flush();
 }
 
 
