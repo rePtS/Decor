@@ -1,7 +1,73 @@
 #include "RendevBackend.h"
 #include "Helpers.h"
+#include "vmthook.h"
 #include <D3DCompiler.inl>
 #include <cassert>
+#include <winuser.h>
+
+namespace DecorHook
+{
+    static const std::size_t PE_INDEX = 34;
+
+    typedef void(__stdcall* ProcessEvent) (UFunction*, void*, void*); //typedef for the processevent function pointer
+
+    VMTHook* hook = nullptr; //Pointer to the VMTHook class
+    ProcessEvent pProcessEvent = nullptr; //pointer to original processevent
+    UFunction* pUFunc = nullptr; //pointers to processevent arguements
+    void* pParms = nullptr;
+    void* pResult = nullptr;
+    UObject* pCallObject = nullptr;
+
+    void __declspec(naked) ProcessEventHooked()
+    {
+        __asm mov pCallObject, ecx; //get caller from ecx register and save it in pCallObject
+
+        __asm
+        {
+            push eax
+            mov eax, dword ptr[esp + 0x8]
+            mov pUFunc, eax
+            mov eax, dword ptr[esp + 0xC]
+            mov pParms, eax
+            mov eax, dword ptr[esp + 0x10]
+            mov pResult, eax
+            pop eax
+        } // Manually get the proper parameters for the function
+
+        __asm pushad //Save registers on stack                  
+        
+        //Do stuff here!
+        //MessageBox(NULL, L"!", L"Test", MB_OK | MB_ICONQUESTION);        
+
+        __asm popad //restore registers from stack
+        __asm
+        {
+            push pResult
+            push pParms
+            push pUFunc
+            call pProcessEvent
+
+            retn 0xC
+        } //put parameters on stack and call the orginal function
+    }
+
+    void Attach(UViewport* const pViewport)
+    {
+        assert(hook == nullptr);
+        hook = new VMTHook(pViewport); //hook object
+        pProcessEvent = hook->GetOriginalFunction<ProcessEvent>(PE_INDEX); //save the orginal funtion in global variable        
+        hook->HookFunction(&ProcessEventHooked, PE_INDEX); //replace the orginal function with the hooked function
+    }
+
+    void Deattach()
+    {
+        if (hook)
+        {
+            delete hook;
+            hook = nullptr;
+        }
+    }
+}
 
 RenDevBackend::RenDevBackend()
 {
@@ -15,7 +81,9 @@ RenDevBackend::~RenDevBackend()
         m_Scene->Destroy();
         delete m_Scene;
         m_Scene = nullptr;
-    }        
+    }
+
+    DecorHook::Deattach();
 }
 
 bool RenDevBackend::Init(const HWND hWnd)
@@ -333,4 +401,9 @@ bool RenDevBackend::GetWindowSize(uint32_t& width,
     width = m_SwapChainDesc.BufferDesc.Width;
     height = m_SwapChainDesc.BufferDesc.Height;
     return true;
+}
+
+void RenDevBackend::AttachHook(UViewport* const pViewport)
+{
+    DecorHook::Attach(pViewport);
 }

@@ -56,6 +56,8 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
         m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
         m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
+
+        m_Backend.AttachHook(pInViewport);
     }
     catch (const Decor::ComException& ex)
     {
@@ -63,7 +65,7 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         return false;
     }
 
-    m_pDeviceState->BindSamplerStates();
+    m_pDeviceState->BindSamplerStates();    
 
     return true;
 }

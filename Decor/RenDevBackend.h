@@ -42,6 +42,8 @@ public:
 
     void DrawScene();
 
+    void AttachHook(UViewport* pViewport);
+
 protected:
     void CreateRenderTargetViews();
 
