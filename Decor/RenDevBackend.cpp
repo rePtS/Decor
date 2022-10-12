@@ -37,7 +37,7 @@ namespace DecorHook
         __asm pushad //Save registers on stack                  
         
         //Do stuff here!
-        //MessageBox(NULL, L"!", L"Test", MB_OK | MB_ICONQUESTION);        
+        //MessageBox(NULL, L"!", L"Test", MB_OK | MB_ICONQUESTION); 
 
         __asm popad //restore registers from stack
         __asm
@@ -55,7 +55,7 @@ namespace DecorHook
     {
         assert(hook == nullptr);
         hook = new VMTHook(pViewport); //hook object
-        pProcessEvent = hook->GetOriginalFunction<ProcessEvent>(PE_INDEX); //save the orginal funtion in global variable        
+        pProcessEvent = hook->GetOriginalFunction<ProcessEvent>(PE_INDEX); //save the orginal funtion in global variable
         hook->HookFunction(&ProcessEventHooked, PE_INDEX); //replace the orginal function with the hooked function
     }
 
@@ -78,7 +78,6 @@ RenDevBackend::~RenDevBackend()
 {
     if (m_Scene)
     {
-        m_Scene->Destroy();
         delete m_Scene;
         m_Scene = nullptr;
     }
@@ -163,9 +162,7 @@ bool RenDevBackend::Init(const HWND hWnd)
 
     LOGMESSAGEF(L"Adapter: %s.", AdapterDesc.Description);
 
-    // Load the scene
-    m_Scene = new Scene(L"Decor/Scenes/test_full.gltf");
-    m_Scene->Init(*this);
+    m_State = RenderState::RENDER_DEFAULT;
 
     return true;
 }
@@ -406,4 +403,47 @@ bool RenDevBackend::GetWindowSize(uint32_t& width,
 void RenDevBackend::AttachHook(UViewport* const pViewport)
 {
     DecorHook::Attach(pViewport);
+}
+
+void RenDevBackend::PreLoadLevel()
+{
+    m_State = RenderState::PRE_LOAD_LEVEL;
+}
+
+void RenDevBackend::LoadLevel(const TCHAR* szLevelName)
+{
+    if (m_State == RenderState::PRE_LOAD_LEVEL)
+    {
+        m_State = RenderState::LOAD_LEVEL;
+
+        //MessageBox(NULL, szLevelName, L"Test", MB_OK | MB_ICONQUESTION);
+
+        // Выгрузка текущего уровня
+        if (m_Scene)
+        {
+            delete m_Scene;
+            m_Scene = nullptr;
+        };
+        
+        // Получаем относительное имя gltf-файла с геометрией уровня
+        wchar_t levelFileName[256];
+        wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
+        
+        // Проверяем, есть ли файл на диске
+        std::ifstream levelFile(levelFileName);
+        if (levelFile.good())
+        {
+            // Load new scene
+            m_Scene = new Scene(levelFileName);
+            m_Scene->Init(*this);
+
+            // Все загружено, можно продолжать
+            m_State = RenderState::RENDER_LEVEL;
+        }
+        else
+        {
+            // Уровень загрузить не удалось, используем обычный рендеринг
+            m_State = RenderState::RENDER_DEFAULT;
+        }
+    }
 }

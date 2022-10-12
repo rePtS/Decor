@@ -44,6 +44,10 @@ public:
 
     void AttachHook(UViewport* pViewport);
 
+    void PreLoadLevel();
+    void LoadLevel(const TCHAR* szLevelName);
+    bool IsSceneRenderingEnabled() { return m_Scene != nullptr; };
+
 protected:
     void CreateRenderTargetViews();
 
@@ -65,5 +69,6 @@ protected:
 
     DXGI_SWAP_CHAIN_DESC m_SwapChainDesc;
 
-    Scene *m_Scene;
+    RenderState m_State;
+    Scene *m_Scene = nullptr;
 };

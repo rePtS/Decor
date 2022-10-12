@@ -10,6 +10,7 @@
 #include "ComplexSurfaceRenderer.h"
 #include "DeviceState.h"
 #include "TextureCache.h"
+#include "NativeHooks.h"
 
 #include <Engine.h>
 
@@ -46,9 +47,9 @@ protected:
     std::unique_ptr<GouraudRenderer> m_pGouraudRenderer;
     std::unique_ptr<ComplexSurfaceRenderer> m_pComplexSurfaceRenderer;
     std::unique_ptr<TextureCache> m_pTextureCache;
+    std::unique_ptr<NativeHooks> m_pNativeHooks;
 
     bool m_bNoTilesDrawnYet;
-    bool m_IsSceneRenderingEnabled;
 
 //From URenderDevice
 public:

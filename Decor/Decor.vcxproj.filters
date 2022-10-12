@@ -64,6 +64,9 @@
     <ClInclude Include="Constants.h">
       <Filter>_Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NativeHooks.h">
+      <Filter>_Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3D11Drv.cpp">
@@ -97,6 +100,9 @@
       <Filter>_Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
+      <Filter>_Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NativeHooks.cpp">
       <Filter>_Source Files</Filter>
     </ClCompile>
   </ItemGroup>

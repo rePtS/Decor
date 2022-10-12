@@ -57,7 +57,10 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
         m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
 
-        m_Backend.AttachHook(pInViewport);
+        //m_Backend.AttachHook(pInViewport);
+
+        //Initialize native hooks
+        m_pNativeHooks = std::make_unique<NativeHooks>(&m_Backend);
     }
     catch (const Decor::ComException& ex)
     {
@@ -110,7 +113,6 @@ const TCHAR* TRAINING_LEVEL_NAME = L"00_Training.MyLevel";
 void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 {
     assert(pFrame);
-    m_IsSceneRenderingEnabled = _tcscmp(pFrame->Level->GetPathName(), TRAINING_LEVEL_NAME) == 0; // Need another way to determine current level !!!
     m_Backend.SetViewport(*pFrame);
     m_pGlobalShaderConstants->SetSceneNode(*pFrame);
 }
@@ -124,7 +126,7 @@ void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashF
     m_pGouraudRenderer->NewFrame();
     m_pComplexSurfaceRenderer->NewFrame();
 
-    if (m_IsSceneRenderingEnabled)
+    if (m_Backend.IsSceneRenderingEnabled())
     {
         m_pDeviceState->BindDefault();
         m_Backend.DrawScene();
@@ -178,7 +180,7 @@ void UD3D11RenderDevice::Render()
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
-    if (m_IsSceneRenderingEnabled)
+    if (m_Backend.IsSceneRenderingEnabled())
     {
         if (Surface.Texture->CacheID != 8978144)
             return;

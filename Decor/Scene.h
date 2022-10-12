@@ -3,6 +3,7 @@
 
 #include "Constants.h"
 #include "IRenderingContext.h"
+#include <fstream>
 
 #include <d3d11.h>
 #include <DirectXMath.h>
