@@ -108,8 +108,6 @@ void UD3D11RenderDevice::Flush(const UBOOL /*bAllowPrecache*/)
 
 }
 
-const TCHAR* TRAINING_LEVEL_NAME = L"00_Training.MyLevel";
-
 void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 {
     assert(pFrame);
@@ -388,7 +386,8 @@ void UD3D11RenderDevice::Draw2DPoint(FSceneNode* const /*pFrame*/, const FPlane 
 
 void UD3D11RenderDevice::ClearZ(FSceneNode* const /*pFrame*/)
 {
-
+    Render();
+    m_Backend.ClearDepth();
 }
 
 void UD3D11RenderDevice::PushHit(const BYTE* const /*pData*/, const INT /*iCount*/)

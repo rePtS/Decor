@@ -41,6 +41,6 @@ void FlagBaseGetBoolHook::ReplacementFunc(XFlagBase& UObjectThis, FlagBaseGetBoo
     }
 
     UBOOL val;
-    UObjectThis.GetBool(flagName, val);
-    *static_cast<UBOOL*>(Result) = val;
+    UBOOL getBoolResult = UObjectThis.GetBool(flagName, val);
+    *reinterpret_cast<UBOOL*>(Result) = getBoolResult && val;
 }

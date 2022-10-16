@@ -48,6 +48,8 @@ public:
     void LoadLevel(const TCHAR* szLevelName);
     bool IsSceneRenderingEnabled() { return m_Scene != nullptr; };
 
+    void ClearDepth();
+
 protected:
     void CreateRenderTargetViews();
 

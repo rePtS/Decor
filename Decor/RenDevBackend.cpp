@@ -447,3 +447,8 @@ void RenDevBackend::LoadLevel(const TCHAR* szLevelName)
         }
     }
 }
+
+void RenDevBackend::ClearDepth()
+{
+    m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+}
