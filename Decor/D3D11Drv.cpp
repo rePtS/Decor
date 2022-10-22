@@ -338,8 +338,6 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
     assert(m_pDeviceState);
     m_bNoTilesDrawnYet = false;
 
-    //const DWORD PolyFlagsCorrected = PolyFlags; //(PolyFlags & (PF_Translucent | PF_Masked)) != PF_Masked ? PolyFlags ^ PF_Masked : PolyFlags; //Translucent has precedence over masked
-
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 
     //Flush state
