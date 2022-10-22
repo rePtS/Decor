@@ -338,9 +338,9 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
     assert(m_pDeviceState);
     m_bNoTilesDrawnYet = false;
 
-    const DWORD PolyFlagsCorrected = (PolyFlags & (PF_Translucent | PF_Masked)) != PF_Masked ? PolyFlags ^ PF_Masked : PolyFlags; //Translucent has precedence over masked
+    //const DWORD PolyFlagsCorrected = PolyFlags; //(PolyFlags & (PF_Translucent | PF_Masked)) != PF_Masked ? PolyFlags ^ PF_Masked : PolyFlags; //Translucent has precedence over masked
 
-    const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlagsCorrected);
+    const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 
     //Flush state
     if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pTextureCache->IsPrepared(Info, 0) || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
@@ -371,7 +371,7 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
     static_assert(sizeof(Color) >= sizeof(t.Color), "Sizes differ, can't use reinterpret_cast");
     t.Color = reinterpret_cast<const decltype(t.Color)&>(Color);
 
-    t.PolyFlags = PolyFlagsCorrected;
+    t.PolyFlags = PolyFlags;
 }
 
 void UD3D11RenderDevice::Draw2DLine(FSceneNode* const /*pFrame*/, const FPlane /*Color*/, const DWORD /*LineFlags*/, const FVector /*P1*/, const FVector /*P2*/)

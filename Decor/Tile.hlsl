@@ -32,12 +32,17 @@ VSOut VSMain(const STile Tile, const uint VertexID : SV_VertexID)
 
 float3 PSMain(const VSOut Input) : SV_Target
 {
-    if (Input.PolyFlags & PF_Masked)
+    if (Input.PolyFlags & (PF_Masked | PF_Modulated))
     {
         clip(TexDiffuse.Sample(SamPoint, Input.TexCoord).a - 0.5f);
     }
 
-    const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
+    if (Input.PolyFlags & PF_Modulated)
+    {
+        return TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
+    }
+
+    const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;    
 
     const float3 Color = Diffuse * Input.Color.rgb;
 
