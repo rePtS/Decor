@@ -25,7 +25,7 @@ void FlagBaseSetBoolHook::ReplacementFunc(XFlagBase& UObjectThis, FlagBaseSetBoo
         HookObjectThis.m_pRenderBackend->PreLoadLevel();
     }
 
-    *static_cast<UBOOL*>(Result) = UObjectThis.SetBool(flagName, flagVal, bAdd, expiration);
+    *reinterpret_cast<UBOOL*>(Result) = UObjectThis.SetBool(flagName, flagVal, bAdd, expiration);
 }
 
 void FlagBaseGetBoolHook::ReplacementFunc(XFlagBase& UObjectThis, FlagBaseGetBoolHook& HookObjectThis, FFrame& Stack, RESULT_DECL)

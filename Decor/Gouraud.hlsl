@@ -32,9 +32,14 @@ float4 PSMain(const VSOut Input) : SV_Target
 {
     float4 Color = float4(Input.Color, 1.0f);
 
-    if (Input.PolyFlags & PF_Masked)
+    if (Input.PolyFlags & (PF_Masked | PF_Modulated))
     {
-        clip(TexDiffuse.Sample(SamPoint, Input.TexCoord).a - 0.5f);
+        clip(TexDiffuse.Sample(SamPoint, Input.TexCoord).a - 0.5f);	
+    }
+
+    if (Input.PolyFlags & PF_Modulated)
+    {
+        return TexDiffuse.Sample(SamPoint, Input.TexCoord);
     }
 
     const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
