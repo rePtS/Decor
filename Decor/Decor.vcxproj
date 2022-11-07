@@ -96,6 +96,7 @@ xcopy "$(OutDir)Decor.pdb" "D:\Games\Deus Ex\System" /Y</Command>
     <ClInclude Include="DynamicBuffer.h" />
     <ClInclude Include="GouraudRenderer.h" />
     <ClInclude Include="IRenderingContext.h" />
+    <ClInclude Include="mikktspace.h" />
     <ClInclude Include="NativeHooks.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="TextureCache.h" />
@@ -112,6 +113,7 @@ xcopy "$(OutDir)Decor.pdb" "D:\Games\Deus Ex\System" /Y</Command>
   <ItemGroup>
     <ClCompile Include="ComplexSurfaceRenderer.cpp" />
     <ClCompile Include="GouraudRenderer.cpp" />
+    <ClCompile Include="mikktspace.cpp" />
     <ClCompile Include="NativeHooks.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="TextureCache.cpp" />

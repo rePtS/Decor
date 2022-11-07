@@ -67,6 +67,9 @@
     <ClInclude Include="NativeHooks.h">
       <Filter>_Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mikktspace.h">
+      <Filter>_Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3D11Drv.cpp">
@@ -103,6 +106,9 @@
       <Filter>_Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NativeHooks.cpp">
+      <Filter>_Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mikktspace.cpp">
       <Filter>_Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -171,7 +171,7 @@ void DeviceState::Bind() const
 void DeviceState::BindDefault() const
 {
     m_DeviceContext.OMSetBlendState(m_BlendStates[static_cast<size_t>(BLEND_STATE::DEFAULT)].Get(), nullptr, 0xffffffff);
-    m_DeviceContext.RSSetState(m_RasterizerStates[static_cast<size_t>(RASTERIZER_STATE::WIREFRAME)].Get()); //todo
+    m_DeviceContext.RSSetState(m_RasterizerStates[static_cast<size_t>(RASTERIZER_STATE::DEFAULT)].Get()); //todo
     m_DeviceContext.OMSetDepthStencilState(m_DepthStencilStates[static_cast<size_t>(DEPTH_STENCIL_STATE::DEFAULT)].Get(), 0xffffffff);
 }
 

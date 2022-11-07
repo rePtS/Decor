@@ -281,7 +281,7 @@ void RenDevBackend::SetViewport(const FSceneNode& SceneNode)
     }
 
     m_Viewport.TopLeftX = static_cast<float>(SceneNode.XB);
-    m_Viewport.TopLeftY = static_cast<float>(SceneNode.YB);
+    m_Viewport.TopLeftY = static_cast<float>(SceneNode.YB);    
     m_Viewport.Width = SceneNode.FX;
     m_Viewport.Height = SceneNode.FY;
     m_Viewport.MinDepth = 0.0;

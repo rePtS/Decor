@@ -6,6 +6,7 @@
 
 #include "Scene.h"
 #include "Helpers.h"
+#include "mikktspace.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -515,6 +516,78 @@ namespace GltfUtils
         case 2: color.z = (float)value; break;
         case 3: color.w = (float)value; break;
         }
+    }
+}
+
+namespace TangentCalculator
+{    
+    ScenePrimitive& GetPrimitive(const SMikkTSpaceContext* context)
+    {
+        return *static_cast<ScenePrimitive*>(context->m_pUserData);
+    }
+
+    int getNumFaces(const SMikkTSpaceContext* context)
+    {
+        return (int)GetPrimitive(context).GetFacesCount();
+    }
+
+    int getNumVerticesOfFace(const SMikkTSpaceContext* context,
+        const int face)
+    {
+        face; // unused param
+
+        return (int)GetPrimitive(context).GetVerticesPerFace();
+    }
+
+    void getPosition(const SMikkTSpaceContext* context,
+        float outpos[],
+        const int face,
+        const int vertex)
+    {
+        GetPrimitive(context).GetPosition(outpos, face, vertex);
+    }
+
+    void getNormal(const SMikkTSpaceContext* context,
+        float outnormal[],
+        const int face,
+        const int vertex)
+    {
+        GetPrimitive(context).GetNormal(outnormal, face, vertex);
+    }
+
+    void getTexCoord(const SMikkTSpaceContext* context,
+        float outuv[],
+        const int face,
+        const int vertex)
+    {
+        GetPrimitive(context).GetTextCoord(outuv, face, vertex);
+    }
+
+    void setTSpaceBasic(const SMikkTSpaceContext* context,
+        const float tangent[],
+        const float sign,
+        const int face,
+        const int vertex)
+    {
+        GetPrimitive(context).SetTangent(tangent, sign, face, vertex);
+    }
+
+    bool Calculate(ScenePrimitive& primitive)
+    {
+        SMikkTSpaceInterface iface;
+        iface.m_getNumFaces = getNumFaces;
+        iface.m_getNumVerticesOfFace = getNumVerticesOfFace;
+        iface.m_getPosition = getPosition;
+        iface.m_getNormal = getNormal;
+        iface.m_getTexCoord = getTexCoord;
+        iface.m_setTSpaceBasic = setTSpaceBasic;
+        iface.m_setTSpace = nullptr;
+
+        SMikkTSpaceContext context;
+        context.m_pInterface = &iface;
+        context.m_pUserData = &primitive;
+
+        return genTangSpaceDefault(&context) == 1;
     }
 }
 
@@ -1138,7 +1211,7 @@ void Scene::SetupDefaultLights()
 
     const float lum = 3.0f;
     mDirectLights.resize(1);
-    mDirectLights[0].dir = XMFLOAT4(0.f, 1.f, 0.f, 1.0f);
+    mDirectLights[0].dir = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
     mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
 
     SetupPointLights(3);
@@ -1594,7 +1667,7 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
             //           dataConsumerLogPrefix.c_str(), itemIdx, texCoord0.x, texCoord0.y);
 
             mVertices[itemIdx].Tex = texCoord0;
-        };
+        };        
 
         if (!IterateGltfAccesorData<float, 2>(model,
                                               texCoord0Accessor,
@@ -1740,6 +1813,9 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
         mMaterialIdx = matIdx;
     }
 
+    // reverse indices
+    std::reverse(mIndices.begin(), mIndices.end());
+
 #ifndef SIMPLE_RENDER_MODE
     CalculateTangentsIfNeeded(subItemsLogPrefix);
 #endif // !1    
@@ -1750,21 +1826,20 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
 
 bool ScenePrimitive::CalculateTangentsIfNeeded(const std::wstring &logPrefix)
 {
+    // TODO: if (material needs tangents && are not present) ... GetMaterial()
+    // TODO: Requires position, normal, and texcoords
+    // TODO: Only for triangles?
+    if (!IsTangentPresent())
+    {
+        Log::Debug(L"%sComputing tangents...", logPrefix.c_str());
 
-    //// TODO: if (material needs tangents && are not present) ... GetMaterial()
-    //// TODO: Requires position, normal, and texcoords
-    //// TODO: Only for triangles?
-    //if (!IsTangentPresent())
-    //{
-    //    Log::Debug(L"%sComputing tangents...", logPrefix.c_str());
-
-    //    if (!TangentCalculator::Calculate(*this))
-    //    {
-    //        Log::Error(L"%sTangents computation failed!", logPrefix.c_str());
-    //        return false;
-    //    }
-    //    mIsTangentPresent = true;
-    //}
+        if (!TangentCalculator::Calculate(*this))
+        {
+            Log::Error(L"%sTangents computation failed!", logPrefix.c_str());
+            return false;
+        }
+        mIsTangentPresent = true;
+    }
 
     return true;
 }
@@ -2729,15 +2804,19 @@ bool Scene::Load(IRenderingContext& ctx)
         return false;
 
     //AddScaleToRoots(100.0);
-    //AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0    
-    //AddRotationQuaternionToRoots({ 0.000, 0.259, 0.000, 0.966 }); // 30°y
+    //AddScaleToRoots({ 1.0f, -1.0f, 1.0f });
+    //AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0
+    //AddRotationQuaternionToRoots({ 0.000, -1.000, 0.000, 0.000 }); // 180°y
+    //AddRotationQuaternionToRoots({ 0.000, 0.000, -1.000, 0.000 }); // 180°y
+    //AddRotationQuaternionToRoots({ 0.000, 0.707, 0.000, 0.707 }); // 90°y
+    //AddRotationQuaternionToRoots({ 0.707, 0.000, 0.000, 0.707 }); // 90°y
 
     const float amb = 0.35f;
     mAmbientLight.luminance = XMFLOAT4(amb, amb, amb, 0.5f);
 
     const float lum = 3.0f;
     mDirectLights.resize(1);
-    mDirectLights[0].dir = XMFLOAT4(0.f, 1.f, 0.f, 1.0f);
+    mDirectLights[0].dir = XMFLOAT4(0.7f, 1.f, 0.9f, 1.0f);
     mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);    
 
     return PostLoadSanityTest();
@@ -2798,7 +2877,7 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
 
     //Create projection matrix with swapped near/far for better accuracy
     static const float fZNear = 32760.0f;
-    static const float fZFar = 1.0f;    
+    static const float fZFar = 1.0f;
 
     const float fAspect = SceneNode.FX / SceneNode.FY;
     const float fFovVert = SceneNode.Viewport->Actor->FovAngle / fAspect * static_cast<float>(PI) / 180.0f;
