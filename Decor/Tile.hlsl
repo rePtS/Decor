@@ -42,7 +42,7 @@ float3 PSMain(const VSOut Input) : SV_Target
         return TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
     }
 
-    const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;    
+    const float3 Diffuse = TexDiffuse.Sample(SamPoint, Input.TexCoord).rgb;    
 
     const float3 Color = Diffuse * Input.Color.rgb;
 
