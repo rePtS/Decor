@@ -19,7 +19,7 @@ void FlagBaseSetBoolHook::ReplacementFunc(XFlagBase& UObjectThis, FlagBaseSetBoo
     P_GET_INT_OPTX(expiration, -1)
     P_FINISH;
 
-    if (flagName.GetIndex() == 1847 || flagName.GetIndex() == 1836)
+    if (flagName.GetIndex() == 1847 || flagName.GetIndex() == 1836 || flagName.GetIndex() == 1842 || flagName.GetIndex() == 1835)
     {
         //MessageBox(NULL, flagName.operator*(), L"Test", MB_OK | MB_ICONQUESTION);
         HookObjectThis.m_pRenderBackend->PreLoadLevel();
@@ -33,7 +33,7 @@ void FlagBaseGetBoolHook::ReplacementFunc(XFlagBase& UObjectThis, FlagBaseGetBoo
     P_GET_NAME(flagName)
     P_FINISH;
 
-    if (flagName.GetIndex() == 1847 || flagName.GetIndex() == 1836)
+    if (flagName.GetIndex() == 1847 || flagName.GetIndex() == 1836 || flagName.GetIndex() == 1842 || flagName.GetIndex() == 1835)
     {
         //MessageBox(NULL, flagName.operator*(), L"Test", MB_OK | MB_ICONQUESTION);
         auto levelName = UObjectThis.GetOuter()->GetOuter()->GetName();

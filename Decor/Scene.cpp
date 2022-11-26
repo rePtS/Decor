@@ -992,6 +992,26 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
                Utils::StringToWstring(scene.name).c_str(),
                scene.nodes.size());
 
+    // Light sources
+    // Нужна коллекция для всех статических источников света (и точечных, и прожекторов и солнечный свет)
+    // Резервируем место для источников, заполняем их основные характеристики (цвет, интенсивность, радиус, направление и т.п.)
+    // При проходе по иерархии узлов заполняем положение источника света в пространстве
+    mPointLights.clear();
+    mPointLights.reserve(model.lights.size());
+    for (const auto& light : model.lights)
+    {
+        PointLight pointLight;
+        float intencity = light.intensity * 1000.0f;
+        pointLight.intensity.x = intencity;
+        pointLight.intensity.y = intencity;
+        pointLight.intensity.z = intencity;
+        pointLight.intensity.w = 1.0f;
+        pointLight.orbitRadius = 5.5f;
+        pointLight.orbitInclinationMin = -XM_PIDIV4;
+        pointLight.orbitInclinationMax = XM_PIDIV4;
+        mPointLights.push_back(pointLight);
+    }
+
     // Nodes hierarchy
     mRootNodes.clear();
     mRootNodes.reserve(scene.nodes.size());
@@ -1001,7 +1021,7 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
         if (!LoadSceneNodeFromGLTF(ctx, sceneNode, model, nodeIdx, logPrefix + L"   "))
             return false;
         mRootNodes.push_back(std::move(sceneNode));
-    }
+    }    
 
     return true;
 }
@@ -1020,10 +1040,19 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
     }
 
     const auto &node = model.nodes[nodeIdx];
-
+        
     // Node itself
     if (!sceneNode.LoadFromGLTF(ctx, model, node, nodeIdx, logPrefix))
         return false;
+
+    // Check if it has lights
+    const auto& lightExtension = node.extensions.find("KHR_lights_punctual");
+    if (lightExtension != std::end(node.extensions))
+    {
+        auto lightIdx = lightExtension->second.Get("light").GetNumberAsInt();
+        XMStoreFloat4(&mPointLights[lightIdx].posTransf,
+            XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
+    }
 
     // Children
     sceneNode.mChildren.clear();
@@ -1102,7 +1131,7 @@ void Scene::AnimateFrame(IRenderingContext &ctx)
         dirLight.dirTransf = dirLight.dir;
 
     // Animate point lights (harwired animation for now)
-    
+ /*
     const float time = 0.0f; ///////ctx.GetFrameAnimationTime();
     const float period = 15.f; //seconds
     const float totalAnimPos = time / period;
@@ -1129,7 +1158,7 @@ void Scene::AnimateFrame(IRenderingContext &ctx)
         const XMVECTOR lightVecTransf = XMVector3Transform(lightVec, transfMtrx);
         XMStoreFloat4(&mPointLights[i].posTransf, lightVecTransf);
     }
-    
+ */   
 }
 
 
@@ -1153,7 +1182,7 @@ void Scene::RenderFrame(IRenderingContext &ctx)
         cbFrame.DirectLightDirs[i]       = mDirectLights[i].dirTransf;
         cbFrame.DirectLightLuminances[i] = mDirectLights[i].luminance;
     }
-    cbFrame.PointLightsCount = (int32_t)mPointLights.size();
+    cbFrame.PointLightsCount = Min<int32_t>(POINT_LIGHTS_MAX_COUNT, (int32_t)mPointLights.size());
     for (int i = 0; i < cbFrame.PointLightsCount; i++)
     {
         cbFrame.PointLightPositions[i]   = mPointLights[i].posTransf;
@@ -1214,7 +1243,7 @@ void Scene::SetupDefaultLights()
     mDirectLights[0].dir = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
     mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
 
-    SetupPointLights(3);
+    SetupPointLights(POINT_LIGHTS_MAX_COUNT);
 }
 
 
@@ -1232,13 +1261,13 @@ bool Scene::SetupPointLights(size_t count,
 
     mPointLights.resize(count);
 
-    for (auto &light : mPointLights)
-    {
-        light.intensity = XMFLOAT4(intensity, intensity, intensity, 1.0f);
-        light.orbitRadius = orbitRadius;
-        light.orbitInclinationMin = orbitInclMin;
-        light.orbitInclinationMax = orbitInclMax;
-    }
+    //for (auto &light : mPointLights)
+    //{
+    //    light.intensity = XMFLOAT4(intensity, intensity, intensity, 1.0f);
+    //    light.orbitRadius = orbitRadius;
+    //    light.orbitInclinationMin = orbitInclMin;
+    //    light.orbitInclinationMax = orbitInclMax;
+    //}
 
     return true;
 }
@@ -2811,13 +2840,18 @@ bool Scene::Load(IRenderingContext& ctx)
     //AddRotationQuaternionToRoots({ 0.000, 0.707, 0.000, 0.707 }); // 90°y
     //AddRotationQuaternionToRoots({ 0.707, 0.000, 0.000, 0.707 }); // 90°y
 
-    const float amb = 0.35f;
+    const float amb = 0.035f;
     mAmbientLight.luminance = XMFLOAT4(amb, amb, amb, 0.5f);
 
-    const float lum = 3.0f;
+    const float lum = 0.30f;
     mDirectLights.resize(1);
     mDirectLights[0].dir = XMFLOAT4(0.7f, 1.f, 0.9f, 1.0f);
-    mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);    
+    mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
+
+    //const float intensity = 1500.0f;
+    //mPointLights.resize(1);
+    //mPointLights[0].posTransf = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+    //mPointLights[0].intensity = XMFLOAT4(intensity, intensity, intensity, 1.0f);
 
     return PostLoadSanityTest();
 }
@@ -2890,6 +2924,11 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
     mViewData.at = XMVectorSet(cameraToVector.X, cameraToVector.Z, cameraToVector.Y, 1.0f);
     mViewData.up = XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
     
+    // 
+    mPointLights[0].posTransf.x = cameraPosition.X;
+    mPointLights[0].posTransf.y = cameraPosition.Z;
+    mPointLights[0].posTransf.z = cameraPosition.Y;
+
     // Matrices
     mViewMtrx = XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
     mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
