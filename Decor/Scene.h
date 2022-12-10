@@ -284,7 +284,6 @@ private:
     // Specularity workflow
     SceneTexture        mSpecularTexture;
     XMFLOAT4            mSpecularFactor;
-    //TODO...
 
     // Both workflows
     SceneNormalTexture      mNormalTexture;
@@ -294,46 +293,27 @@ private:
 };
 
 
-
 struct AmbientLight
 {
-    XMFLOAT4 luminance; // omnidirectional luminance: lm * sr-1 * m-2
-
-    AmbientLight() :
-        luminance{}
-    {}
+    XMFLOAT4 luminance = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // omnidirectional luminance: lm * sr-1 * m-2
 };
 
 
-// Directional light
 struct DirectLight
 {
-    XMFLOAT4 dir;
-    XMFLOAT4 dirTransf;
-    XMFLOAT4 luminance; // lm * sr-1 * m-2 ... Really???
-
-    DirectLight() :
-        dir{},
-        dirTransf{},
-        luminance{}
-    {}
+    XMFLOAT4 direction = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f };
+    XMFLOAT4 luminance = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // lm * sr-1 * m-2 ... Really???
 };
 
 
 struct PointLight
 {
-    // Parameters
-    XMFLOAT4 intensity = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // luminuous intensity [cd = lm * sr-1] = luminuous flux / 4Pi
-    float orbitRadius = 5.5f;
-    float orbitInclinationMin = -XM_PIDIV4;
-    float orbitInclinationMax =  XM_PIDIV4;
-
-    // Internals
-    XMFLOAT4 posTransf = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // Final position after animation
+    XMFLOAT4 intensity = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // luminuous intensity [cd = lm * sr-1] = luminuous flux / 4Pi    
+    XMFLOAT4 position = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // position of the light source
 };
 
 
-class Scene //: public IScene
+class Scene
 {
 public:    
 
@@ -378,15 +358,6 @@ private:
 
     // Lights
     void SetupDefaultLights();
-    bool SetupPointLights(size_t count,
-                          float intensity = 6.5f,
-                          float orbitRadius = 5.5f,
-                          float orbitInclMin = -XM_PIDIV4,
-                          float orbitInclMax = XM_PIDIV4);
-    bool SetupPointLights(const std::initializer_list<XMFLOAT4> &intensities,
-                          float orbitRadius = 5.5f,
-                          float orbitInclMin = -XM_PIDIV4,
-                          float orbitInclMax = XM_PIDIV4);
 
     // Transformations
     void AddScaleToRoots(double scale);
@@ -402,7 +373,6 @@ private:
 private:
 
     std::wstring                mSceneFilePath;
-    //const SceneId               mSceneId;
 
     // Geometry
     std::vector<SceneNode>      mRootNodes;

@@ -7,7 +7,7 @@
 #define CONVERT_LINEAR_OUTPUT_TO_SRGB
 
 //#define USE_SMOOTH_REFRACTION_APPROX
-#define USE_ROUGH_REFRACTION_APPROX
+//#define USE_ROUGH_REFRACTION_APPROX
 
 static const float PI = 3.14159265f;
 
@@ -90,7 +90,7 @@ struct PS_INPUT
 PS_INPUT VS(VS_INPUT input)
 {
     PS_INPUT output = (PS_INPUT)0;
-
+    
     output.PosWorld = mul(input.Pos, WorldMtrx);
 
     output.PosProj = mul(output.PosWorld, ViewMtrx);
@@ -486,7 +486,7 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
 
 
     PbrM_ShadingCtx shadingCtx;
-    shadingCtx.normal  = ComputeNormal(input);
+    shadingCtx.normal  = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for test models
     shadingCtx.viewDir = normalize((float3)CameraPos - (float3)input.PosWorld);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);

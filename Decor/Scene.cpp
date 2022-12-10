@@ -743,12 +743,15 @@ bool Scene::Init(IRenderingContext &ctx)
     if (!Load(ctx))
         return false;
 
-    if (!mDefaultMaterial.CreatePbrSpecularity(ctx,
-                                               nullptr,
-                                               XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f),
-                                               nullptr,
-                                               XMFLOAT4(0.f, 0.f, 0.f, 1.f)))
+    if (!mDefaultMaterial.CreatePbrMetalness(ctx, nullptr, XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f), nullptr, 0.0f, 0.4f))
         return false;
+
+//    if (!mDefaultMaterial.CreatePbrSpecularity(ctx,
+//        nullptr,
+//        XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f),
+//        nullptr,
+//        XMFLOAT4(0.f, 0.f, 0.f, 1.f)))
+//        return false;
 
     // Matrices
     mViewMtrx = XMMatrixLookAtLH(mViewData.eye, mViewData.at, mViewData.up);
@@ -1006,9 +1009,6 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
         pointLight.intensity.y = intencity;
         pointLight.intensity.z = intencity;
         pointLight.intensity.w = 1.0f;
-        pointLight.orbitRadius = 5.5f;
-        pointLight.orbitInclinationMin = -XM_PIDIV4;
-        pointLight.orbitInclinationMax = XM_PIDIV4;
         mPointLights.push_back(pointLight);
     }
 
@@ -1050,7 +1050,7 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
     if (lightExtension != std::end(node.extensions))
     {
         auto lightIdx = lightExtension->second.Get("light").GetNumberAsInt();
-        XMStoreFloat4(&mPointLights[lightIdx].posTransf,
+        XMStoreFloat4(&mPointLights[lightIdx].position,
             XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
     }
 
@@ -1125,40 +1125,6 @@ void Scene::AnimateFrame(IRenderingContext &ctx)
     // Scene geometry
     for (auto &node : mRootNodes)
         node.Animate(ctx);
-
-    // Directional lights (are steady for now)
-    for (auto &dirLight : mDirectLights)
-        dirLight.dirTransf = dirLight.dir;
-
-    // Animate point lights (harwired animation for now)
- /*
-    const float time = 0.0f; ///////ctx.GetFrameAnimationTime();
-    const float period = 15.f; //seconds
-    const float totalAnimPos = time / period;
-    const float angle = totalAnimPos * XM_2PI;
-
-    const auto pointCount = mPointLights.size();
-    for (int i = 0; i < pointCount; i++)
-    {
-        const float lightRelOffsetCircular = (float)i / pointCount;
-        const float lightRelOffsetInterval = (float)i / (pointCount - 1);
-
-        const float rotationAngle = -2.f * angle - lightRelOffsetCircular * XM_2PI;
-        const float orbitInclination = Utils::Lerp(mPointLights[i].orbitInclinationMin,
-                                                   mPointLights[i].orbitInclinationMax,
-                                                   lightRelOffsetInterval);
-
-        const XMMATRIX translationMtrx  = XMMatrixTranslation(mPointLights[i].orbitRadius, 0.f, 0.f);
-        const XMMATRIX rotationMtrx     = XMMatrixRotationY(rotationAngle);
-        const XMMATRIX inclinationMtrx  = XMMatrixRotationZ(orbitInclination);
-        const XMMATRIX transfMtrx = translationMtrx * rotationMtrx * inclinationMtrx;
-
-        const XMFLOAT4 basePos{ 0.f, 0.f, 0.f, 0.f };
-        const XMVECTOR lightVec = XMLoadFloat4(&basePos);
-        const XMVECTOR lightVecTransf = XMVector3Transform(lightVec, transfMtrx);
-        XMStoreFloat4(&mPointLights[i].posTransf, lightVecTransf);
-    }
- */   
 }
 
 
@@ -1179,13 +1145,13 @@ void Scene::RenderFrame(IRenderingContext &ctx)
     cbFrame.DirectLightsCount = (int32_t)mDirectLights.size();
     for (int i = 0; i < cbFrame.DirectLightsCount; i++)
     {
-        cbFrame.DirectLightDirs[i]       = mDirectLights[i].dirTransf;
+        cbFrame.DirectLightDirs[i] = mDirectLights[i].direction;
         cbFrame.DirectLightLuminances[i] = mDirectLights[i].luminance;
     }
     cbFrame.PointLightsCount = Min<int32_t>(POINT_LIGHTS_MAX_COUNT, (int32_t)mPointLights.size());
     for (int i = 0; i < cbFrame.PointLightsCount; i++)
     {
-        cbFrame.PointLightPositions[i]   = mPointLights[i].posTransf;
+        cbFrame.PointLightPositions[i]   = mPointLights[i].position;
         cbFrame.PointLightIntensities[i] = mPointLights[i].intensity;
     }
     deviceContext.UpdateSubresource(mCbFrame, 0, nullptr, &cbFrame, 0, 0);
@@ -1206,107 +1172,20 @@ void Scene::RenderFrame(IRenderingContext &ctx)
     // Scene geometry
     for (auto &node : mRootNodes)
         RenderNode(ctx, node, XMMatrixIdentity());
-
-    //// Proxy geometry for point lights
-    //for (int i = 0; i < mPointLights.size(); i++)
-    //{
-    //    CbSceneNode cbSceneNode;
-
-    //    const float radius = 0.07f;
-    //    XMMATRIX lightScaleMtrx = XMMatrixScaling(radius, radius, radius);
-    //    XMMATRIX lightTrnslMtrx = XMMatrixTranslationFromVector(XMLoadFloat4(&mPointLights[i].posTransf));
-    //    XMMATRIX lightMtrx = lightScaleMtrx * lightTrnslMtrx;
-    //    cbSceneNode.WorldMtrx = XMMatrixTranspose(lightMtrx);
-
-    //    const float radius2 = radius * radius;
-    //    cbSceneNode.MeshColor = {
-    //        mPointLights[i].intensity.x / radius2,
-    //        mPointLights[i].intensity.y / radius2,
-    //        mPointLights[i].intensity.z / radius2,
-    //        mPointLights[i].intensity.w / radius2,
-    //    };
-
-    //    immCtx.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
-
-    //    immCtx.PSSetShader(mPsConstEmmisive, nullptr, 0);
-    //}
 }
 
 
 void Scene::SetupDefaultLights()
 {
-    const uint8_t amb = 120;
-    mAmbientLight.luminance = SceneUtils::SrgbColorToFloat(amb, amb, amb, 1.0f);
+    const float amb = 0.035f;
+    mAmbientLight.luminance = SceneUtils::SrgbColorToFloat(amb, amb, amb, 0.5f);
 
-    const float lum = 3.0f;
+    const float lum = 0.30f;
     mDirectLights.resize(1);
-    mDirectLights[0].dir = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+    mDirectLights[0].direction = XMFLOAT4(0.7f, 1.f, 0.9f, 1.0f);
     mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
 
-    SetupPointLights(POINT_LIGHTS_MAX_COUNT);
-}
-
-
-bool Scene::SetupPointLights(size_t count,
-                             float intensity,
-                             float orbitRadius,
-                             float orbitInclMin,
-                             float orbitInclMax)
-{
-    if (count > POINT_LIGHTS_MAX_COUNT)
-    {
-        Log::Error(L"SetupPointLights: requested number of point lights (%d) exceeds the limit (%d)", count, POINT_LIGHTS_MAX_COUNT);
-        return false;
-    }
-
-    mPointLights.resize(count);
-
-    //for (auto &light : mPointLights)
-    //{
-    //    light.intensity = XMFLOAT4(intensity, intensity, intensity, 1.0f);
-    //    light.orbitRadius = orbitRadius;
-    //    light.orbitInclinationMin = orbitInclMin;
-    //    light.orbitInclinationMax = orbitInclMax;
-    //}
-
-    return true;
-}
-
-
-bool Scene::SetupPointLights(const std::initializer_list<XMFLOAT4> &intensities,
-                             float orbitRadius,
-                             float orbitInclMin,
-                             float orbitInclMax)
-{
-    if (intensities.size() > POINT_LIGHTS_MAX_COUNT)
-    {
-        Log::Error(L"SetupPointLights: requested number of point lights (%d) exceeds the limit (%d)",
-                   intensities.size(), POINT_LIGHTS_MAX_COUNT);
-        return false;
-    }
-
-    if (intensities.size() != intensities.size())
-    {
-        Log::Error(L"SetupPointLights: provided intensities count (%d) doesn't match the light count (%d)",
-                   intensities.size(), POINT_LIGHTS_MAX_COUNT);
-        return false;
-    }
-
-    mPointLights.resize(intensities.size());
-
-    auto itLight = mPointLights.begin();
-    auto itIntensity = intensities.begin();
-    for (; itLight != mPointLights.end() && itIntensity != intensities.end(); ++itLight, ++itIntensity)
-    {
-        auto &light = *itLight;
-
-        light.intensity = *itIntensity;
-        light.orbitRadius = orbitRadius;
-        light.orbitInclinationMin = orbitInclMin;
-        light.orbitInclinationMax = orbitInclMax;
-    }
-
-    return true;
+    mPointLights.resize(POINT_LIGHTS_MAX_COUNT);
 }
 
 
@@ -2835,23 +2714,8 @@ bool Scene::Load(IRenderingContext& ctx)
     //AddScaleToRoots(100.0);
     //AddScaleToRoots({ 1.0f, -1.0f, 1.0f });
     //AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0
-    //AddRotationQuaternionToRoots({ 0.000, -1.000, 0.000, 0.000 }); // 180°y
-    //AddRotationQuaternionToRoots({ 0.000, 0.000, -1.000, 0.000 }); // 180°y
+    //AddRotationQuaternionToRoots({ 0.000, -1.000, 0.000, 0.000 }); // 180°y    
     //AddRotationQuaternionToRoots({ 0.000, 0.707, 0.000, 0.707 }); // 90°y
-    //AddRotationQuaternionToRoots({ 0.707, 0.000, 0.000, 0.707 }); // 90°y
-
-    const float amb = 0.035f;
-    mAmbientLight.luminance = XMFLOAT4(amb, amb, amb, 0.5f);
-
-    const float lum = 0.30f;
-    mDirectLights.resize(1);
-    mDirectLights[0].dir = XMFLOAT4(0.7f, 1.f, 0.9f, 1.0f);
-    mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
-
-    //const float intensity = 1500.0f;
-    //mPointLights.resize(1);
-    //mPointLights[0].posTransf = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
-    //mPointLights[0].intensity = XMFLOAT4(intensity, intensity, intensity, 1.0f);
 
     return PostLoadSanityTest();
 }
@@ -2925,9 +2789,9 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
     mViewData.up = XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
     
     // 
-    mPointLights[0].posTransf.x = cameraPosition.X;
-    mPointLights[0].posTransf.y = cameraPosition.Z;
-    mPointLights[0].posTransf.z = cameraPosition.Y;
+    mPointLights[0].position.x = cameraPosition.X;
+    mPointLights[0].position.y = cameraPosition.Z;
+    mPointLights[0].position.z = cameraPosition.Y;
 
     // Matrices
     mViewMtrx = XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
