@@ -219,15 +219,6 @@ private:
     float mStrength = 1.f;
 };
 
-
-enum class MaterialWorkflow
-{
-    kNone,
-    kPbrMetalness,
-    kPbrSpecularity,
-};
-
-
 class SceneMaterial
 {
 public:
@@ -235,12 +226,6 @@ public:
     SceneMaterial();
 
 public:
-
-    bool CreatePbrSpecularity(IRenderingContext &ctx,
-                              const wchar_t * diffuseTexPath,
-                              XMFLOAT4 diffuseFactor,
-                              const wchar_t * specularTexPath,
-                              XMFLOAT4 specularFactor);
 
     bool CreatePbrMetalness(IRenderingContext &ctx,
                             const wchar_t * baseColorTexPath,
@@ -254,15 +239,10 @@ public:
                       const tinygltf::Material &material,
                       const std::wstring &logPrefix);
 
-    MaterialWorkflow GetWorkflow() const { return mWorkflow; }
-
     const SceneTexture &            GetBaseColorTexture()           const { return mBaseColorTexture; };
     XMFLOAT4                        GetBaseColorFactor()            const { return mBaseColorFactor; }
     const SceneTexture &            GetMetallicRoughnessTexture()   const { return mMetallicRoughnessTexture; };
     XMFLOAT4                        GetMetallicRoughnessFactor()    const { return mMetallicRoughnessFactor; }
-
-    const SceneTexture &            GetSpecularTexture()            const { return mSpecularTexture; };
-    XMFLOAT4                        GetSpecularFactor()             const { return mSpecularFactor; }
 
     const SceneNormalTexture &      GetNormalTexture()              const { return mNormalTexture; };
     const SceneOcclusionTexture &   GetOcclusionTexture()           const { return mOcclusionTexture; };
@@ -273,17 +253,11 @@ public:
 
 private:
 
-    MaterialWorkflow    mWorkflow;
-
     // Metal/roughness workflow
     SceneTexture        mBaseColorTexture;
     XMFLOAT4            mBaseColorFactor;
     SceneTexture        mMetallicRoughnessTexture;
     XMFLOAT4            mMetallicRoughnessFactor;
-
-    // Specularity workflow
-    SceneTexture        mSpecularTexture;
-    XMFLOAT4            mSpecularFactor;
 
     // Both workflows
     SceneNormalTexture      mNormalTexture;
@@ -399,7 +373,6 @@ private:
 
     ID3D11VertexShader*         mVertexShader = nullptr;
     ID3D11PixelShader*          mPsPbrMetalness = nullptr;
-    ID3D11PixelShader*          mPsPbrSpecularity = nullptr;
     ID3D11PixelShader*          mPsConstEmmisive = nullptr;
     ID3D11InputLayout*          mVertexLayout = nullptr;
 

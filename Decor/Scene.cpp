@@ -696,8 +696,6 @@ bool Scene::Init(IRenderingContext &ctx)
     // Pixel shaders
     if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
         return false;
-    if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsPbrSpecularity", "ps_4_0", mPsPbrSpecularity))
-        return false;
     if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
         return false;
 
@@ -739,19 +737,12 @@ bool Scene::Init(IRenderingContext &ctx)
         return hr;
 
     // Load scene
-
     if (!Load(ctx))
         return false;
 
+    // Create default material
     if (!mDefaultMaterial.CreatePbrMetalness(ctx, nullptr, XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f), nullptr, 0.0f, 0.4f))
         return false;
-
-//    if (!mDefaultMaterial.CreatePbrSpecularity(ctx,
-//        nullptr,
-//        XMFLOAT4(0.5f, 0.5f, 0.5f, 1.f),
-//        nullptr,
-//        XMFLOAT4(0.f, 0.f, 0.f, 1.f)))
-//        return false;
 
     // Matrices
     mViewMtrx = XMMatrixLookAtLH(mViewData.eye, mViewData.at, mViewData.up);
@@ -783,7 +774,6 @@ bool Scene::LoadExternal(IRenderingContext &ctx, const std::wstring &filePath)
         return false;
     }
 }
-
 
 
 const tinygltf::Accessor& GetPrimitiveAttrAccessor(bool &accessorLoaded,
@@ -844,7 +834,6 @@ bool IterateGltfAccesorData(const tinygltf::Model &model,
                accessor.count);
 
     // Buffer view
-
     const auto bufferViewIdx = accessor.bufferView;
 
     if ((bufferViewIdx < 0) || (bufferViewIdx >= model.bufferViews.size()))
@@ -1097,7 +1086,6 @@ void Scene::Destroy()
     Utils::ReleaseAndMakeNull(mVertexShader);
 
     Utils::ReleaseAndMakeNull(mPsPbrMetalness);
-    Utils::ReleaseAndMakeNull(mPsPbrSpecularity);
     Utils::ReleaseAndMakeNull(mPsConstEmmisive);
 
     Utils::ReleaseAndMakeNull(mVertexLayout);
@@ -1246,51 +1234,22 @@ void Scene::RenderNode(IRenderingContext &ctx,
     {
         auto &material = GetMaterial(primitive);
 
-        switch (material.GetWorkflow())
-        {
-        case MaterialWorkflow::kPbrMetalness:
-        {
-            deviceContext.PSSetShader(mPsPbrMetalness, nullptr, 0);
-            deviceContext.PSSetShaderResources(0, 1, &material.GetBaseColorTexture().srv);
-            deviceContext.PSSetShaderResources(1, 1, &material.GetMetallicRoughnessTexture().srv);
-            deviceContext.PSSetShaderResources(4, 1, &material.GetNormalTexture().srv);
-            deviceContext.PSSetShaderResources(5, 1, &material.GetOcclusionTexture().srv);
-            deviceContext.PSSetShaderResources(6, 1, &material.GetEmissionTexture().srv);
+        deviceContext.PSSetShader(mPsPbrMetalness, nullptr, 0);
+        deviceContext.PSSetShaderResources(0, 1, &material.GetBaseColorTexture().srv);
+        deviceContext.PSSetShaderResources(1, 1, &material.GetMetallicRoughnessTexture().srv);
+        deviceContext.PSSetShaderResources(4, 1, &material.GetNormalTexture().srv);
+        deviceContext.PSSetShaderResources(5, 1, &material.GetOcclusionTexture().srv);
+        deviceContext.PSSetShaderResources(6, 1, &material.GetEmissionTexture().srv);
 
-            CbScenePrimitive cbScenePrimitive;
-            cbScenePrimitive.BaseColorFactor            = material.GetBaseColorFactor();
-            cbScenePrimitive.MetallicRoughnessFactor    = material.GetMetallicRoughnessFactor();
-            cbScenePrimitive.DiffuseColorFactor         = UNUSED_COLOR;
-            cbScenePrimitive.SpecularFactor             = UNUSED_COLOR;
-            cbScenePrimitive.NormalTexScale             = material.GetNormalTexture().GetScale();
-            cbScenePrimitive.OcclusionTexStrength       = material.GetOcclusionTexture().GetStrength();
-            cbScenePrimitive.EmissionFactor             = material.GetEmissionFactor();
-            deviceContext.UpdateSubresource(mCbScenePrimitive, 0, nullptr, &cbScenePrimitive, 0, 0);
-            break;
-        }
-        case MaterialWorkflow::kPbrSpecularity:
-        {
-            deviceContext.PSSetShader(mPsPbrSpecularity, nullptr, 0);
-            deviceContext.PSSetShaderResources(2, 1, &material.GetBaseColorTexture().srv);
-            deviceContext.PSSetShaderResources(3, 1, &material.GetSpecularTexture().srv);
-            deviceContext.PSSetShaderResources(4, 1, &material.GetNormalTexture().srv);
-            deviceContext.PSSetShaderResources(5, 1, &material.GetOcclusionTexture().srv);
-            deviceContext.PSSetShaderResources(6, 1, &material.GetEmissionTexture().srv);
-
-            CbScenePrimitive cbScenePrimitive;
-            cbScenePrimitive.DiffuseColorFactor         = material.GetBaseColorFactor();
-            cbScenePrimitive.SpecularFactor             = material.GetSpecularFactor();
-            cbScenePrimitive.BaseColorFactor            = UNUSED_COLOR;
-            cbScenePrimitive.MetallicRoughnessFactor    = UNUSED_COLOR;
-            cbScenePrimitive.NormalTexScale             = material.GetNormalTexture().GetScale();
-            cbScenePrimitive.OcclusionTexStrength       = material.GetOcclusionTexture().GetStrength();
-            cbScenePrimitive.EmissionFactor             = material.GetEmissionFactor();
-            deviceContext.UpdateSubresource(mCbScenePrimitive, 0, nullptr, &cbScenePrimitive, 0, 0);
-            break;
-        }
-        default:
-            continue;
-        }
+        CbScenePrimitive cbScenePrimitive;
+        cbScenePrimitive.BaseColorFactor = material.GetBaseColorFactor();
+        cbScenePrimitive.MetallicRoughnessFactor = material.GetMetallicRoughnessFactor();
+        cbScenePrimitive.DiffuseColorFactor = UNUSED_COLOR;
+        cbScenePrimitive.SpecularFactor = UNUSED_COLOR;
+        cbScenePrimitive.NormalTexScale = material.GetNormalTexture().GetScale();
+        cbScenePrimitive.OcclusionTexStrength = material.GetOcclusionTexture().GetStrength();
+        cbScenePrimitive.EmissionFactor = material.GetEmissionFactor();
+        deviceContext.UpdateSubresource(mCbScenePrimitive, 0, nullptr, &cbScenePrimitive, 0, 0);
 
         primitive.DrawGeometry(ctx, mVertexLayout);
     }
@@ -2574,50 +2533,16 @@ bool SceneOcclusionTexture::LoadTextureFromGltf(const tinygltf::OcclusionTexture
 
 
 SceneMaterial::SceneMaterial() :
-    mWorkflow(MaterialWorkflow::kNone),
     mBaseColorTexture(L"BaseColorTexture", SceneTexture::eSrgb, XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
     mBaseColorFactor(XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
     mMetallicRoughnessTexture(L"MetallicRoughnessTexture", SceneTexture::eLinear, XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
     mMetallicRoughnessFactor(XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
-
-    mSpecularTexture(L"SpecularTexture", SceneTexture::eLinear, XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
-    mSpecularFactor(XMFLOAT4(1.f, 1.f, 1.f, 1.f)),
 
     mNormalTexture(L"NormalTexture"),
     mOcclusionTexture(L"OcclusionTexture"),
     mEmissionTexture(L"EmissionTexture", SceneTexture::eSrgb, XMFLOAT4(0.f, 0.f, 0.f, 1.f)),
     mEmissionFactor(XMFLOAT4(0.f, 0.f, 0.f, 1.f))
 {}
-
-
-bool SceneMaterial::CreatePbrSpecularity(IRenderingContext &ctx,
-                                         const wchar_t * diffuseTexPath,
-                                         XMFLOAT4 diffuseFactor,
-                                         const wchar_t * specularTexPath,
-                                         XMFLOAT4 specularFactor)
-{
-    if (!mBaseColorTexture.Create(ctx, diffuseTexPath))
-        return false;
-    mBaseColorFactor = diffuseFactor;
-
-    if (!mSpecularTexture.Create(ctx, specularTexPath))
-        return false;
-    mSpecularFactor = specularFactor;
-
-    if (!mNormalTexture.CreateNeutral(ctx))
-        return false;
-
-    if (!mOcclusionTexture.CreateNeutral(ctx))
-        return false;
-
-    if (!mEmissionTexture.CreateNeutral(ctx))
-        return false;
-    mEmissionFactor = XMFLOAT4(0.f, 0.f, 0.f, 1.f);
-
-    mWorkflow = MaterialWorkflow::kPbrSpecularity;
-
-    return true;
-}
 
 
 bool SceneMaterial::CreatePbrMetalness(IRenderingContext &ctx,
@@ -2644,8 +2569,6 @@ bool SceneMaterial::CreatePbrMetalness(IRenderingContext &ctx,
     if (!mEmissionTexture.CreateNeutral(ctx))
         return false;
     mEmissionFactor = XMFLOAT4(0.f, 0.f, 0.f, 1.f);
-
-    mWorkflow = MaterialWorkflow::kPbrMetalness;
 
     return true;
 }
@@ -2694,8 +2617,6 @@ bool SceneMaterial::LoadFromGltf(IRenderingContext &ctx,
                logPrefix.c_str(),
                L"EmissionFactor",
                GltfUtils::ColorToWstring(mEmissionFactor).c_str());
-
-    mWorkflow = MaterialWorkflow::kPbrMetalness;
 
     return true;
 }
