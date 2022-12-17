@@ -273,17 +273,21 @@ struct AmbientLight
 };
 
 
-struct DirectLight
+struct SceneLight
 {
-    XMFLOAT4 direction = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f };
-    XMFLOAT4 luminance = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // lm * sr-1 * m-2 ... Really???
-};
-
-
-struct PointLight
-{
-    XMFLOAT4 intensity = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // luminuous intensity [cd = lm * sr-1] = luminuous flux / 4Pi    
-    XMFLOAT4 position = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // position of the light source
+    enum class LightType : uint32_t {
+        DIRECT = 1,
+        POINT = 2,
+        SPOT = 3
+    };
+    
+    LightType type;
+    float range;
+    float innerSpotAngle;
+    float outerSpotAngle;
+    XMFLOAT4 intensity;
+    XMFLOAT4 position;
+    XMFLOAT4 direction;
 };
 
 
@@ -326,6 +330,10 @@ private:
                                const tinygltf::Model &model,
                                int nodeIdx,
                                const std::wstring &logPrefix);
+    
+    bool LoadLightFromGLTF(SceneLight& sceneLight,
+        const tinygltf::Light& light,
+        const std::wstring& logPrefix);
 
     // Materials
     const SceneMaterial& GetMaterial(const ScenePrimitive &primitive) const;
@@ -342,7 +350,7 @@ private:
 
     void RenderNode(IRenderingContext &ctx,
                     const SceneNode &node,
-                    const XMMATRIX &parentWorldMtrx);    
+                    const XMMATRIX &parentWorldMtrx);
 
 private:
 
@@ -357,8 +365,7 @@ private:
 
     // Lights
     AmbientLight                mAmbientLight;
-    std::vector<DirectLight>    mDirectLights;
-    std::vector<PointLight>     mPointLights;
+    std::vector<SceneLight>          mLights;
 
     // Camera
     struct {
@@ -370,7 +377,6 @@ private:
     XMMATRIX                    mProjectionMtrx;
 
     // Shaders
-
     ID3D11VertexShader*         mVertexShader = nullptr;
     ID3D11PixelShader*          mPsPbrMetalness = nullptr;
     ID3D11PixelShader*          mPsConstEmmisive = nullptr;

@@ -1,7 +1,6 @@
 //#include "Constants.h"
 
-#define DIRECT_LIGHTS_MAX_COUNT 4
-#define POINT_LIGHTS_MAX_COUNT  64
+#define LIGHTS_DATA_MAX_SIZE 1024
 
 #define CONVERT_SRGB_INPUT_TO_LINEAR
 #define CONVERT_LINEAR_OUTPUT_TO_SRGB
@@ -36,15 +35,7 @@ cbuffer cbScene : register(b0)
 cbuffer cbFrame : register(b1)
 {
     float4 AmbientLightLuminance;
-
-    float4 DirectLightDirs[DIRECT_LIGHTS_MAX_COUNT];
-    float4 DirectLightLuminances[DIRECT_LIGHTS_MAX_COUNT];
-
-    float4 PointLightPositions[POINT_LIGHTS_MAX_COUNT];
-    float4 PointLightIntensities[POINT_LIGHTS_MAX_COUNT];
-
-    int    DirectLightsCount;
-    int    PointLightsCount;
+    float4 LightsData[LIGHTS_DATA_MAX_SIZE];
 };
 
 cbuffer cbSceneNode : register(b2)
@@ -365,7 +356,7 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
 
 
     PbrM_ShadingCtx shadingCtx;
-    shadingCtx.normal  = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for test models
+    shadingCtx.normal  = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing
     shadingCtx.viewDir = normalize((float3)CameraPos - (float3)input.PosWorld);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
@@ -374,19 +365,27 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
 
     output += PbrM_AmbLightContrib(AmbientLightLuminance, shadingCtx, matInfo);
 
-    int i;
-    for (i = 0; i < DirectLightsCount; i++)
-        output += PbrM_DirLightContrib((float3)DirectLightDirs[i],
-                                       DirectLightLuminances[i],
-                                       shadingCtx,
-                                       matInfo);
-
-    for (i = 0; i < PointLightsCount; i++)
-        output += PbrM_PointLightContrib((float3)input.PosWorld,
-                                         (float3)PointLightPositions[i],
-                                         PointLightIntensities[i],
-                                         shadingCtx,
-                                         matInfo);
+    int i = 0;
+    while(i < LIGHTS_DATA_MAX_SIZE)
+    {
+        float4 intencity = LightsData[i];
+        if (intencity.w < 0)
+            break;
+        // Direct
+        if (intencity.w == 1)
+            output += PbrM_DirLightContrib((float3)LightsData[i + 1],
+                intencity,
+                shadingCtx,
+                matInfo);
+        // Point
+        if (intencity.w == 2)
+            output += PbrM_PointLightContrib((float3)input.PosWorld,
+                (float3)LightsData[i + 1],
+                intencity,
+                shadingCtx,
+                matInfo);
+        i += 1;
+    }
 
     output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
 

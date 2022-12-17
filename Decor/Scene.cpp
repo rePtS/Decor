@@ -609,16 +609,29 @@ struct CbScene
 struct CbFrame
 {
     XMFLOAT4 AmbientLightLuminance;
+    XMFLOAT4 LightsData[LIGHTS_DATA_MAX_SIZE];
 
-    XMFLOAT4 DirectLightDirs[DIRECT_LIGHTS_MAX_COUNT];
-    XMFLOAT4 DirectLightLuminances[DIRECT_LIGHTS_MAX_COUNT];
+    size_t AddLight(const SceneLight &light, size_t counter)
+    {
+        LightsData[counter] = XMFLOAT4{ light.intensity.x, light.intensity.y, light.intensity.z, (float)light.type };
 
-    XMFLOAT4 PointLightPositions[POINT_LIGHTS_MAX_COUNT];
-    XMFLOAT4 PointLightIntensities[POINT_LIGHTS_MAX_COUNT];
-
-    int32_t  DirectLightsCount; // at the end to avoid 16-byte packing issues
-    int32_t  PointLightsCount;  // at the end to avoid 16-byte packing issues
-    int32_t  dummy_padding[2];  // padding to 16 bytes multiple
+        if (light.type == SceneLight::LightType::POINT)
+        {
+            LightsData[counter + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
+            return counter + 2;
+        }
+        else if (light.type == SceneLight::LightType::DIRECT)
+        {
+            LightsData[counter + 1] = light.direction;
+            return counter + 2;
+        }
+        else if (light.type == SceneLight::LightType::SPOT)
+        {
+            LightsData[counter + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
+            LightsData[counter + 2] = XMFLOAT4{ light.direction.x, light.direction.y, light.direction.z, light.outerSpotAngle };
+            return counter + 3;
+        }
+    }
 };
 
 struct CbSceneNode
@@ -988,17 +1001,14 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
     // Нужна коллекция для всех статических источников света (и точечных, и прожекторов и солнечный свет)
     // Резервируем место для источников, заполняем их основные характеристики (цвет, интенсивность, радиус, направление и т.п.)
     // При проходе по иерархии узлов заполняем положение источника света в пространстве
-    mPointLights.clear();
-    mPointLights.reserve(model.lights.size());
-    for (const auto& light : model.lights)
+    mLights.clear();
+    mLights.reserve(model.lights.size());
+    for (const auto& gltfLight : model.lights)
     {
-        PointLight pointLight;
-        float intencity = light.intensity * 1000.0f;
-        pointLight.intensity.x = intencity;
-        pointLight.intensity.y = intencity;
-        pointLight.intensity.z = intencity;
-        pointLight.intensity.w = 1.0f;
-        mPointLights.push_back(pointLight);
+        SceneLight sceneLight;
+        if (!LoadLightFromGLTF(sceneLight, gltfLight, logPrefix + L"   "))
+            return false;
+        mLights.push_back(sceneLight);
     }
 
     // Nodes hierarchy
@@ -1015,6 +1025,32 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
     return true;
 }
 
+bool Scene::LoadLightFromGLTF(
+    SceneLight& sceneLight,
+    const tinygltf::Light& light,
+    const std::wstring& logPrefix)
+{
+    float intencityFactor = light.intensity * 1000.0f;
+
+    sceneLight.range = light.range;
+    sceneLight.intensity.x = light.color[0] * intencityFactor;
+    sceneLight.intensity.y = light.color[1] * intencityFactor;
+    sceneLight.intensity.z = light.color[2] * intencityFactor;
+    sceneLight.intensity.w = 1.0f;
+
+    if (light.type == "spot")
+    {
+        sceneLight.type = SceneLight::LightType::SPOT;
+        sceneLight.innerSpotAngle = light.spot.innerConeAngle;
+        sceneLight.outerSpotAngle = light.spot.outerConeAngle;
+    }
+    else if (light.type == "point")
+        sceneLight.type = SceneLight::LightType::POINT;
+    else if (light.type == "directional")
+        sceneLight.type = SceneLight::LightType::DIRECT;
+    
+    return true;
+}
 
 bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
                                   SceneNode &sceneNode,
@@ -1039,8 +1075,12 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
     if (lightExtension != std::end(node.extensions))
     {
         auto lightIdx = lightExtension->second.Get("light").GetNumberAsInt();
-        XMStoreFloat4(&mPointLights[lightIdx].position,
+        // Set position of the light
+        XMStoreFloat4(&mLights[lightIdx].position,
             XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
+        // Set direction of the light
+        XMStoreFloat4(&mLights[lightIdx].direction,
+            XMVector3Transform(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), sceneNode.mLocalMtrx));
     }
 
     // Children
@@ -1119,29 +1159,17 @@ void Scene::AnimateFrame(IRenderingContext &ctx)
 void Scene::RenderFrame(IRenderingContext &ctx)
 {
     assert(&ctx);
-
-    //if (mPointLights.size() > POINT_LIGHTS_MAX_COUNT)
-    //    return;
-    //if (mDirectLights.size() > DIRECT_LIGHTS_MAX_COUNT)
-    //    return;
-
     auto &deviceContext = ctx.GetDeviceContext();
 
     // Frame constant buffer
     CbFrame cbFrame;
     cbFrame.AmbientLightLuminance = mAmbientLight.luminance;
-    cbFrame.DirectLightsCount = (int32_t)mDirectLights.size();
-    for (int i = 0; i < cbFrame.DirectLightsCount; i++)
-    {
-        cbFrame.DirectLightDirs[i] = mDirectLights[i].direction;
-        cbFrame.DirectLightLuminances[i] = mDirectLights[i].luminance;
-    }
-    cbFrame.PointLightsCount = Min<int32_t>(POINT_LIGHTS_MAX_COUNT, (int32_t)mPointLights.size());
-    for (int i = 0; i < cbFrame.PointLightsCount; i++)
-    {
-        cbFrame.PointLightPositions[i]   = mPointLights[i].position;
-        cbFrame.PointLightIntensities[i] = mPointLights[i].intensity;
-    }
+
+    size_t i = 0;
+    for (auto& light : mLights)
+        i = cbFrame.AddLight(light, i);
+    cbFrame.LightsData[i].w = -1.0f; // end of lights list
+
     deviceContext.UpdateSubresource(mCbFrame, 0, nullptr, &cbFrame, 0, 0);
 
     // Setup vertex shader
@@ -1168,12 +1196,8 @@ void Scene::SetupDefaultLights()
     const float amb = 0.035f;
     mAmbientLight.luminance = SceneUtils::SrgbColorToFloat(amb, amb, amb, 0.5f);
 
-    const float lum = 0.30f;
-    mDirectLights.resize(1);
-    mDirectLights[0].direction = XMFLOAT4(0.7f, 1.f, 0.9f, 1.0f);
-    mDirectLights[0].luminance = XMFLOAT4(lum, lum, lum, 1.0f);
-
-    mPointLights.resize(POINT_LIGHTS_MAX_COUNT);
+    // Limit light max count for testing purposes
+    mLights.resize(LIGHTS_MAX_COUNT); 
 }
 
 
@@ -2644,17 +2668,10 @@ bool Scene::Load(IRenderingContext& ctx)
 
 bool Scene::PostLoadSanityTest()
 {
-    if (mPointLights.size() > POINT_LIGHTS_MAX_COUNT)
+    if (mLights.size() > LIGHTS_MAX_COUNT)
     {
-        Log::Error(L"Point lights count (%d) exceeded maximum limit (%d)!",
-            mPointLights.size(), POINT_LIGHTS_MAX_COUNT);
-        return false;
-    }
-
-    if (mDirectLights.size() > DIRECT_LIGHTS_MAX_COUNT)
-    {
-        Log::Error(L"Directional lights count (%d) exceeded maximum limit (%d)!",
-            mDirectLights.size(), DIRECT_LIGHTS_MAX_COUNT);
+        Log::Error(L"Lights count (%d) exceeded maximum limit (%d)!",
+            mLights.size(), LIGHTS_MAX_COUNT);
         return false;
     }
 
@@ -2708,11 +2725,6 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
     mViewData.eye = XMVectorSet(cameraPosition.X, cameraPosition.Z, cameraPosition.Y, 1.0f);
     mViewData.at = XMVectorSet(cameraToVector.X, cameraToVector.Z, cameraToVector.Y, 1.0f);
     mViewData.up = XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
-    
-    // 
-    mPointLights[0].position.x = cameraPosition.X;
-    mPointLights[0].position.y = cameraPosition.Z;
-    mPointLights[0].position.z = cameraPosition.Y;
 
     // Matrices
     mViewMtrx = XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
