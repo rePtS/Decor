@@ -326,12 +326,12 @@ float DoSpotCone(float4 lightDir, float3 L)
     // If the cosine angle of the light's direction 
     // vector and the vector from the light source to the point being 
     // shaded is less than minCos, then the spotlight contribution will be 0.
-    float minCos = cos(radians(lightDir.w));
+    float minCos = cos(lightDir.w);
     // If the cosine angle of the light's direction vector
     // and the vector from the light source to the point being shaded
     // is greater than maxCos, then the spotlight contribution will be 1.
     float maxCos = lerp(minCos, 1, 0.5f);
-    float cosAngle = dot((float3)lightDir, -L);
+    float cosAngle = dot(normalize((float3)lightDir), normalize(-L));
     // Blend between the maxixmum and minimum cosine angles.
     return smoothstep(minCos, maxCos, cosAngle);
 }
@@ -422,7 +422,7 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
-            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            //if (length((float3)lightPosData - posWorld) < lightPosData.w)
                 output += PbrM_PointLightContrib(posWorld,
                     lightPosData,
                     intencity,
@@ -437,7 +437,7 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip spot lights that are out of range of the point being shaded.
-            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            //if (length((float3)lightPosData - posWorld) < lightPosData.w)
                 output += PbrM_SpotLightContrib(posWorld,
                     lightPosData,
                     lightDirData,

@@ -1030,7 +1030,7 @@ bool Scene::LoadLightFromGLTF(
     const tinygltf::Light& light,
     const std::wstring& logPrefix)
 {
-    float intencityFactor = light.intensity * 1000.0f;
+    float intencityFactor = light.intensity * 16.0f;
 
     sceneLight.range = light.range;
     sceneLight.intensity.x = light.color[0] * intencityFactor;
@@ -1079,8 +1079,7 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
         XMStoreFloat4(&mLights[lightIdx].position,
             XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
         // Set direction of the light
-        XMStoreFloat4(&mLights[lightIdx].direction,
-            XMVector3Transform(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), sceneNode.mLocalMtrx));
+        XMStoreFloat4(&mLights[lightIdx].direction, XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
     }
 
     // Children
