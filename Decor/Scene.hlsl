@@ -27,15 +27,15 @@ SamplerState LinearSampler : register(s0);
 
 cbuffer cbScene : register(b0)
 {
-    matrix ViewMtrx;
-    float4 CameraPos;
-    matrix ProjectionMtrx;
+    float4 AmbientLightLuminance;
+    float4 LightsData[LIGHTS_DATA_MAX_SIZE];
 };
 
 cbuffer cbFrame : register(b1)
 {
-    float4 AmbientLightLuminance;
-    float4 LightsData[LIGHTS_DATA_MAX_SIZE];
+    matrix ViewMtrx;
+    float4 CameraPos;
+    matrix ProjectionMtrx;
 };
 
 cbuffer cbSceneNode : register(b2)

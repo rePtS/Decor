@@ -599,14 +599,14 @@ const std::vector<D3D11_INPUT_ELEMENT_DESC> sVertexLayoutDesc =
     D3D11_INPUT_ELEMENT_DESC{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 };
 
-struct CbScene
+struct CbFrame
 {
     XMMATRIX ViewMtrx;
     XMFLOAT4 CameraPos;
     XMMATRIX ProjectionMtrx;
 };
 
-struct CbFrame
+struct CbScene
 {
     XMFLOAT4 AmbientLightLuminance;
     XMFLOAT4 LightsData[LIGHTS_DATA_MAX_SIZE];
@@ -763,12 +763,16 @@ bool Scene::Init(IRenderingContext &ctx)
                                                (FLOAT)wndWidth / wndHeight,
                                                0.01f, 100.0f);
 
-    // Scene constant buffer can be updated now
+    // Scene constant buffer
     CbScene cbScene;
-    cbScene.ViewMtrx = XMMatrixTranspose(mViewMtrx);
-    XMStoreFloat4(&cbScene.CameraPos, mViewData.eye);
-    cbScene.ProjectionMtrx = XMMatrixTranspose(mProjectionMtrx);
-    deviceContext.UpdateSubresource(mCbScene, 0, NULL, &cbScene, 0, 0);
+    cbScene.AmbientLightLuminance = mAmbientLight.luminance;
+
+    size_t i = 0;
+    for (auto& light : mLights)
+        i = cbScene.AddLight(light, i);
+    cbScene.LightsData[i].w = -1.0f; // end of lights list
+
+    deviceContext.UpdateSubresource(mCbScene, 0, nullptr, &cbScene, 0, 0);
 
     return true;
 }
@@ -1160,16 +1164,12 @@ void Scene::RenderFrame(IRenderingContext &ctx)
     assert(&ctx);
     auto &deviceContext = ctx.GetDeviceContext();
 
-    // Frame constant buffer
-    CbFrame cbFrame;
-    cbFrame.AmbientLightLuminance = mAmbientLight.luminance;
-
-    size_t i = 0;
-    for (auto& light : mLights)
-        i = cbFrame.AddLight(light, i);
-    cbFrame.LightsData[i].w = -1.0f; // end of lights list
-
-    deviceContext.UpdateSubresource(mCbFrame, 0, nullptr, &cbFrame, 0, 0);
+    //// Frame constant buffer
+    //CbFrame cbFrame;
+    //cbFrame.ViewMtrx = XMMatrixTranspose(mViewMtrx);
+    //XMStoreFloat4(&cbFrame.CameraPos, mViewData.eye);
+    //cbFrame.ProjectionMtrx = XMMatrixTranspose(mProjectionMtrx);
+    //deviceContext.UpdateSubresource(mCbFrame, 0, nullptr, &cbFrame, 0, 0);
 
     // Setup vertex shader
     deviceContext.VSSetShader(mVertexShader, nullptr, 0);
@@ -2730,10 +2730,10 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
     mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
     mProjectionMtrx.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
-    // Scene constant buffer can be updated now
-    CbScene cbScene;
-    cbScene.ViewMtrx = XMMatrixTranspose(mViewMtrx);
-    XMStoreFloat4(&cbScene.CameraPos, mViewData.eye);
-    cbScene.ProjectionMtrx = XMMatrixTranspose(mProjectionMtrx);
-    deviceContext.UpdateSubresource(mCbScene, 0, NULL, &cbScene, 0, 0);
+    // Frame constant buffer can be updated now
+    CbFrame cbFrame;
+    cbFrame.ViewMtrx = XMMatrixTranspose(mViewMtrx);
+    XMStoreFloat4(&cbFrame.CameraPos, mViewData.eye);
+    cbFrame.ProjectionMtrx = XMMatrixTranspose(mProjectionMtrx);
+    deviceContext.UpdateSubresource(mCbFrame, 0, nullptr, &cbFrame, 0, 0);
 }
