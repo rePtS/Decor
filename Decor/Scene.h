@@ -102,6 +102,31 @@ private:
     int                         mMaterialIdx = -1;
 };
 
+struct AmbientLight
+{
+    XMFLOAT4 luminance = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // omnidirectional luminance: lm * sr-1 * m-2
+};
+
+
+struct SceneLight
+{
+    enum class LightType : uint32_t {
+        DIRECT = 1,
+        POINT = 2,
+        SPOT = 3
+    };
+
+    LightType type;
+    float range;
+    float innerSpotAngle;
+    float outerSpotAngle;
+    XMFLOAT4 intensity;
+    XMFLOAT4 position;
+    XMFLOAT4 direction;
+
+    std::vector<std::string> affectedNodes;
+    size_t index;
+};
 
 class SceneNode
 {
@@ -127,15 +152,19 @@ public:
 
     XMMATRIX GetWorldMtrx() const { return mWorldMtrx; }
 
+    void LinkLights(const std::vector<SceneLight> &lights);
+
 private:
     friend class Scene;
     std::vector<ScenePrimitive> mPrimitives;
     std::vector<SceneNode>      mChildren;
+    std::vector<size_t>         mLightIds;
 
 private:
     bool        mIsRootNode;
     XMMATRIX    mLocalMtrx;
     XMMATRIX    mWorldMtrx;
+    std::string mName;
 };
 
 
@@ -267,27 +296,11 @@ private:
 };
 
 
-struct AmbientLight
+struct CbSceneNode
 {
-    XMFLOAT4 luminance = XMFLOAT4{ 0.f, 0.f, 0.f, 0.f }; // omnidirectional luminance: lm * sr-1 * m-2
-};
-
-
-struct SceneLight
-{
-    enum class LightType : uint32_t {
-        DIRECT = 1,
-        POINT = 2,
-        SPOT = 3
-    };
-    
-    LightType type;
-    float range;
-    float innerSpotAngle;
-    float outerSpotAngle;
-    XMFLOAT4 intensity;
-    XMFLOAT4 position;
-    XMFLOAT4 direction;
+    XMMATRIX WorldMtrx;
+    XMFLOAT4 MeshColor; // May be eventually replaced by the emmisive component of the standard surface shader
+    int      LightIds[NODE_LIGHTS_MAX_COUNT];
 };
 
 
@@ -349,8 +362,11 @@ private:
     void AddMatrixToRoots(const std::vector<double> &vec);
 
     void RenderNode(IRenderingContext &ctx,
-                    const SceneNode &node,
+                    CbSceneNode& cbSceneNode,
+                    const SceneNode &node,                    
                     const XMMATRIX &parentWorldMtrx);
+
+    void RenderRootNode(IRenderingContext& ctx, const SceneNode& node);
 
 private:
 

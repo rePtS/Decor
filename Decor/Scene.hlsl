@@ -5,6 +5,8 @@
 #define CONVERT_SRGB_INPUT_TO_LINEAR
 #define CONVERT_LINEAR_OUTPUT_TO_SRGB
 
+#define NODE_LIGHTS_MAX_COUNT 64
+
 //#define USE_SMOOTH_REFRACTION_APPROX
 //#define USE_ROUGH_REFRACTION_APPROX
 
@@ -42,6 +44,7 @@ cbuffer cbSceneNode : register(b2)
 {
     matrix WorldMtrx;
     float4 MeshColor;
+    int4 LightIds[16];
 };
 
 cbuffer cbScenePrimitive : register(b3)
@@ -403,22 +406,26 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
     output += PbrM_AmbLightContrib(AmbientLightLuminance, shadingCtx, matInfo);
 
     int i = 0;
-    while(i < LIGHTS_DATA_MAX_SIZE)
+    int lightId = 0;
+    int lightIdsArr[64] = (int[64])LightIds;
+    while(i < NODE_LIGHTS_MAX_COUNT)
     {
-        float4 intencity = LightsData[i];
-        if (intencity.w < 0)
-            break;
+        lightId = lightIdsArr[i];
+	//lightId = LightIds[i];
+	if (lightId < 0)
+	    break;	
+
+        float4 intencity = LightsData[lightId];
         // Direct
         if (intencity.w == 1) {
-            output += PbrM_DirLightContrib((float3)LightsData[i + 1],
+            output += PbrM_DirLightContrib((float3)LightsData[lightId + 1],
                 intencity,
                 shadingCtx,
                 matInfo);
-            i += 2;
         }
         // Point
         if (intencity.w == 2) {
-            float4 lightPosData = LightsData[i + 1];
+            float4 lightPosData = LightsData[lightId + 1];
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
@@ -428,12 +435,11 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
                     intencity,
                     shadingCtx,
                     matInfo);
-            i += 2;
         }
         // Spot
         if (intencity.w == 3) {
-            float4 lightPosData = LightsData[i + 1];
-            float4 lightDirData = LightsData[i + 2];
+            float4 lightPosData = LightsData[lightId + 1];
+            float4 lightDirData = LightsData[lightId + 2];
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip spot lights that are out of range of the point being shaded.
@@ -444,8 +450,8 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
                     intencity,
                     shadingCtx,
                     matInfo);
-            i += 3;
         }
+	    i += 1;
     }
 
     output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;

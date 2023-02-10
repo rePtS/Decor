@@ -3,6 +3,7 @@
 
 #include <codecvt>
 #include <locale>
+#include <sstream>
 
 #include "Scene.h"
 #include "Helpers.h"
@@ -611,33 +612,34 @@ struct CbScene
     XMFLOAT4 AmbientLightLuminance;
     XMFLOAT4 LightsData[LIGHTS_DATA_MAX_SIZE];
 
-    size_t AddLight(const SceneLight &light, size_t counter)
+    // !!! ѕеределать этот метод
+    size_t AddLight(const SceneLight &light)
     {
-        LightsData[counter] = XMFLOAT4{ light.intensity.x, light.intensity.y, light.intensity.z, (float)light.type };
+        size_t dataIndex = light.index;
+        LightsData[dataIndex] = XMFLOAT4{ light.intensity.x, light.intensity.y, light.intensity.z, (float)light.type };
 
         if (light.type == SceneLight::LightType::POINT)
         {
-            LightsData[counter + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
-            return counter + 2;
+            LightsData[dataIndex + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
+            //return counter + 2;
+            LightsData[dataIndex + 2].w = -1.0f;
         }
         else if (light.type == SceneLight::LightType::DIRECT)
         {
-            LightsData[counter + 1] = light.direction;
-            return counter + 2;
+            LightsData[dataIndex + 1] = light.direction;
+            //return counter + 2;
+            LightsData[dataIndex + 2].w = -1.0f;
         }
         else if (light.type == SceneLight::LightType::SPOT)
         {
-            LightsData[counter + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
-            LightsData[counter + 2] = XMFLOAT4{ light.direction.x, light.direction.y, light.direction.z, light.outerSpotAngle };
-            return counter + 3;
+            LightsData[dataIndex + 1] = XMFLOAT4{ light.position.x, light.position.y, light.position.z, light.range };
+            LightsData[dataIndex + 2] = XMFLOAT4{ light.direction.x, light.direction.y, light.direction.z, light.outerSpotAngle };
+            //return counter + 3;
+            LightsData[dataIndex + 3].w = -1.0f;
         }
-    }
-};
 
-struct CbSceneNode
-{
-    XMMATRIX WorldMtrx;
-    XMFLOAT4 MeshColor; // May be eventually replaced by the emmisive component of the standard surface shader
+        return 0;
+    }
 };
 
 struct CbScenePrimitive
@@ -765,13 +767,9 @@ bool Scene::Init(IRenderingContext &ctx)
 
     // Scene constant buffer
     CbScene cbScene;
-    cbScene.AmbientLightLuminance = mAmbientLight.luminance;
-
-    size_t i = 0;
+    cbScene.AmbientLightLuminance = mAmbientLight.luminance;    
     for (auto& light : mLights)
-        i = cbScene.AddLight(light, i);
-    cbScene.LightsData[i].w = -1.0f; // end of lights list
-
+        cbScene.AddLight(light);
     deviceContext.UpdateSubresource(mCbScene, 0, nullptr, &cbScene, 0, 0);
 
     return true;
@@ -1012,7 +1010,22 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
         SceneLight sceneLight;
         if (!LoadLightFromGLTF(sceneLight, gltfLight, logPrefix + L"   "))
             return false;
-        mLights.push_back(sceneLight);
+        mLights.push_back(std::move(sceneLight));
+    }
+
+    // ѕроставим индексы источников света дл€ общего массива данных об источниках света
+    size_t indexInTotalLightDataArray = 0;
+    for (auto& sceneLight : mLights)
+    {
+        sceneLight.index = indexInTotalLightDataArray;
+        switch (sceneLight.type)
+        {
+            case SceneLight::LightType::DIRECT:
+            case SceneLight::LightType::POINT:
+                indexInTotalLightDataArray += 2; break;
+            case SceneLight::LightType::SPOT:
+                indexInTotalLightDataArray += 3; break;
+        };
     }
 
     // Nodes hierarchy
@@ -1024,9 +1037,36 @@ bool Scene::LoadSceneFromGltf(IRenderingContext &ctx,
         if (!LoadSceneNodeFromGLTF(ctx, sceneNode, model, nodeIdx, logPrefix + L"   "))
             return false;
         mRootNodes.push_back(std::move(sceneNode));
-    }    
+    }
+
+    // ѕроставл€ем каждому узлу списки источников света, которые освещают данный узел
+    for (auto &rootNode : mRootNodes)
+        rootNode.LinkLights(mLights);
 
     return true;
+}
+
+void SceneNode::LinkLights(const std::vector<SceneLight>& lights)
+{
+    mLightIds.clear();
+    for (size_t i = 0; i < lights.size(); ++i) {
+        auto& nodeNames = lights.at(i).affectedNodes;
+        if (std::find(nodeNames.begin(), nodeNames.end(), mName) != nodeNames.end())
+            mLightIds.push_back(lights[i].index);
+    }
+}
+
+// Splits a given string into the parts by a char delimeter
+std::vector<std::string> split(const std::string& s, char delim) {
+    std::vector<std::string> result;
+    std::stringstream ss(s);
+    std::string item;
+
+    while (getline(ss, item, delim)) {
+        result.push_back(item);
+    }
+
+    return result;
 }
 
 bool Scene::LoadLightFromGLTF(
@@ -1034,7 +1074,7 @@ bool Scene::LoadLightFromGLTF(
     const tinygltf::Light& light,
     const std::wstring& logPrefix)
 {
-    float intencityFactor = light.intensity * 16.0f;
+    float intencityFactor = light.intensity * 0.005f; //*16.0f;
 
     sceneLight.range = light.range;
     sceneLight.intensity.x = light.color[0] * intencityFactor;
@@ -1069,7 +1109,16 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
     }
 
     const auto &node = model.nodes[nodeIdx];
-        
+    
+    // ≈сли это корневой узел, то провер€ем им€ узла (оно должно начинатьс€ с "Node")    
+    if (sceneNode.mIsRootNode)
+    {
+        auto& nodeNameParts = split(node.name, '_');
+        if (nodeNameParts.size() > 1 && nodeNameParts[0] == "Node")
+            // —охр€нем им€ корневого узла (или лучше сохраним список ид источников света, которые освещаютс€ данным узлом???)
+            sceneNode.mName = nodeNameParts[1];
+    }
+
     // Node itself
     if (!sceneNode.LoadFromGLTF(ctx, model, node, nodeIdx, logPrefix))
         return false;
@@ -1084,6 +1133,10 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
             XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
         // Set direction of the light
         XMStoreFloat4(&mLights[lightIdx].direction, XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
+
+        auto & lightNameParts = split(node.name, '_');
+        if (lightNameParts.size() > 1)
+            mLights[lightIdx].affectedNodes.assign(++lightNameParts.begin(), lightNameParts.end());
     }
 
     // Children
@@ -1186,7 +1239,7 @@ void Scene::RenderFrame(IRenderingContext &ctx)
 
     // Scene geometry
     for (auto &node : mRootNodes)
-        RenderNode(ctx, node, XMMatrixIdentity());
+        RenderRootNode(ctx, node);
 }
 
 
@@ -1194,9 +1247,6 @@ void Scene::SetupDefaultLights()
 {
     const float amb = 0.035f;
     mAmbientLight.luminance = SceneUtils::SrgbColorToFloat(amb, amb, amb, 0.5f);
-
-    // Limit light max count for testing purposes
-    mLights.resize(LIGHTS_MAX_COUNT); 
 }
 
 
@@ -1234,8 +1284,39 @@ void Scene::AddMatrixToRoots(const std::vector<double> &vec)
         rootNode.AddMatrix(vec);
 }
 
+void Scene::RenderRootNode(IRenderingContext& ctx, const SceneNode& node)
+{
+    assert(&ctx);
+
+    auto& deviceContext = ctx.GetDeviceContext();
+    assert(&deviceContext);    
+
+    // !!! ћожет здесь нужно добавить €вный признак того, что узел €вл€етс€ корневым мэшем, а не источников света?
+    if (node.mPrimitives.size() > 0 /*&& (node.mName == "A" || node.mName == "C" || node.mName == "B")*/)
+    {
+        const auto worldMtrx = node.GetWorldMtrx();
+
+        // Per-node constant buffer
+        CbSceneNode cbSceneNode;
+        cbSceneNode.WorldMtrx = XMMatrixTranspose(worldMtrx);
+        cbSceneNode.MeshColor = { 0.f, 1.f, 0.f, 1.f, };
+
+        // !!! ћожет вынести заполенение LightIds в CbRootSceneNode?
+        for (size_t i = 0; i < node.mLightIds.size(); ++i)
+            cbSceneNode.LightIds[i] = static_cast<int>(node.mLightIds[i]);
+        cbSceneNode.LightIds[node.mLightIds.size()] = -1; // watch dog
+
+        deviceContext.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
+
+        // Children
+        for (auto& child : node.mChildren)
+            RenderNode(ctx, cbSceneNode, child, worldMtrx);
+    }    
+}
+
 
 void Scene::RenderNode(IRenderingContext &ctx,
+                       CbSceneNode& cbSceneNode,
                        const SceneNode &node,
                        const XMMATRIX &parentWorldMtrx)
 {
@@ -1246,40 +1327,41 @@ void Scene::RenderNode(IRenderingContext &ctx,
 
     const auto worldMtrx = node.GetWorldMtrx() * parentWorldMtrx;
 
-    // Per-node constant buffer
-    CbSceneNode cbSceneNode;
-    cbSceneNode.WorldMtrx = XMMatrixTranspose(worldMtrx);
-    cbSceneNode.MeshColor = { 0.f, 1.f, 0.f, 1.f, };
-    deviceContext.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
+    if (node.mPrimitives.size() > 0) {
+        // Per-node constant buffer
+        cbSceneNode.WorldMtrx = XMMatrixTranspose(worldMtrx);
+        cbSceneNode.MeshColor = { 0.f, 1.f, 0.f, 1.f, };
+        deviceContext.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
 
-    // Draw current node
-    for (auto &primitive : node.mPrimitives)
-    {
-        auto &material = GetMaterial(primitive);
+        // Draw current node
+        for (auto &primitive : node.mPrimitives)
+        {
+            auto &material = GetMaterial(primitive);
 
-        deviceContext.PSSetShader(mPsPbrMetalness, nullptr, 0);
-        deviceContext.PSSetShaderResources(0, 1, &material.GetBaseColorTexture().srv);
-        deviceContext.PSSetShaderResources(1, 1, &material.GetMetallicRoughnessTexture().srv);
-        deviceContext.PSSetShaderResources(4, 1, &material.GetNormalTexture().srv);
-        deviceContext.PSSetShaderResources(5, 1, &material.GetOcclusionTexture().srv);
-        deviceContext.PSSetShaderResources(6, 1, &material.GetEmissionTexture().srv);
+            deviceContext.PSSetShader(mPsPbrMetalness, nullptr, 0);
+            deviceContext.PSSetShaderResources(0, 1, &material.GetBaseColorTexture().srv);
+            deviceContext.PSSetShaderResources(1, 1, &material.GetMetallicRoughnessTexture().srv);
+            deviceContext.PSSetShaderResources(4, 1, &material.GetNormalTexture().srv);
+            deviceContext.PSSetShaderResources(5, 1, &material.GetOcclusionTexture().srv);
+            deviceContext.PSSetShaderResources(6, 1, &material.GetEmissionTexture().srv);
 
-        CbScenePrimitive cbScenePrimitive;
-        cbScenePrimitive.BaseColorFactor = material.GetBaseColorFactor();
-        cbScenePrimitive.MetallicRoughnessFactor = material.GetMetallicRoughnessFactor();
-        cbScenePrimitive.DiffuseColorFactor = UNUSED_COLOR;
-        cbScenePrimitive.SpecularFactor = UNUSED_COLOR;
-        cbScenePrimitive.NormalTexScale = material.GetNormalTexture().GetScale();
-        cbScenePrimitive.OcclusionTexStrength = material.GetOcclusionTexture().GetStrength();
-        cbScenePrimitive.EmissionFactor = material.GetEmissionFactor();
-        deviceContext.UpdateSubresource(mCbScenePrimitive, 0, nullptr, &cbScenePrimitive, 0, 0);
+            CbScenePrimitive cbScenePrimitive;
+            cbScenePrimitive.BaseColorFactor = material.GetBaseColorFactor();
+            cbScenePrimitive.MetallicRoughnessFactor = material.GetMetallicRoughnessFactor();
+            cbScenePrimitive.DiffuseColorFactor = UNUSED_COLOR;
+            cbScenePrimitive.SpecularFactor = UNUSED_COLOR;
+            cbScenePrimitive.NormalTexScale = material.GetNormalTexture().GetScale();
+            cbScenePrimitive.OcclusionTexStrength = material.GetOcclusionTexture().GetStrength();
+            cbScenePrimitive.EmissionFactor = material.GetEmissionFactor();
+            deviceContext.UpdateSubresource(mCbScenePrimitive, 0, nullptr, &cbScenePrimitive, 0, 0);
 
-        primitive.DrawGeometry(ctx, mVertexLayout);
+            primitive.DrawGeometry(ctx, mVertexLayout);
+        }
     }
 
     // Children
     for (auto &child : node.mChildren)
-        RenderNode(ctx, child, worldMtrx);
+        RenderNode(ctx, cbSceneNode, child, worldMtrx);
 }
 
 bool Scene::GetAmbientColor(float(&rgba)[4])
