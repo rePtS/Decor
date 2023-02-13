@@ -1303,8 +1303,8 @@ void Scene::RenderRootNode(IRenderingContext& ctx, const SceneNode& node)
 
         // !!! Может вынести заполенение LightIds в CbRootSceneNode?
         for (size_t i = 0; i < node.mLightIds.size(); ++i)
-            cbSceneNode.LightIds[i] = static_cast<int>(node.mLightIds[i]);
-        cbSceneNode.LightIds[node.mLightIds.size()] = -1; // watch dog
+            cbSceneNode.LightIds[i] = node.mLightIds[i];
+        cbSceneNode.Control.x = node.mLightIds.size();
 
         deviceContext.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
 

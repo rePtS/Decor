@@ -300,7 +300,8 @@ struct CbSceneNode
 {
     XMMATRIX WorldMtrx;
     XMFLOAT4 MeshColor; // May be eventually replaced by the emmisive component of the standard surface shader
-    int      LightIds[NODE_LIGHTS_MAX_COUNT];
+    XMUINT4  Control;
+    size_t   LightIds[NODE_LIGHTS_MAX_COUNT];
 };
 
 

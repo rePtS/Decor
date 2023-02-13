@@ -44,7 +44,8 @@ cbuffer cbSceneNode : register(b2)
 {
     matrix WorldMtrx;
     float4 MeshColor;
-    int4 LightIds[16];
+    uint4  Control;
+    uint4  LightIds[16];
 };
 
 cbuffer cbScenePrimitive : register(b3)
@@ -350,10 +351,13 @@ float4 PbrM_SpotLightContrib(float3 surfPos,
     const float3 dirRaw = (float3)lightPosData - surfPos;
     const float  len = length(dirRaw);
     const float3 lightDir = dirRaw / len;
-    const float  distSqr = len * len;
 
-    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
     const float spotIntensity = DoSpotCone(lightDirData, lightDir);
+    if (spotIntensity == 0.0f)
+        return intensity * 0.0f;
+
+    const float distSqr = len * len;
+    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
 
     const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
@@ -404,16 +408,12 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
     float4 output = float4(0, 0, 0, 0);
 
     output += PbrM_AmbLightContrib(AmbientLightLuminance, shadingCtx, matInfo);
-
-    int i = 0;
-    int lightId = 0;
-    int lightIdsArr[64] = (int[64])LightIds;
-    while(i < NODE_LIGHTS_MAX_COUNT)
+    
+    uint lightId = 0;
+    uint lightIdsArr[NODE_LIGHTS_MAX_COUNT] = (uint[NODE_LIGHTS_MAX_COUNT])LightIds;
+    for (uint i = 0; i < Control.x; ++i)
     {
-        lightId = lightIdsArr[i];
-	//lightId = LightIds[i];
-	if (lightId < 0)
-	    break;	
+        lightId = lightIdsArr[i];	    
 
         float4 intencity = LightsData[lightId];
         // Direct
@@ -451,7 +451,6 @@ float4 PsPbrMetalness(PS_INPUT input) : SV_Target
                     shadingCtx,
                     matInfo);
         }
-	    i += 1;
     }
 
     output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
