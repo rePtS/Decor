@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d11.h>
 #include <cstdint>
+#include <bitset>
 
 // Used by a scene to access necessary renderer internals
 class IRenderingContext
@@ -56,4 +57,8 @@ public:
 
     virtual void PreLoadLevel() = 0;
     virtual void LoadLevel(const TCHAR* szLevelName) = 0;
+
+    virtual void SetDefaultRenderTarget() = 0;
+    virtual void SetCullingRenderTarget() = 0;
+    virtual std::bitset<256> GetCulledRoots() = 0;
 };

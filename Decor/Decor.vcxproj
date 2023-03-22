@@ -67,8 +67,8 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(OutDir)Decor.dll" "D:\Games\Deus Ex\System" /Y
-xcopy "$(OutDir)Decor.pdb" "D:\Games\Deus Ex\System" /Y</Command>
+      <Command>xcopy "$(OutDir)Decor.dll" "C:\Games\Deus Ex\System" /Y
+xcopy "$(OutDir)Decor.pdb" "C:\Games\Deus Ex\System" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">
@@ -86,8 +86,8 @@ xcopy "$(OutDir)Decor.pdb" "D:\Games\Deus Ex\System" /Y</Command>
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(OutDir)Decor.dll" "D:\Games\Deus Ex\System" /Y
-xcopy "$(OutDir)Decor.pdb" "D:\Games\Deus Ex\System" /Y</Command>
+      <Command>xcopy "$(OutDir)Decor.dll" "C:\Games\Deus Ex\System" /Y
+xcopy "$(OutDir)Decor.pdb" "C:\Games\Deus Ex\System" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

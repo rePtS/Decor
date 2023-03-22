@@ -319,6 +319,8 @@ public:
     virtual void RenderFrame(IRenderingContext &ctx);
     virtual bool GetAmbientColor(float(&rgba)[4]);
 
+    virtual void CullFrame(IRenderingContext& ctx);
+
     void SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode);
 
 private:
@@ -368,6 +370,8 @@ private:
                     const XMMATRIX &parentWorldMtrx);
 
     void RenderRootNode(IRenderingContext& ctx, const SceneNode& node);
+    
+    void CullRootNode(IRenderingContext& ctx, size_t rootNodeIndex); //const SceneNode& node);
 
 private:
 
@@ -398,6 +402,9 @@ private:
     ID3D11PixelShader*          mPsPbrMetalness = nullptr;
     ID3D11PixelShader*          mPsConstEmmisive = nullptr;
     ID3D11InputLayout*          mVertexLayout = nullptr;
+
+    ID3D11VertexShader*         mVsCulling = nullptr;
+    ID3D11PixelShader*          mPsCulling = nullptr;
 
     ID3D11Buffer*               mCbScene = nullptr;
     ID3D11Buffer*               mCbFrame = nullptr;

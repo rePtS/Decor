@@ -696,7 +696,7 @@ bool Scene::Init(IRenderingContext &ctx)
     // Vertex shader
     ID3DBlob* pVsBlob = nullptr;
     if (!ctx.CreateVertexShader(L"Decor/Scene.hlsl", "VS", "vs_4_0", pVsBlob, mVertexShader))
-        return false;       
+        return false;
 
     // Input layout
     hr = device.CreateInputLayout(sVertexLayoutDesc.data(),
@@ -706,13 +706,22 @@ bool Scene::Init(IRenderingContext &ctx)
                                    &mVertexLayout);
     pVsBlob->Release();
     if (FAILED(hr))
-        return false;
+        return false;    
+
+    // Culling vertex shader
+    if (!ctx.CreateVertexShader(L"Decor/Culling.hlsl", "VSMain", "vs_4_0", pVsBlob, mVsCulling))
+        return false;    
 
     // Pixel shaders
     if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
         return false;
     if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
         return false;
+    
+    // Culling pixel shader
+    if (!ctx.CreatePixelShader(L"Decor/Culling.hlsl", "PSMain", "ps_4_0", mPsCulling))
+        return false;
+
 
     // Create constant buffers
     D3D11_BUFFER_DESC bd;
@@ -1179,6 +1188,9 @@ const SceneMaterial& Scene::GetMaterial(const ScenePrimitive &primitive) const
 
 void Scene::Destroy()
 {
+    Utils::ReleaseAndMakeNull(mVsCulling);
+    Utils::ReleaseAndMakeNull(mPsCulling);
+
     Utils::ReleaseAndMakeNull(mVertexShader);
 
     Utils::ReleaseAndMakeNull(mPsPbrMetalness);
@@ -1236,10 +1248,80 @@ void Scene::RenderFrame(IRenderingContext &ctx)
     deviceContext.PSSetConstantBuffers(2, 1, &mCbSceneNode);
     deviceContext.PSSetConstantBuffers(3, 1, &mCbScenePrimitive);
     deviceContext.PSSetSamplers(0, 1, &mSamplerLinear);
+    
+    // Смотрим, какие корневые узлы видны в текущем кадре
+    auto culledNodes = ctx.GetCulledRoots();
+    for (size_t i = 0; i < mRootNodes.size(); ++i)
+    {        
+        if (culledNodes[i])
+        {
+            // и рисуем только их
+            auto& node = mRootNodes[i];
+            RenderRootNode(ctx, node);
+        }
+    }
+
+    //// Scene geometry
+    //for (auto &node : mRootNodes)
+    //    RenderRootNode(ctx, node);
+}
+
+
+void Scene::CullFrame(IRenderingContext& ctx)
+{
+    assert(&ctx);
+    auto& deviceContext = ctx.GetDeviceContext();
+
+    // Нужно переключить RenderTraget для отсечения
+    ctx.SetCullingRenderTarget();
+
+    // Setup vertex shader
+    deviceContext.VSSetShader(mVsCulling, nullptr, 0);
+    deviceContext.VSSetConstantBuffers(0, 1, &mCbFrame);
+    deviceContext.VSSetConstantBuffers(1, 1, &mCbSceneNode);
+
+    // Setup pixel shader data
+    deviceContext.PSSetShader(mPsCulling, nullptr, 0);
+    deviceContext.PSSetConstantBuffers(0, 1, &mCbFrame);
+    deviceContext.PSSetConstantBuffers(1, 1, &mCbSceneNode);
 
     // Scene geometry
-    for (auto &node : mRootNodes)
-        RenderRootNode(ctx, node);
+    for (size_t i = 0; i < mRootNodes.size(); ++i)
+        CullRootNode(ctx, i);    
+
+    // Нужно переключить RenderTraget для отрисовки
+    ctx.SetDefaultRenderTarget();
+}
+
+
+void Scene::CullRootNode(IRenderingContext& ctx, size_t rootNodeIndex) // const SceneNode& node)
+{
+    assert(&ctx);
+
+    auto& deviceContext = ctx.GetDeviceContext();
+    assert(&deviceContext);
+
+    auto& node = mRootNodes[rootNodeIndex];
+
+    // !!! Может здесь нужно добавить явный признак того, что узел является корневым мэшем, а не источников света?
+    if (node.mPrimitives.size() > 0)
+    {
+        const auto worldMtrx = node.GetWorldMtrx();
+
+        // Per-node constant buffer
+        CbSceneNode cbSceneNode;
+        cbSceneNode.WorldMtrx = XMMatrixTranspose(worldMtrx);
+        ////cbSceneNode.MeshColor = { 0.f, 1.f, 0.f, 1.f, };
+        cbSceneNode.Control.x = rootNodeIndex;
+
+        deviceContext.UpdateSubresource(mCbSceneNode, 0, nullptr, &cbSceneNode, 0, 0);
+
+        // ...
+        for (auto& primitive : node.mPrimitives)
+        {
+            primitive.DrawGeometry(ctx, mVertexLayout);
+        }
+    }
 }
 
 
@@ -2812,6 +2894,7 @@ void Scene::SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
     mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
     mProjectionMtrx.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
+    // !!! Может это лучше делать в RenderFrame?
     // Frame constant buffer can be updated now
     CbFrame cbFrame;
     cbFrame.ViewMtrx = XMMatrixTranspose(mViewMtrx);

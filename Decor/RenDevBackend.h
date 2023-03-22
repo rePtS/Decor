@@ -11,6 +11,7 @@ using Microsoft::WRL::ComPtr;
 class RenDevBackend : public IRenderingContext
 {
 public:
+    
     explicit RenDevBackend();
     RenDevBackend(const RenDevBackend&) = delete;
     RenDevBackend& operator=(const RenDevBackend&) = delete;
@@ -50,6 +51,10 @@ public:
 
     void ClearDepth();
 
+    void SetDefaultRenderTarget();
+    void SetCullingRenderTarget();
+    std::bitset<256> GetCulledRoots();
+
 protected:
     void CreateRenderTargetViews();
 
@@ -71,6 +76,12 @@ protected:
 
     DXGI_SWAP_CHAIN_DESC m_SwapChainDesc;
 
+    ComPtr<ID3D11Texture2D> m_pCullingTexture;
+    ComPtr<ID3D11Texture2D> m_pStageCullingTexture;
+    ComPtr<ID3D11RenderTargetView> m_pCullingRTV;
+    ComPtr<ID3D11DepthStencilView> m_pCullingDepthStencilView;
+    size_t m_CullingBufferSize;
+
     RenderState m_State;
-    Scene *m_Scene = nullptr;
+    Scene *m_Scene = nullptr;    
 };

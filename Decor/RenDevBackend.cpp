@@ -176,6 +176,10 @@ void RenDevBackend::SetRes(const unsigned int iX, const unsigned int iY)
 
     m_pBackBufferRTV = nullptr;
     m_pDepthStencilView = nullptr;
+    m_pCullingRTV = nullptr;
+    m_pCullingTexture = nullptr;
+    m_pStageCullingTexture = nullptr;
+    m_pCullingDepthStencilView = nullptr;
     
     Decor::ThrowIfFailed(
         m_pSwapChain->ResizeBuffers(
@@ -194,7 +198,56 @@ void RenDevBackend::SetRes(const unsigned int iX, const unsigned int iY)
 void RenDevBackend::CreateRenderTargetViews()
 {
     assert(m_pSwapChain);
-    assert(m_pDevice);
+    assert(m_pDevice);    
+
+    // Culling texture
+    D3D11_TEXTURE2D_DESC cullingTextureDesc;
+    ZeroMemory(&cullingTextureDesc, sizeof(cullingTextureDesc));
+    cullingTextureDesc.Width = m_SwapChainDesc.BufferDesc.Width; //64; //m_SwapChainDesc.BufferDesc.Width / 16;
+    cullingTextureDesc.Height = m_SwapChainDesc.BufferDesc.Height; //36; //m_SwapChainDesc.BufferDesc.Height / 16;
+    cullingTextureDesc.MipLevels = 1;
+    cullingTextureDesc.ArraySize = 1;
+    cullingTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R32_UINT;
+    cullingTextureDesc.SampleDesc.Count = 1;
+    cullingTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    cullingTextureDesc.CPUAccessFlags = 0;
+    cullingTextureDesc.MiscFlags = 0;
+
+    m_CullingBufferSize = cullingTextureDesc.Width * cullingTextureDesc.Height;
+
+    // Culling staging texture
+    cullingTextureDesc.BindFlags = 0;
+    cullingTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_STAGING;
+    cullingTextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+    Decor::ThrowIfFailed(
+        m_pDevice->CreateTexture2D(&cullingTextureDesc, nullptr, m_pStageCullingTexture.GetAddressOf()),
+        "Failed to create stage culling texture."
+    );
+    Decor::SetResourceName(m_pStageCullingTexture, "StageCullingTexture");    
+
+    // Culling buffer texture
+    cullingTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_RENDER_TARGET; //| D3D11_BIND_SHADER_RESOURCE;
+    cullingTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    cullingTextureDesc.CPUAccessFlags = 0;
+    
+    Decor::ThrowIfFailed(
+        m_pDevice->CreateTexture2D(&cullingTextureDesc, nullptr, m_pCullingTexture.GetAddressOf()),
+        "Failed to create culling buffer texture."
+    );
+    Decor::SetResourceName(m_pCullingTexture, "CullingTexture");
+
+    // Culling Render Target    
+    D3D11_RENDER_TARGET_VIEW_DESC cullingRenderTargetViewDesc;
+    cullingRenderTargetViewDesc.Format = cullingTextureDesc.Format;
+    cullingRenderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    cullingRenderTargetViewDesc.Texture2D.MipSlice = 0;
+
+    Decor::ThrowIfFailed(
+        m_pDevice->CreateRenderTargetView(m_pCullingTexture.Get(), &cullingRenderTargetViewDesc, &m_pCullingRTV),
+        "Failed to create RTV for back buffer texture."
+    );
+    Decor::SetResourceName(m_pCullingRTV, "CullingRTV");
 
     //Backbuffer
     ComPtr<ID3D11Texture2D> pBackBufferTex;
@@ -210,23 +263,50 @@ void RenDevBackend::CreateRenderTargetViews()
     );
     Decor::SetResourceName(m_pBackBufferRTV, "BackBufferRTV");
 
+    // Culling Depth stencil
+    D3D11_TEXTURE2D_DESC cullingDepthTextureDesc;
+    cullingDepthTextureDesc.Width = cullingTextureDesc.Width;
+    cullingDepthTextureDesc.Height = cullingTextureDesc.Height;
+    cullingDepthTextureDesc.MipLevels = 1;
+    cullingDepthTextureDesc.ArraySize = 1;
+    cullingDepthTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+    cullingDepthTextureDesc.SampleDesc.Count = 1;
+    cullingDepthTextureDesc.SampleDesc.Quality = 0;
+    cullingDepthTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    cullingDepthTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
+    cullingDepthTextureDesc.CPUAccessFlags = 0;
+    cullingDepthTextureDesc.MiscFlags = 0;
+
+    ComPtr<ID3D11Texture2D> pCullingDepthTexture;
+    Decor::ThrowIfFailed(
+        m_pDevice->CreateTexture2D(&cullingDepthTextureDesc, nullptr, pCullingDepthTexture.GetAddressOf()),
+        "Failed to create culling depth-stencil texture."
+    );
+    Decor::SetResourceName(pCullingDepthTexture, "CullingDepthStencil");
+
+    Decor::ThrowIfFailed(
+        m_pDevice->CreateDepthStencilView(pCullingDepthTexture.Get(), nullptr, m_pCullingDepthStencilView.GetAddressOf()),
+        "Failed to create culling depth-stencil view."
+    );
+    Decor::SetResourceName(m_pCullingDepthStencilView, "CullingDepthStencilView");
+
     //Depth stencil
-    D3D11_TEXTURE2D_DESC DepthTextureDesc;
-    DepthTextureDesc.Width = m_SwapChainDesc.BufferDesc.Width;
-    DepthTextureDesc.Height = m_SwapChainDesc.BufferDesc.Height;
-    DepthTextureDesc.MipLevels = 1;
-    DepthTextureDesc.ArraySize = 1;
-    DepthTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
-    DepthTextureDesc.SampleDesc.Count = 1;
-    DepthTextureDesc.SampleDesc.Quality = 0;
-    DepthTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
-    DepthTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
-    DepthTextureDesc.CPUAccessFlags = 0;
-    DepthTextureDesc.MiscFlags = 0;
+    D3D11_TEXTURE2D_DESC depthTextureDesc;
+    depthTextureDesc.Width = m_SwapChainDesc.BufferDesc.Width;
+    depthTextureDesc.Height = m_SwapChainDesc.BufferDesc.Height;
+    depthTextureDesc.MipLevels = 1;
+    depthTextureDesc.ArraySize = 1;
+    depthTextureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+    depthTextureDesc.SampleDesc.Count = 1;
+    depthTextureDesc.SampleDesc.Quality = 0;
+    depthTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+    depthTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_DEPTH_STENCIL;
+    depthTextureDesc.CPUAccessFlags = 0;
+    depthTextureDesc.MiscFlags = 0;
 
     ComPtr<ID3D11Texture2D> pDepthTexture;
     Decor::ThrowIfFailed(
-        m_pDevice->CreateTexture2D(&DepthTextureDesc, nullptr, pDepthTexture.GetAddressOf()),
+        m_pDevice->CreateTexture2D(&depthTextureDesc, nullptr, pDepthTexture.GetAddressOf()),
         "Failed to create depth-stencil texture."
     );
     Decor::SetResourceName(pDepthTexture, "DepthStencil");
@@ -237,19 +317,28 @@ void RenDevBackend::CreateRenderTargetViews()
     );
     Decor::SetResourceName(m_pDepthStencilView, "DepthStencilView");
 
-    //Set
-    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthStencilView.Get());
+    SetDefaultRenderTarget();
 }
 
 void RenDevBackend::NewFrame()
 {
     assert(m_pDeviceContext);
     assert(m_pBackBufferRTV);
+    assert(m_pCullingRTV);
     assert(m_pDepthStencilView);
+    assert(m_pCullingDepthStencilView);
+
+    // "Цвет", которым очищается culling-буфер 
+    // По идее имеет значение только компонента R. И в нее нужно записать такое значение,
+    // которое будет интерпретироваться, как отсутствие объекта. Значение 0 не совсем подходит,
+    // так как под этим индексом в буфер может быть записан какой-нибудь объект.
+    // !!! Похоже, что придется индексы узлов передавать в шейдер со смещением, чтобы не спутать нулевой объект с отсутсвием объекта
+    const float CullingClearColor[] = { 0, 0, 0, 0 };
+    m_pDeviceContext->ClearRenderTargetView(m_pCullingRTV.Get(), CullingClearColor);
+    m_pDeviceContext->ClearDepthStencilView(m_pCullingDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
 
     const float ClearColor[] = {0.0f, 0.5f, 0.0f, 0.0f};
-
-    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);
+    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);    
     m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
 }
 
@@ -258,6 +347,7 @@ void RenDevBackend::DrawScene()
     if (m_Scene)
     {
         m_Scene->AnimateFrame(*this);
+        m_Scene->CullFrame(*this); // пока отключим
         m_Scene->RenderFrame(*this);
     }
 }
@@ -449,6 +539,46 @@ void RenDevBackend::LoadLevel(const TCHAR* szLevelName)
 }
 
 void RenDevBackend::ClearDepth()
-{
+{    
     m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+}
+
+void RenDevBackend::SetDefaultRenderTarget()
+{
+    // Меняем RenderTarget на дефолтный (для ренедра графики, собственно)
+    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthStencilView.Get());
+}
+
+void RenDevBackend::SetCullingRenderTarget()
+{
+    m_pDeviceContext->OMSetRenderTargets(1, m_pCullingRTV.GetAddressOf(), m_pCullingDepthStencilView.Get());
+    m_pDeviceContext->ClearDepthStencilView(m_pCullingDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH, 0.0f, 0);
+}
+
+std::bitset<256> RenDevBackend::GetCulledRoots()
+{
+    // Выделяем чтение ресурса в отдельный метод
+    // Метод будет возвращать bitset
+    std::bitset<256> usedNodes;
+
+    // Считаем, что до вызова этого метода конекст был уже переключен на отсечение графики,
+    // и теперь нужно получить результаты этого отсечения (по идее это лучше вынести в отдельный метод!!!)
+    D3D11_MAPPED_SUBRESOURCE mappedImgData;
+    ZeroMemory(&mappedImgData, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+    m_pDeviceContext->CopyResource(m_pStageCullingTexture.Get(), m_pCullingTexture.Get());
+    m_pDeviceContext->Map(m_pStageCullingTexture.Get(), 0, D3D11_MAP_READ, 0, &mappedImgData);
+
+    uint32_t* textureData = (uint32_t*)mappedImgData.pData;
+    uint32_t nodeIndex = 0;
+    
+    for (size_t i = 0; i < m_CullingBufferSize; i += 1000)
+    {
+        nodeIndex = textureData[i];
+        usedNodes[nodeIndex] = true;
+    }
+
+    //m_pDeviceContext->Unmap(m_pStageCullingTexture.Get(), 0);
+
+    return usedNodes;
 }
