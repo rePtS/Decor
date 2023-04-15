@@ -44,20 +44,6 @@ public:
         return true;
     };
 
-    /// <summary>
-    /// Render states used by render backend
-    /// </summary>
-    enum RenderState
-    {
-        RENDER_DEFAULT = 0,        
-        PRE_LOAD_LEVEL = 10,
-        LOAD_LEVEL = 20,
-        RENDER_LEVEL = 30
-    };
-
-    virtual void PreLoadLevel() = 0;
-    virtual void LoadLevel(const TCHAR* szLevelName) = 0;
-
     virtual void SetDefaultRenderTarget() = 0;
     virtual void SetCullingRenderTarget() = 0;
     virtual std::bitset<256> GetCulledRoots() = 0;

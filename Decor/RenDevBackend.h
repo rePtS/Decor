@@ -43,9 +43,6 @@ public:
 
     void DrawScene();
 
-    void AttachHook(UViewport* pViewport);
-
-    void PreLoadLevel();
     void LoadLevel(const TCHAR* szLevelName);
     bool IsSceneRenderingEnabled() { return m_Scene != nullptr; };
 
@@ -54,6 +51,11 @@ public:
     void SetDefaultRenderTarget();
     void SetCullingRenderTarget();
     std::bitset<256> GetCulledRoots();
+
+    /// <summary>
+    /// Checks if we need to load a scene
+    /// </summary>
+    void EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName);
 
 protected:
     void CreateRenderTargetViews();
@@ -82,6 +84,6 @@ protected:
     ComPtr<ID3D11DepthStencilView> m_pCullingDepthStencilView;
     size_t m_CullingBufferSize;
 
-    RenderState m_State;
+    int m_CurrentSceneIndex;
     Scene *m_Scene = nullptr;    
 };

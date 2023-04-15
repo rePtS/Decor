@@ -1,77 +1,12 @@
 #include "RendevBackend.h"
 #include "Helpers.h"
-#include "vmthook.h"
 #include <D3DCompiler.inl>
 #include <cassert>
 #include <winuser.h>
-
-namespace DecorHook
-{
-    static const std::size_t PE_INDEX = 34;
-
-    typedef void(__stdcall* ProcessEvent) (UFunction*, void*, void*); //typedef for the processevent function pointer
-
-    VMTHook* hook = nullptr; //Pointer to the VMTHook class
-    ProcessEvent pProcessEvent = nullptr; //pointer to original processevent
-    UFunction* pUFunc = nullptr; //pointers to processevent arguements
-    void* pParms = nullptr;
-    void* pResult = nullptr;
-    UObject* pCallObject = nullptr;
-
-    void __declspec(naked) ProcessEventHooked()
-    {
-        __asm mov pCallObject, ecx; //get caller from ecx register and save it in pCallObject
-
-        __asm
-        {
-            push eax
-            mov eax, dword ptr[esp + 0x8]
-            mov pUFunc, eax
-            mov eax, dword ptr[esp + 0xC]
-            mov pParms, eax
-            mov eax, dword ptr[esp + 0x10]
-            mov pResult, eax
-            pop eax
-        } // Manually get the proper parameters for the function
-
-        __asm pushad //Save registers on stack                  
-        
-        //Do stuff here!
-        //MessageBox(NULL, L"!", L"Test", MB_OK | MB_ICONQUESTION); 
-
-        __asm popad //restore registers from stack
-        __asm
-        {
-            push pResult
-            push pParms
-            push pUFunc
-            call pProcessEvent
-
-            retn 0xC
-        } //put parameters on stack and call the orginal function
-    }
-
-    void Attach(UViewport* const pViewport)
-    {
-        assert(hook == nullptr);
-        hook = new VMTHook(pViewport); //hook object
-        pProcessEvent = hook->GetOriginalFunction<ProcessEvent>(PE_INDEX); //save the orginal funtion in global variable
-        hook->HookFunction(&ProcessEventHooked, PE_INDEX); //replace the orginal function with the hooked function
-    }
-
-    void Deattach()
-    {
-        if (hook)
-        {
-            delete hook;
-            hook = nullptr;
-        }
-    }
-}
+#include <thread>
 
 RenDevBackend::RenDevBackend()
 {
-
 }
 
 RenDevBackend::~RenDevBackend()
@@ -81,8 +16,6 @@ RenDevBackend::~RenDevBackend()
         delete m_Scene;
         m_Scene = nullptr;
     }
-
-    DecorHook::Deattach();
 }
 
 bool RenDevBackend::Init(const HWND hWnd)
@@ -161,8 +94,6 @@ bool RenDevBackend::Init(const HWND hWnd)
     );
 
     LOGMESSAGEF(L"Adapter: %s.", AdapterDesc.Description);
-
-    m_State = RenderState::RENDER_DEFAULT;
 
     return true;
 }
@@ -490,51 +421,45 @@ bool RenDevBackend::GetWindowSize(uint32_t& width,
     return true;
 }
 
-void RenDevBackend::AttachHook(UViewport* const pViewport)
-{
-    DecorHook::Attach(pViewport);
-}
-
-void RenDevBackend::PreLoadLevel()
-{
-    m_State = RenderState::PRE_LOAD_LEVEL;
-}
-
 void RenDevBackend::LoadLevel(const TCHAR* szLevelName)
-{
-    if (m_State == RenderState::PRE_LOAD_LEVEL)
+{    
+    // Выгрузка текущего уровня
+    if (m_Scene)
     {
-        m_State = RenderState::LOAD_LEVEL;
-
-        //MessageBox(NULL, szLevelName, L"Test", MB_OK | MB_ICONQUESTION);
-
-        // Выгрузка текущего уровня
-        if (m_Scene)
-        {
-            delete m_Scene;
-            m_Scene = nullptr;
-        };
+        delete m_Scene;
+        m_Scene = nullptr;
+    };
         
-        // Получаем относительное имя gltf-файла с геометрией уровня
-        wchar_t levelFileName[256];
-        wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
+    // Получаем относительное имя gltf-файла с геометрией уровня
+    wchar_t levelFileName[256];
+    wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
         
-        // Проверяем, есть ли файл на диске
-        std::ifstream levelFile(levelFileName);
-        if (levelFile.good())
-        {
-            // Load new scene
-            m_Scene = new Scene(levelFileName);
-            m_Scene->Init(*this);
+    // Проверяем, есть ли файл на диске
+    std::ifstream levelFile(levelFileName);
+    if (levelFile.good())
+    {
+        // Load new scene
+        auto scene = new Scene(levelFileName);
+        scene->Init(*this);
 
-            // Все загружено, можно продолжать
-            m_State = RenderState::RENDER_LEVEL;
-        }
-        else
-        {
-            // Уровень загрузить не удалось, используем обычный рендеринг
-            m_State = RenderState::RENDER_DEFAULT;
-        }
+        // Все загружено, можно продолжать
+        m_Scene = scene;
+    }
+    else
+    {
+        // Уровень загрузить не удалось, используем обычный рендеринг            
+    }
+}
+
+void RenDevBackend::EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName)
+{
+    if (m_CurrentSceneIndex != sceneIndex)
+    {
+        std::thread loadLevelThread(&RenDevBackend::LoadLevel, this, sceneName);
+        //loadLevelThread.detach();
+        loadLevelThread.join();
+
+        m_CurrentSceneIndex = sceneIndex;
     }
 }
 

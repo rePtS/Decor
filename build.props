@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>../3rdparty/Unreal/DeusEx/inc;../3rdparty/Unreal/Extension/inc;../3rdparty/Unreal/Engine/inc;../3rdparty/Unreal/Core/inc;%(AdditionalIncludeDirectories);../3rdparty/tinygltf;../3rdparty/VMTHook</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../3rdparty/Unreal/DeusEx/inc;../3rdparty/Unreal/Engine/inc;../3rdparty/Unreal/Core/inc;%(AdditionalIncludeDirectories);../3rdparty/tinygltf;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PROJECTNAME=L"DECOR";_REALLY_WANT_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
@@ -22,7 +22,7 @@
       <CompileAsWinRT>false</CompileAsWinRT>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>../3rdparty/Unreal/DeusEx/lib/DeusEx.lib;../3rdparty/Unreal/Extension/lib/extension.lib;../3rdparty/Unreal/Engine/lib/engine.lib;../3rdparty/Unreal/Core/lib/core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../3rdparty/Unreal/DeusEx/lib/DeusEx.lib;../3rdparty/Unreal/Engine/lib/engine.lib;../3rdparty/Unreal/Core/lib/core.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>      
       <Command>

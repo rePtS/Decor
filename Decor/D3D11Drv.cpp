@@ -56,11 +56,6 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
         m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
         m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
-
-        //m_Backend.AttachHook(pInViewport);
-
-        //Initialize native hooks
-        m_pNativeHooks = std::make_unique<NativeHooks>(&m_Backend);
     }
     catch (const Decor::ComException& ex)
     {
@@ -113,8 +108,12 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     assert(pFrame);
     m_Backend.SetViewport(*pFrame);
     m_pGlobalShaderConstants->SetSceneNode(*pFrame);
-}
 
+    auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
+    auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
+
+    m_Backend.EnsureCurrentScene(levelIndex, levelPathName);
+}
 
 void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashFog*/, const FPlane /*ScreenClear*/, const DWORD /*RenderLockFlags*/, BYTE* const /*pHitData*/, INT* const /*pHitSize*/)
 {
