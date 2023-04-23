@@ -3,7 +3,6 @@
 #include <D3DCompiler.inl>
 #include <cassert>
 #include <winuser.h>
-#include <thread>
 
 RenDevBackend::RenDevBackend()
 {
@@ -455,10 +454,7 @@ void RenDevBackend::EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName)
 {
     if (m_CurrentSceneIndex != sceneIndex)
     {
-        std::thread loadLevelThread(&RenDevBackend::LoadLevel, this, sceneName);
-        //loadLevelThread.detach();
-        loadLevelThread.join();
-
+        LoadLevel(sceneName);
         m_CurrentSceneIndex = sceneIndex;
     }
 }

@@ -1,5 +1,6 @@
 #include "D3D11Drv.h"
 #include "Helpers.h"
+#include <DeusEx.h>
 #include <tchar.h>
 
 #pragma warning(push, 1)
@@ -113,6 +114,64 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
 
     m_Backend.EnsureCurrentScene(levelIndex, levelPathName);
+
+    // TO-DO:
+    // В RenDevBackend (или Scene) добавить указатель на AAugmentation-фонарик, лампы и триггерные источники света
+    // Или лучше завести еще один класс, который будет хранить динамические источники света (например, SceneDynamicLights).
+    // Класс будет иметь интерфейсный метод, который будет выдавать уже готовые данные для шейдеров
+    // Момент: некоторые источники света полностью динамичны (могут менять свое положение со временем, например - фонарик и файеры),
+    // но некоторые статичны и их положение заранее известно (например, лампы).
+    // Используем такой же формат для динамических источников света, что и для статических. Но это будет отдельный буфер,
+    // и он будет обновляться в шейдерах каждый кадр, а не задаваться один раз для всей сцены.
+    // Если у динамического источника света есть список узлов, которые он освещает, то используем эту информацию для фильтрации
+    // буфера динамических источников при отправке в шейдер
+
+    //// Код для поиска различных источников света на уровне:
+    //FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
+    //FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
+    //FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
+
+    //for (size_t i = 0; i < pFrame->Level->Actors.Num(); ++i)
+    //{
+    //    auto& actor = pFrame->Level->Actors(i);
+    //    if (actor != nullptr)
+    //    {
+    //        // Проверка, что текущий актор является лампой
+    //        if (actor->GetClass()->GetFName() == classNameLamp3)
+    //        {
+    //            // Проверка что лампа включена/выключена
+    //            bool isLampOff = actor->LightType == ELightType::LT_None;
+    //        }
+
+    //        // Проверка, что текущий актор является включаемым источником света
+    //        if (actor->GetClass()->GetFName() == classNameTriggerLight)
+    //        {
+    //            // триггерные источники света могут иметь изменяющуюся яркость
+    //            auto triggerLightBrightness = actor->LightBrightness;
+    //            // если яркость равна 0, то можно считать что свет полностью выключен
+    //            bool isTriggerLampOff = triggerLightBrightness == 0;
+    //        }
+
+    //        // Проверка, что текущий актор является аугментацией-фонариком
+    //        if (actor->GetClass()->GetFName() == classNameAugLight)
+    //        {
+    //            // преобразуем актор к типу аугментации
+    //            auto augLight = (AAugmentation*)actor;
+    //            // Проверяем, что аугментация активирована/деактивирована
+    //            bool isActive = augLight->bIsActive;
+    //        }
+
+    //        //const auto pathName = actor->GetPathName();
+
+    //        ////if (wcsstr(pathName, L"Lamp") != NULL)
+    //        ////if (wcsstr(pathName, L"TriggerLight") != NULL)
+    //        //if (wcsstr(pathName, L"AugLight") != NULL)            
+    //        //{
+    //        //    auto name = actor->GetClass()->GetPathName();
+    //        //    auto cn = actor->GetClass()->GetFName();
+    //        //}
+    //    }
+    //}
 }
 
 void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashFog*/, const FPlane /*ScreenClear*/, const DWORD /*RenderLockFlags*/, BYTE* const /*pHitData*/, INT* const /*pHitSize*/)
