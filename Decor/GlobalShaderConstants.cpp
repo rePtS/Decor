@@ -13,6 +13,23 @@ void GlobalShaderConstants::SetSceneNode(const FSceneNode& SceneNode)
     assert(SceneNode.Viewport->Actor);
     assert(reinterpret_cast<uintptr_t>(&m_CBufPerFrame.m_Data.ProjectionMatrix) % 16 == 0);
 
+    // >>>>>
+    const auto& c = SceneNode.Coords;
+    auto viewMatrix = DirectX::XMMatrixSet(
+        c.XAxis.X, c.YAxis.X, c.ZAxis.X, c.Origin.X,
+        c.XAxis.Y, c.YAxis.Y, c.ZAxis.Y, c.Origin.Y,
+        c.XAxis.Z, c.YAxis.Z, c.ZAxis.Z, c.Origin.Z,
+        0.0f,      0.0f,      0.0f,      1.0f
+    );   
+    
+    // тестовый direct light source
+    const auto& lightDir = DirectX::XMVectorSet(0.7f, 0.5f, -0.9f, 0.0f);
+    
+    m_CBufPerFrame.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
+    m_CBufPerFrame.m_Data.LightDir = DirectX::XMVector4Transform(lightDir, viewMatrix);
+    m_CBufPerFrame.MarkAsDirty();
+    // <<<<<
+
     //TODO: we don't need any of the SceneNode precalculated values, so remove calculation from render.dll
     if (SceneNode.Viewport->Actor->FovAngle == m_fFov && SceneNode.X == m_iViewPortX && SceneNode.Y == m_iViewPortY)
     {

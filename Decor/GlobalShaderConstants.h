@@ -39,6 +39,8 @@ protected:
         float fRes[2];
         float padding[2];
         DirectX::XMMATRIX ProjectionMatrix;
+        DirectX::XMMATRIX ViewMatrix;
+        DirectX::XMVECTOR LightDir;
     };
     ConstantBuffer<PerFrame> m_CBufPerFrame;
 

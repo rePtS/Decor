@@ -41,6 +41,7 @@ protected:
     ComPtr<ID3D11InputLayout> m_pInputLayout;
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
+    ComPtr<ID3D11GeometryShader> m_pGeometryShader;
 
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;

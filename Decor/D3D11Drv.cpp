@@ -1,6 +1,5 @@
 #include "D3D11Drv.h"
 #include "Helpers.h"
-#include <DeusEx.h>
 #include <tchar.h>
 
 #pragma warning(push, 1)
@@ -104,6 +103,61 @@ void UD3D11RenderDevice::Flush(const UBOOL /*bAllowPrecache*/)
 
 }
 
+void UD3D11RenderDevice::EnsureCurrentLevel(FSceneNode* const pFrame)
+{
+    auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
+
+    if (m_CurrentLevelIndex != levelIndex)
+    {
+        // Сцена поменялась, выгружаем данные по старой сцене:
+        m_AugLight = nullptr;
+        m_Lamps.clear();
+        m_TriggerLights.clear();
+        m_PointLights.clear();
+        m_SpotLights.clear();
+
+        // Загружаем данные по новой сцене:
+        FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
+        FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
+        FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
+        FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
+        FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
+        FName classNameLight(L"Light", EFindName::FNAME_Find);
+        FName classNameSpotlight(L"Spotlight", EFindName::FNAME_Find);
+
+        for (size_t i = 0; i < pFrame->Level->Actors.Num(); ++i)
+        {
+            auto actor = pFrame->Level->Actors(i);
+            if (actor != nullptr)
+            {
+                auto& actorFName = actor->GetClass()->GetFName();
+
+                // Проверка, что текущий актор является лампой
+                if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3)
+                    m_Lamps.push_back(actor);
+
+                // Проверка, что текущий актор является триггерным источником света
+                else if (actorFName == classNameTriggerLight)
+                    m_TriggerLights.push_back(actor);
+
+                // Проверка, что текущий актор является аугментацией-фонариком
+                else if (actorFName == classNameAugLight)
+                    m_AugLight = (AAugmentation*)actor;
+
+                // Проверка, что текущий актор является точечным источником света
+                else if (actorFName == classNameLight)
+                    m_PointLights.push_back(actor);
+
+                // Проверка, что текущий актор является направленным источником света
+                else if (actorFName == classNameSpotlight)
+                    m_SpotLights.push_back(actor);
+            }
+        }
+
+        m_CurrentLevelIndex = levelIndex;
+    }
+}
+
 void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 {
     assert(pFrame);
@@ -112,6 +166,12 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 
     auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
+
+    // Убираем из бэкенда методы для проверки и загрузки сцены.
+    // Все будет делаться в D3D11Drv,
+    // в том числе здесь будет храниться список источников света,
+    // который будет передаваться в рендеры
+
 
     m_Backend.EnsureCurrentScene(levelIndex, levelPathName);
 
@@ -161,15 +221,17 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     //            bool isActive = augLight->bIsActive;
     //        }
 
-    //        //const auto pathName = actor->GetPathName();
+    //        const auto pathName = actor->GetPathName();
 
-    //        ////if (wcsstr(pathName, L"Lamp") != NULL)
-    //        ////if (wcsstr(pathName, L"TriggerLight") != NULL)
-    //        //if (wcsstr(pathName, L"AugLight") != NULL)            
-    //        //{
-    //        //    auto name = actor->GetClass()->GetPathName();
-    //        //    auto cn = actor->GetClass()->GetFName();
-    //        //}
+    //        //if (wcsstr(pathName, L"Lamp") != NULL)
+    //        //if (wcsstr(pathName, L"TriggerLight") != NULL)
+    //        //if (wcsstr(pathName, L"AugLight") != NULL)
+    //        if (wcsstr(pathName, L"light") != NULL)
+    //        {
+    //            auto name = actor->GetClass()->GetPathName();
+    //            auto cn = actor->GetClass()->GetFName();
+    //            int b = 1;
+    //        }
     //    }
     //}
 }
@@ -180,7 +242,7 @@ void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashF
     m_Backend.NewFrame();
     m_pTileRenderer->NewFrame();
     m_pGouraudRenderer->NewFrame();
-    m_pComplexSurfaceRenderer->NewFrame();
+    m_pComplexSurfaceRenderer->NewFrame();    
 
     if (m_Backend.IsSceneRenderingEnabled())
     {
@@ -191,10 +253,10 @@ void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashF
 
 void UD3D11RenderDevice::Unlock(const UBOOL bBlit)
 {
-    Render();
+    Render();    
 
     if (bBlit)
-    {
+    {        
         m_Backend.Present();
     }
 }
@@ -202,39 +264,40 @@ void UD3D11RenderDevice::Unlock(const UBOOL bBlit)
 void UD3D11RenderDevice::Render()
 {
     //Check if something to render
-    if (!m_pTileRenderer->IsMapped() && !m_pGouraudRenderer->IsMapped() && !m_pComplexSurfaceRenderer->IsMapped())
+    if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
     {
-        return;
-    }
+        m_pGlobalShaderConstants->Bind();
+        m_pDeviceState->Bind();
+        m_pTextureCache->BindTextures();
 
-    m_pGlobalShaderConstants->Bind();
-    m_pDeviceState->Bind();
-    m_pTextureCache->BindTextures();
+        if (m_pTileRenderer->IsMapped())
+        {
+            m_pTileRenderer->Unmap();
+            m_pTileRenderer->Bind();
+            m_pTileRenderer->Draw();
+        }
 
-    if (m_pTileRenderer->IsMapped())
-    {
-        m_pTileRenderer->Unmap();
-        m_pTileRenderer->Bind();
-        m_pTileRenderer->Draw();
-    }
+        if (m_pGouraudRenderer->IsMapped())
+        {
+            m_pGouraudRenderer->Unmap();
+            m_pGouraudRenderer->Bind();
+            m_pGouraudRenderer->Draw();
+        }
 
-    if (m_pGouraudRenderer->IsMapped())
-    {
-        m_pGouraudRenderer->Unmap();
-        m_pGouraudRenderer->Bind();
-        m_pGouraudRenderer->Draw();
-    }
-
-    if (m_pComplexSurfaceRenderer->IsMapped())
-    {
-        m_pComplexSurfaceRenderer->Unmap();
-        m_pComplexSurfaceRenderer->Bind();
-        m_pComplexSurfaceRenderer->Draw();        
+        if (m_pComplexSurfaceRenderer->IsMapped())
+        {
+            m_pComplexSurfaceRenderer->Unmap();
+            m_pComplexSurfaceRenderer->Bind();
+            m_pComplexSurfaceRenderer->Draw();
+        }
     }
 }
 
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
+    // !!! По идее лучше сделать отдельный метод (и возможно отдельный буфер для шейдера, куда будут писаться данные о ViewMatrix)
+    m_pGlobalShaderConstants->SetSceneNode(*pFrame);
+
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
     if (m_Backend.IsSceneRenderingEnabled())
     {
@@ -247,7 +310,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
     const DWORD PolyFlags = Surface.PolyFlags;
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
     const auto& DepthStencilState = m_pDeviceState->GetDepthStencilStateForPolyFlags(PolyFlags);
-    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pDeviceState->IsDepthStencilStatePrepared(DepthStencilState) || m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped())
+    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pDeviceState->IsDepthStencilStatePrepared(DepthStencilState))    
     {
         Render();
     }
@@ -336,7 +399,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             //    v->TexCoord[4].y = (VCoord - Surface.MacroTexture->Pan.Y)*macro->multV;
             //}
 
-            static_assert(sizeof(Poly.Pts[i]->Point) >= sizeof(v.Pos), "Sizes differ, can't use reinterpret_cast");
+            static_assert(sizeof(Poly.Pts[i]->Point) >= sizeof(v.Pos), "Point sizes differ, can't use reinterpret_cast");
             v.Pos = reinterpret_cast<decltype(v.Pos)&>(Poly.Pts[i]->Point);
             v.PolyFlags = PolyFlags;
             v.TexFlags = TexFlags;
@@ -356,7 +419,7 @@ void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextu
 
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
     const auto& DepthStencilState = m_pDeviceState->GetDepthStencilStateForPolyFlags(PolyFlags);
-    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pDeviceState->IsDepthStencilStatePrepared(DepthStencilState) || !m_pTextureCache->IsPrepared(Info, 0) || m_pTileRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
+    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pDeviceState->IsDepthStencilStatePrepared(DepthStencilState) || !m_pTextureCache->IsPrepared(Info, 0))
     {
         Render();
     }
@@ -386,7 +449,6 @@ void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextu
 
         v.PolyFlags = PolyFlags;
     }
-
 }
 
 void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& Info, const FLOAT fX, const FLOAT fY, const FLOAT fXL, const FLOAT fYL, const FLOAT fU, const FLOAT fV, const FLOAT fUL, const FLOAT fVL, FSpanBuffer* const /*pSpan*/, const FLOAT fZ, const FPlane Color, const FPlane /*Fog*/, const DWORD PolyFlags)
@@ -399,7 +461,7 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 
     //Flush state
-    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pTextureCache->IsPrepared(Info, 0) || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
+    if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pTextureCache->IsPrepared(Info, 0))
     {
         Render();
     }

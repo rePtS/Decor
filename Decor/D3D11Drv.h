@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <memory>
+#include <vector>
 
 #include "RenDevBackend.h"
 #include "GlobalShaderConstants.h"
@@ -12,6 +13,7 @@
 #include "TextureCache.h"
 
 #include <Engine.h>
+#include <DeusEx.h>
 
 class UD3D11RenderDevice : public URenderDevice
 {
@@ -28,6 +30,9 @@ public:
 
 protected:
     void Render();
+
+    // Ensure that current scene is not changed
+    void EnsureCurrentLevel(FSceneNode* const pFrame);
 
     //Convenience function so don't need to pass Viewport->...; template to pass varargs
 
@@ -48,6 +53,13 @@ protected:
     std::unique_ptr<TextureCache> m_pTextureCache;
 
     bool m_bNoTilesDrawnYet;
+    
+    int m_CurrentLevelIndex; // Index of the current level (used to determine if scene is changed)
+    AAugmentation* m_AugLight;
+    std::vector<AActor*> m_Lamps;
+    std::vector<AActor*> m_TriggerLights;
+    std::vector<AActor*> m_PointLights;
+    std::vector<AActor*> m_SpotLights;    
 
 //From URenderDevice
 public:

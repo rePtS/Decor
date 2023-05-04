@@ -48,6 +48,7 @@ void GouraudRenderer::Bind()
     m_DeviceContext.IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), Strides, Offsets);
     m_DeviceContext.IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
     m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+    m_DeviceContext.GSSetShader(nullptr, nullptr, 0);
     m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 }
 

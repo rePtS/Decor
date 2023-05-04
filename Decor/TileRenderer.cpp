@@ -44,6 +44,7 @@ void TileRenderer::Bind()
 
     m_DeviceContext.IASetVertexBuffers(0, 1, m_InstanceBuffer.GetAddressOf(), Strides, Offsets);
     m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
+    m_DeviceContext.GSSetShader(nullptr, nullptr, 0);
     m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
 }
 

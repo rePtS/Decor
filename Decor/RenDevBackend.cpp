@@ -44,7 +44,7 @@ bool RenDevBackend::Init(const HWND hWnd)
     m_SwapChainDesc.Windowed = TRUE;
     m_SwapChainDesc.SampleDesc.Count = 1;
     m_SwapChainDesc.SampleDesc.Quality = 0;
-    m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL
+    m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL    
     //Todo: waitable swap chain IDXGISwapChain2::GetFrameLatencyWaitableObject
 
     Decor::ThrowIfFailed(

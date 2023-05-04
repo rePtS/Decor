@@ -52,6 +52,7 @@ public:
         //TODO: constant buffer registration pool
         m_DeviceContext.VSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
         m_DeviceContext.PSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
+        m_DeviceContext.GSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
     }
 
 

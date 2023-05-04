@@ -23,7 +23,8 @@ ComplexSurfaceRenderer::ComplexSurfaceRenderer(ID3D11Device& Device, ID3D11Devic
 
     m_pInputLayout = Compiler.CreateInputLayout(InputElementDescs, _countof(InputElementDescs));
 
-    m_pPixelShader = Compiler.CompilePixelShader();
+    m_pGeometryShader = Compiler.CompileGeometryShader();
+    m_pPixelShader = Compiler.CompilePixelShader();    
 }
 
 
@@ -49,7 +50,8 @@ void ComplexSurfaceRenderer::Bind()
     m_DeviceContext.IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), Strides, Offsets);
     m_DeviceContext.IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
     m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
-    m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
+    m_DeviceContext.GSSetShader(m_pGeometryShader.Get(), nullptr, 0);
+    m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);    
 }
 
 void ComplexSurfaceRenderer::Draw()

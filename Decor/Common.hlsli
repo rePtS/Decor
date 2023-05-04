@@ -5,6 +5,8 @@ cbuffer CBufGlobal : register(b0)
 {
     float4 fRes;
     matrix ProjectionMatrix;
+    matrix ViewMatrix;
+    float4 LightDir;
 };
 
 sampler SamLinear : register(s0);
