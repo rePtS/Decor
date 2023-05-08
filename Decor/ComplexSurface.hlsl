@@ -245,6 +245,24 @@ float4 PbrM_DirLightContrib(float3 lightDir,
     return brdf * thetaCos * luminance;    
 }
 
+float4 PbrM_PointLightContrib(float3 surfPos,
+    float4 lightPos,
+    float4 intensity,
+    PbrM_ShadingCtx shadingCtx,
+    PbrM_MatInfo matInfo)
+{
+    const float3 dirRaw = (float3)lightPos - surfPos;
+    const float  len = length(dirRaw);
+    const float3 lightDir = dirRaw / len;
+    const float  distSqr = len * len;
+
+    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
+
+    const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
+
+    return brdf * thetaCos * intensity / distSqr;
+}
+
 float4 PSMain(const VSOut input) : SV_Target
 //float4 PsPbrMetalness(const VSOut input) : SV_Target
 {
@@ -266,6 +284,42 @@ float4 PSMain(const VSOut input) : SV_Target
         luminance,
         shadingCtx,
         matInfo);
+
+    uint firstLightsInSlices[16] = (uint[16])IndexesOfFirstLightsInSlices;
+    //uint lightIndexes[1024] = (uint[1024])LightIndexesFromAllSlices;
+    
+    uint slice = (uint)floor((input.PosWorld.z - 1.0f) / 3275.9f);
+
+    slice = max(0, slice);
+    slice = min(9, slice);
+    
+    //if (slice == 0)
+    //    output = float4(0.1, 0.0, 0.3, 1);
+    //if (slice == 1)
+    //    output = float4(0.7, 0.0, 0.3, 1);    
+
+    uint lightId = 0;
+    for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; i++)
+    {
+        //lightId = lightIndexes[i];
+        lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
+        float4 intencity = Lights[lightId];
+
+        // Point
+        if (intencity.w == 2) {
+            float4 lightPosData = Lights[lightId + 1];
+            float3 posWorld = (float3)input.PosWorld;
+
+            // Skip point lights that are out of range of the point being shaded.
+            //if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            output += PbrM_PointLightContrib(posWorld,
+                lightPosData,
+                intencity,
+                shadingCtx,
+                matInfo);
+        }
+    }
+
 
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
 

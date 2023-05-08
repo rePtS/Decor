@@ -103,66 +103,13 @@ void UD3D11RenderDevice::Flush(const UBOOL /*bAllowPrecache*/)
 
 }
 
-void UD3D11RenderDevice::EnsureCurrentLevel(FSceneNode* const pFrame)
-{
-    auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
-
-    if (m_CurrentLevelIndex != levelIndex)
-    {
-        // Сцена поменялась, выгружаем данные по старой сцене:
-        m_AugLight = nullptr;
-        m_Lamps.clear();
-        m_TriggerLights.clear();
-        m_PointLights.clear();
-        m_SpotLights.clear();
-
-        // Загружаем данные по новой сцене:
-        FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
-        FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
-        FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
-        FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
-        FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
-        FName classNameLight(L"Light", EFindName::FNAME_Find);
-        FName classNameSpotlight(L"Spotlight", EFindName::FNAME_Find);
-
-        for (size_t i = 0; i < pFrame->Level->Actors.Num(); ++i)
-        {
-            auto actor = pFrame->Level->Actors(i);
-            if (actor != nullptr)
-            {
-                auto& actorFName = actor->GetClass()->GetFName();
-
-                // Проверка, что текущий актор является лампой
-                if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3)
-                    m_Lamps.push_back(actor);
-
-                // Проверка, что текущий актор является триггерным источником света
-                else if (actorFName == classNameTriggerLight)
-                    m_TriggerLights.push_back(actor);
-
-                // Проверка, что текущий актор является аугментацией-фонариком
-                else if (actorFName == classNameAugLight)
-                    m_AugLight = (AAugmentation*)actor;
-
-                // Проверка, что текущий актор является точечным источником света
-                else if (actorFName == classNameLight)
-                    m_PointLights.push_back(actor);
-
-                // Проверка, что текущий актор является направленным источником света
-                else if (actorFName == classNameSpotlight)
-                    m_SpotLights.push_back(actor);
-            }
-        }
-
-        m_CurrentLevelIndex = levelIndex;
-    }
-}
-
 void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 {
     assert(pFrame);
     m_Backend.SetViewport(*pFrame);
-    m_pGlobalShaderConstants->SetSceneNode(*pFrame);
+
+    m_pGlobalShaderConstants->CheckLevelChange(*pFrame);
+    m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
 
     auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
@@ -172,68 +119,7 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     // в том числе здесь будет храниться список источников света,
     // который будет передаваться в рендеры
 
-
-    m_Backend.EnsureCurrentScene(levelIndex, levelPathName);
-
-    // TO-DO:
-    // В RenDevBackend (или Scene) добавить указатель на AAugmentation-фонарик, лампы и триггерные источники света
-    // Или лучше завести еще один класс, который будет хранить динамические источники света (например, SceneDynamicLights).
-    // Класс будет иметь интерфейсный метод, который будет выдавать уже готовые данные для шейдеров
-    // Момент: некоторые источники света полностью динамичны (могут менять свое положение со временем, например - фонарик и файеры),
-    // но некоторые статичны и их положение заранее известно (например, лампы).
-    // Используем такой же формат для динамических источников света, что и для статических. Но это будет отдельный буфер,
-    // и он будет обновляться в шейдерах каждый кадр, а не задаваться один раз для всей сцены.
-    // Если у динамического источника света есть список узлов, которые он освещает, то используем эту информацию для фильтрации
-    // буфера динамических источников при отправке в шейдер
-
-    //// Код для поиска различных источников света на уровне:
-    //FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
-    //FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
-    //FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
-
-    //for (size_t i = 0; i < pFrame->Level->Actors.Num(); ++i)
-    //{
-    //    auto& actor = pFrame->Level->Actors(i);
-    //    if (actor != nullptr)
-    //    {
-    //        // Проверка, что текущий актор является лампой
-    //        if (actor->GetClass()->GetFName() == classNameLamp3)
-    //        {
-    //            // Проверка что лампа включена/выключена
-    //            bool isLampOff = actor->LightType == ELightType::LT_None;
-    //        }
-
-    //        // Проверка, что текущий актор является включаемым источником света
-    //        if (actor->GetClass()->GetFName() == classNameTriggerLight)
-    //        {
-    //            // триггерные источники света могут иметь изменяющуюся яркость
-    //            auto triggerLightBrightness = actor->LightBrightness;
-    //            // если яркость равна 0, то можно считать что свет полностью выключен
-    //            bool isTriggerLampOff = triggerLightBrightness == 0;
-    //        }
-
-    //        // Проверка, что текущий актор является аугментацией-фонариком
-    //        if (actor->GetClass()->GetFName() == classNameAugLight)
-    //        {
-    //            // преобразуем актор к типу аугментации
-    //            auto augLight = (AAugmentation*)actor;
-    //            // Проверяем, что аугментация активирована/деактивирована
-    //            bool isActive = augLight->bIsActive;
-    //        }
-
-    //        const auto pathName = actor->GetPathName();
-
-    //        //if (wcsstr(pathName, L"Lamp") != NULL)
-    //        //if (wcsstr(pathName, L"TriggerLight") != NULL)
-    //        //if (wcsstr(pathName, L"AugLight") != NULL)
-    //        if (wcsstr(pathName, L"light") != NULL)
-    //        {
-    //            auto name = actor->GetClass()->GetPathName();
-    //            auto cn = actor->GetClass()->GetFName();
-    //            int b = 1;
-    //        }
-    //    }
-    //}
+    m_Backend.EnsureCurrentScene(levelIndex, levelPathName);    
 }
 
 void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashFog*/, const FPlane /*ScreenClear*/, const DWORD /*RenderLockFlags*/, BYTE* const /*pHitData*/, INT* const /*pHitSize*/)
@@ -295,8 +181,11 @@ void UD3D11RenderDevice::Render()
 
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
-    // !!! По идее лучше сделать отдельный метод (и возможно отдельный буфер для шейдера, куда будут писаться данные о ViewMatrix)
-    m_pGlobalShaderConstants->SetSceneNode(*pFrame);
+    // Пока отключим неосновной рендеринг (возможно надо учитывать Surface, чтобы отключать не все, а только ненужные поверхности)
+    if (pFrame->Parent != nullptr)
+        return;
+
+    m_pGlobalShaderConstants->CheckViewChange(*pFrame);
 
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
     if (m_Backend.IsSceneRenderingEnabled())

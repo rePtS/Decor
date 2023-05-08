@@ -1242,6 +1242,9 @@ void Scene::RenderFrame(IRenderingContext &ctx)
     deviceContext.VSSetConstantBuffers(1, 1, &mCbFrame);
     deviceContext.VSSetConstantBuffers(2, 1, &mCbSceneNode);
 
+    // Setup geometry shader
+    deviceContext.GSSetShader(nullptr, nullptr, 0);
+
     // Setup pixel shader data (shader itself is chosen later for each material)
     deviceContext.PSSetConstantBuffers(0, 1, &mCbScene);
     deviceContext.PSSetConstantBuffers(1, 1, &mCbFrame);
@@ -1279,6 +1282,9 @@ void Scene::CullFrame(IRenderingContext& ctx)
     deviceContext.VSSetShader(mVsCulling, nullptr, 0);
     deviceContext.VSSetConstantBuffers(0, 1, &mCbFrame);
     deviceContext.VSSetConstantBuffers(1, 1, &mCbSceneNode);
+
+    // Setup geometry shader
+    deviceContext.GSSetShader(nullptr, nullptr, 0);
 
     // Setup pixel shader data
     deviceContext.PSSetShader(mPsCulling, nullptr, 0);

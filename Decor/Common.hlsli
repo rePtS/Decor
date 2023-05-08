@@ -7,6 +7,10 @@ cbuffer CBufGlobal : register(b0)
     matrix ProjectionMatrix;
     matrix ViewMatrix;
     float4 LightDir;
+    
+    uint4  IndexesOfFirstLightsInSlices[4];
+    uint4  LightIndexesFromAllSlices[256];    
+    float4 Lights[1024];
 };
 
 sampler SamLinear : register(s0);
