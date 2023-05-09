@@ -94,6 +94,7 @@ protected:
         DirectX::XMVECTOR Color;
         DirectX::XMVECTOR Location;
         DirectX::XMVECTOR Direction;
+        size_t RealIndex;
     };
 
     std::vector<LightData> m_LightsData;

@@ -77,35 +77,31 @@ struct PbrM_ShadingCtx
 };
 
 PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
-{
-// Пока заомментируем, но в дальнейшем возможно будет использоваться
-//    const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
-//
-//    const float4 metalRoughness = MetalRoughnessTexture.Sample(LinearSampler, input.Tex) * MetallicRoughnessFactor;
-//    const float4 metalness = float4(metalRoughness.bbb, 1);
-//    const float  roughness = metalRoughness.g;
-//
-//    const float4 f0Diel = float4(0.04, 0.04, 0.04, 1);
-//#if defined USE_SMOOTH_REFRACTION_APPROX || defined USE_ROUGH_REFRACTION_APPROX
-//    const float4 diffuseDiel = baseColor;
-//#else
-//    const float4 diffuseDiel = (float4(1, 1, 1, 1) - f0Diel) * baseColor;
-//#endif
-//
-//    const float4 f0Metal = baseColor;
-//    const float4 diffuseMetal = float4(0, 0, 0, 1);
+{    
+    //const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
+    const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // Пока будем использовать фиксированный baseColor, но потом его нужно будет брать из TexDiffuse
 
-//    PbrM_MatInfo matInfo;
-//    matInfo.diffuse = lerp(diffuseDiel, diffuseMetal, metalness);
-//    matInfo.f0 = lerp(f0Diel, f0Metal, metalness);
-//    matInfo.alphaSq = max(roughness * roughness, 0.0001f);
-//    matInfo.occlusion = lerp(1., OcclusionTexture.Sample(LinearSampler, input.Tex).r, OcclusionTexStrength);
+    //const float4 metalRoughness = MetalRoughnessTexture.Sample(LinearSampler, input.Tex) * MetallicRoughnessFactor;
+    const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // Пока будем использовать фиксированный metalRoughness
+    const float4 metalness = float4(metalRoughness.bbb, 1);
+    const float  roughness = metalRoughness.g;
+
+    const float4 f0Diel = float4(0.04, 0.04, 0.04, 1);
+#if defined USE_SMOOTH_REFRACTION_APPROX || defined USE_ROUGH_REFRACTION_APPROX
+    const float4 diffuseDiel = baseColor;
+#else
+    const float4 diffuseDiel = (float4(1, 1, 1, 1) - f0Diel) * baseColor;
+#endif
+
+    const float4 f0Metal = baseColor;
+    const float4 diffuseMetal = float4(0, 0, 0, 1);
 
     PbrM_MatInfo matInfo;
-    matInfo.diffuse = float4(0.5, 0.5, 0.5, 0.5);
-    matInfo.f0 = float4(0.5, 0.5, 0.5, 0.5);
-    matInfo.alphaSq = 0.0001f;
-    matInfo.occlusion = 0.5;
+    matInfo.diffuse = lerp(diffuseDiel, diffuseMetal, metalness);
+    matInfo.f0 = lerp(f0Diel, f0Metal, metalness);
+    matInfo.alphaSq = max(roughness * roughness, 0.0001f);
+    //matInfo.occlusion = lerp(1., OcclusionTexture.Sample(LinearSampler, input.Tex).r, OcclusionTexStrength);
+    matInfo.occlusion = 1.0f; // Пока будем использовать фиксированный matInfo.occlusion
 
     return matInfo;
 }
@@ -183,7 +179,7 @@ float4 PbrM_BRDF(float3 lightDir, PbrM_ShadingCtx shadingCtx, PbrM_MatInfo matIn
 {
     float4 brdf = float4(0, 0, 0, 1);
 
-    float NdotL = dot(lightDir, shadingCtx.normal);
+    float NdotL = dot(lightDir, shadingCtx.normal);    
     float NdotV = dot(shadingCtx.viewDir, shadingCtx.normal);
 
     //if (NdotL < 0)
@@ -251,12 +247,12 @@ float4 PbrM_PointLightContrib(float3 surfPos,
     PbrM_ShadingCtx shadingCtx,
     PbrM_MatInfo matInfo)
 {
-    const float3 dirRaw = (float3)lightPos - surfPos;
+    const float3 dirRaw = surfPos - (float3)lightPos;
     const float  len = length(dirRaw);
     const float3 lightDir = dirRaw / len;
     const float  distSqr = len * len;
 
-    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
+    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
 
     const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
@@ -276,17 +272,16 @@ float4 PSMain(const VSOut input) : SV_Target
     float4 ambientLightLuminance = float4(0.5, 0.5, 0.5, 1);
     float3 directionalLightVector = normalize((float3)LightDir);
 
-    float4 luminance = float4(1, 2, 0, 1);
+    float4 luminance = float4(0.7, 0.7, 0.3, 1);
 
     //output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);
 
-    output += PbrM_DirLightContrib(directionalLightVector,
-        luminance,
-        shadingCtx,
-        matInfo);
+    //output += PbrM_DirLightContrib(directionalLightVector,
+    //    luminance,
+    //    shadingCtx,
+    //    matInfo);
 
     uint firstLightsInSlices[16] = (uint[16])IndexesOfFirstLightsInSlices;
-    //uint lightIndexes[1024] = (uint[1024])LightIndexesFromAllSlices;
     
     uint slice = (uint)floor((input.PosWorld.z - 1.0f) / 3275.9f);
 
@@ -299,9 +294,8 @@ float4 PSMain(const VSOut input) : SV_Target
     //    output = float4(0.7, 0.0, 0.3, 1);    
 
     uint lightId = 0;
-    for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; i++)
+    for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; ++i)
     {
-        //lightId = lightIndexes[i];
         lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
         float4 intencity = Lights[lightId];
 
@@ -322,6 +316,8 @@ float4 PSMain(const VSOut input) : SV_Target
 
 
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
+
+    //output.rgb = input.Normal;
 
     output.a = 1;
     return output;    

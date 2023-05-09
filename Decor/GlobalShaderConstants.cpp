@@ -82,25 +82,25 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
                 // Проверку делаем по методу Charles Bloom'а:
                 //      V = sphere.center - cone.apex_location
                 //      a = V * cone.direction_normal
-                //      Square(a) <= dotProduct(V,V) * Square(cone.cos) -> sphere intersects the cone
+                //      Square(a) > dotProduct(V,V) * Square(cone.cos) -> sphere intersects the cone
                 // 
                 // Так как мы работаем с View Space, то вершина конуса является началом координат и направление конуса совпадает с осью Z.
                 // Соответственно, вектор V становится равен lightPos и переменная a = lightPos.Z
-                if (lightPos.Z * lightPos.Z <= (lightPos | lightPos) * m_SquaredViewConeCos)
+                if (lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos)
                 {
                     count++;
 
                     int firstSlice = 0;
                     if ((lightPos.Z - lightRadius) > 1.0f)
-                        firstSlice = floorf((lightPos.Z - lightRadius - 1.0f) / 3275.9f);
+                        firstSlice = (int)floorf((lightPos.Z - lightRadius - 1.0f) / 3275.9f);
 
                     int lastSlice = SLICE_MAX_INDEX;
                     if ((lightPos.Z + lightRadius) < 32760.0f)
-                        lastSlice = floorf((lightPos.Z + lightRadius - 1.0f) / 3275.9f);
+                        lastSlice = (int)floorf((lightPos.Z + lightRadius - 1.0f) / 3275.9f);
 
                     // добавляем источник в список источников
                     LightData lightData;
-                    lightData.Color = DirectX::XMVectorSet(1000.0f, 500.5f, 500.5f, (float)LightData::LightType::POINT);
+                    lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 50000.5f, (float)LightData::LightType::POINT);
                     lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
                     m_LightsData.push_back(lightData);
 
@@ -111,6 +111,15 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
                     lightIndex++;
                 }
             };
+        }        
+
+        size_t lightDataIndex = 0;
+        for (size_t i = 0; i < m_LightsData.size(); ++i)
+        {
+            m_LightsData[i].RealIndex = lightDataIndex;
+            m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
+            m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
+            lightDataIndex += 2;
         }
 
         size_t indexCounter = 0;
@@ -120,19 +129,11 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
 
             for (const auto& index : m_LightSlices[i])
             {
-                m_CBufPerFrame.m_Data.LightIndexesFromAllSlices[indexCounter] = index;
+                m_CBufPerFrame.m_Data.LightIndexesFromAllSlices[indexCounter] = m_LightsData[index].RealIndex;
                 indexCounter++;
             }
         }
         m_CBufPerFrame.m_Data.IndexesOfFirstLightsInSlices[SLICE_NUMBER] = indexCounter;
-
-        size_t lightDataIndex = 0;
-        for (size_t i = 0; i < m_LightsData.size(); ++i)
-        {
-            m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
-            m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
-            lightDataIndex += 2;
-        }
 
         m_CBufPerFrame.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
         m_CBufPerFrame.m_Data.LightDir = DirectX::XMVector4Transform(lightDir, viewMatrix);
