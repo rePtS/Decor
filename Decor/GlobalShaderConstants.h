@@ -3,6 +3,7 @@
 #include <vector>
 #include <DirectXMath.h>
 #include "ConstantBuffer.h"
+#include "Defines.hlsli"
 
 #include <DeusEx.h>
 
@@ -20,11 +21,6 @@
 //        _aligned_free(p);
 //    }
 //};
-
-#define SLICE_NUMBER 10
-#define MAX_SLICE_DATA_SIZE 16
-#define SLICE_MAX_INDEX SLICE_NUMBER - 1
-#define MAX_LIGHTS_DATA_SIZE 1024
 
 class GlobalShaderConstants //: public XMMAligned
 {

@@ -1,5 +1,12 @@
+#include "Defines.hlsli"
+
 static const uint PF_Masked = 0x00000002;
 static const uint PF_Modulated = 0x00000040;
+
+static const uint PACKED_MAX_SLICE_DATA_SIZE = MAX_SLICE_DATA_SIZE / 4;
+static const uint PACKED_MAX_LIGHTS_INDEX_SIZE = MAX_LIGHTS_INDEX_SIZE / 4;
+static const uint SLICE_MAX_INDEX = SLICE_NUMBER - 1;
+static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
 
 cbuffer CBufGlobal : register(b0)
 {
@@ -8,9 +15,9 @@ cbuffer CBufGlobal : register(b0)
     matrix ViewMatrix;
     float4 LightDir;
     
-    uint4  IndexesOfFirstLightsInSlices[4];
-    uint4  LightIndexesFromAllSlices[256];    
-    float4 Lights[1024];
+    uint4  IndexesOfFirstLightsInSlices[PACKED_MAX_SLICE_DATA_SIZE];
+    uint4  LightIndexesFromAllSlices[PACKED_MAX_LIGHTS_INDEX_SIZE];
+    float4 Lights[MAX_LIGHTS_DATA_SIZE];
 };
 
 sampler SamLinear : register(s0);

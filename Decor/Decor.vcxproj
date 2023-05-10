@@ -135,6 +135,7 @@ xcopy "$(OutDir)Decor.pdb" "C:\Games\Deus Ex\System" /Y</Command>
     <None Include="Common.hlsli">
       <FileType>Document</FileType>
     </None>
+    <None Include="Defines.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

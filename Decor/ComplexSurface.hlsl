@@ -1,10 +1,5 @@
+#include "Defines.hlsli"
 #include "Common.hlsli"
-
-#define CONVERT_SRGB_INPUT_TO_LINEAR
-#define CONVERT_LINEAR_OUTPUT_TO_SRGB
-
-//#define USE_SMOOTH_REFRACTION_APPROX
-//#define USE_ROUGH_REFRACTION_APPROX
 
 static const float PI = 3.14159265f;
 
@@ -281,12 +276,12 @@ float4 PSMain(const VSOut input) : SV_Target
     //    shadingCtx,
     //    matInfo);
 
-    uint firstLightsInSlices[16] = (uint[16])IndexesOfFirstLightsInSlices;
+    uint firstLightsInSlices[MAX_SLICE_DATA_SIZE] = (uint[MAX_SLICE_DATA_SIZE])IndexesOfFirstLightsInSlices;
     
-    uint slice = (uint)floor((input.PosWorld.z - 1.0f) / 3275.9f);
+    uint slice = (uint)floor((input.PosWorld.z - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
 
     slice = max(0, slice);
-    slice = min(9, slice);
+    slice = min(SLICE_MAX_INDEX, slice);
     
     //if (slice == 0)
     //    output = float4(0.1, 0.0, 0.3, 1);

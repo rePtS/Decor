@@ -48,6 +48,9 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
 {
     if (m_Coords.Origin != SceneNode.Coords.Origin || m_Coords.XAxis != SceneNode.Coords.XAxis || m_Coords.YAxis != SceneNode.Coords.YAxis || m_Coords.ZAxis != SceneNode.Coords.ZAxis)
     {
+        static const size_t SLICE_MAX_INDEX = SLICE_NUMBER - 1;
+        static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
+
         const auto& c = SceneNode.Coords;
         auto viewMatrix = DirectX::XMMatrixSet(
             c.XAxis.X, c.YAxis.X, c.ZAxis.X, c.Origin.X,
@@ -73,11 +76,15 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
             auto lightPos = light->Location.TransformPointBy(c);
             // получаем радиус действия источника
             auto lightRadius = light->WorldLightRadius();
+            auto lightRadiusSquared = lightRadius * lightRadius;
+
+            auto nearLightBoundary = lightPos.Z - lightRadius;
+            auto farLightBoundary = lightPos.Z + lightRadius;
 
             // Проверяем, что источник света находится между ближней и дальней плоскостью видимости
-            if ((lightPos.Z + lightRadius) > 1.0f && (lightPos.Z - lightRadius) < 32760.0f)
+            if (farLightBoundary > NEAR_CLIPPING_DISTANCE && nearLightBoundary < FAR_CLIPPING_DISTANCE)
             {
-                // Проверяем, что источник света попадает в конус видимости.
+                // Проверяем, что источник света попадает в конус видимости (либо, что камера находится в пределах действия источника света).
                 // Используем именно конус, а не усеченную пирамиду (View Frustum) для ускорения проверки
                 // Проверку делаем по методу Charles Bloom'а:
                 //      V = sphere.center - cone.apex_location
@@ -86,17 +93,17 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
                 // 
                 // Так как мы работаем с View Space, то вершина конуса является началом координат и направление конуса совпадает с осью Z.
                 // Соответственно, вектор V становится равен lightPos и переменная a = lightPos.Z
-                if (lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos)
+                if (lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos || lightPos.SizeSquared() < lightRadiusSquared)
                 {
                     count++;
 
-                    int firstSlice = 0;
-                    if ((lightPos.Z - lightRadius) > 1.0f)
-                        firstSlice = (int)floorf((lightPos.Z - lightRadius - 1.0f) / 3275.9f);
+                    size_t firstSlice = 0;
+                    if (nearLightBoundary > NEAR_CLIPPING_DISTANCE)
+                        firstSlice = (size_t)floorf((nearLightBoundary - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
 
-                    int lastSlice = SLICE_MAX_INDEX;
-                    if ((lightPos.Z + lightRadius) < 32760.0f)
-                        lastSlice = (int)floorf((lightPos.Z + lightRadius - 1.0f) / 3275.9f);
+                    size_t lastSlice = SLICE_MAX_INDEX;
+                    if (farLightBoundary < FAR_CLIPPING_DISTANCE)
+                        lastSlice = (size_t)floorf((farLightBoundary - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
 
                     // добавляем источник в список источников
                     LightData lightData;
