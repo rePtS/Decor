@@ -107,7 +107,12 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
 
                     // добавляем источник в список источников
                     LightData lightData;
-                    lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 50000.5f, (float)LightData::LightType::POINT);
+                    auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (float)light->LightSaturation / 255.0f, (float)light->LightBrightness / 255.0f);
+                    color = DirectX::XMVectorScale(color, lightRadius * 100.0f);
+                    color = DirectX::XMVectorSetW(color, (float)LightData::LightType::POINT);
+
+                    lightData.Color = color;
+                    //lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 50000.5f, (float)LightData::LightType::POINT);
                     lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
                     m_LightsData.push_back(lightData);
 
@@ -148,6 +153,28 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
 
         m_Coords = SceneNode.Coords;
     }    
+}
+
+DirectX::XMVECTOR GlobalShaderConstants::HSVtoRGB(float H, float S, float V)
+{
+    if (S == 0.0)
+        return DirectX::XMVectorSet(V, V, V, 0.0f);
+
+    float i = floor(H * 6.0);
+    float f = H * 6.0f - i; 
+    float p = V * (1.0f - S);
+    float q = V * (1.0f - S * f);
+    float t = V * (1.0f - S * (1.0f - f));    
+    
+    switch ((int)i % 6)
+    {
+        case 0: return DirectX::XMVectorSet(V, t, p, 0.0f);
+        case 1: return DirectX::XMVectorSet(q, V, p, 0.0f);
+        case 2: return DirectX::XMVectorSet(p, V, t, 0.0f);
+        case 3: return DirectX::XMVectorSet(p, q, V, 0.0f);
+        case 4: return DirectX::XMVectorSet(t, p, V, 0.0f);
+        case 5: return DirectX::XMVectorSet(V, p, q, 0.0f);
+    }
 }
 
 void GlobalShaderConstants::CheckLevelChange(const FSceneNode& SceneNode)
