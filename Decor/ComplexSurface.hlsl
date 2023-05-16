@@ -31,7 +31,6 @@ SPoly VSMain(const SPoly Input)
     return Input;
 }
 
-//float4 PSMain(const VSOut Input) : SV_Target
 float4 PSMain_Old(const VSOut Input) : SV_Target
 {
     if (Input.PolyFlags & PF_Masked)
@@ -74,10 +73,22 @@ struct PbrM_ShadingCtx
 PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 {    
     //const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
-    const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // Пока будем использовать фиксированный baseColor, но потом его нужно будет брать из TexDiffuse
+    //const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // Пока будем использовать фиксированный baseColor, но потом его нужно будет брать из TexDiffuse    
+    float4 baseColor;
+    if (input.TexFlags & 0x00000001)
+        baseColor = TexDiffuse.Sample(SamLinear, input.TexCoord) * float4(0.5f, 0.5f, 0.5f, 1.f);
+    else
+        baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f);
 
     //const float4 metalRoughness = MetalRoughnessTexture.Sample(LinearSampler, input.Tex) * MetallicRoughnessFactor;
-    const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // Пока будем использовать фиксированный metalRoughness
+    //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // Пока будем использовать фиксированный metalRoughness
+    float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // Пока будем использовать фиксированный metalRoughness
+
+    if ((input.PolyFlags & PF_Masked) || (input.PolyFlags & PF_Translucent))
+    {
+        metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
+    }
+
     const float4 metalness = float4(metalRoughness.bbb, 1);
     const float  roughness = metalRoughness.g;
 
@@ -255,9 +266,14 @@ float4 PbrM_PointLightContrib(float3 surfPos,
 }
 
 float4 PSMain(const VSOut input) : SV_Target
-//float4 PsPbrMetalness(const VSOut input) : SV_Target
 {
+    if (input.PolyFlags & PF_Masked)
+    {
+        clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
+    }
+
     PbrM_ShadingCtx shadingCtx;
+    //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
     shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
     shadingCtx.viewDir = normalize((float3)input.PosWorld);
 
@@ -312,7 +328,18 @@ float4 PSMain(const VSOut input) : SV_Target
 
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
 
+    // Original lightmap
+    if (input.TexFlags & 0x00000002)
+    {
+        const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;        
+        //output.rgb *= Light;
+	    output.rgb *= (Light * 1.5f);
+        //output.rgb = output.rgb * 0.2f + output.rgb * (0.8f * Light);
+	    //output.rgb = Light;
+    }
+
     //output.rgb = input.Normal;
+    //output.rgb = TexNoise.Sample(SamLinear, input.TexCoord).rrr;
 
     output.a = 1;
     return output;    
