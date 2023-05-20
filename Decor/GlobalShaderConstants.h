@@ -97,5 +97,6 @@ protected:
     std::vector<size_t> m_LightSlices[SLICE_NUMBER];
 
     DirectX::XMVECTOR HSVtoRGB(float H, float S, float V);
+    void ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex);
 };
 

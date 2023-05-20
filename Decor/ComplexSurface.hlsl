@@ -265,6 +265,47 @@ float4 PbrM_PointLightContrib(float3 surfPos,
     return brdf * thetaCos * intensity / distSqr;
 }
 
+float DoSpotCone(float4 lightDir, float3 L)
+{
+    // If the cosine angle of the light's direction 
+    // vector and the vector from the light source to the point being 
+    // shaded is less than minCos, then the spotlight contribution will be 0.
+    float minCos = cos(lightDir.w);
+    // If the cosine angle of the light's direction vector
+    // and the vector from the light source to the point being shaded
+    // is greater than maxCos, then the spotlight contribution will be 1.
+    float maxCos = lerp(minCos, 1, 0.5f);
+    float cosAngle = dot(normalize((float3)lightDir), normalize(L));
+    // Blend between the maxixmum and minimum cosine angles.
+    return smoothstep(minCos, maxCos, cosAngle);
+}
+
+
+float4 PbrM_SpotLightContrib(float3 surfPos,
+    float4 lightPosData,
+    float4 lightDirData,
+    float4 intensity,
+    PbrM_ShadingCtx shadingCtx,
+    PbrM_MatInfo matInfo)
+{
+    const float3 dirRaw = surfPos - (float3)lightPosData;
+    const float  len = length(dirRaw);
+    const float3 lightDir = dirRaw / len;
+
+    const float spotIntensity = DoSpotCone(lightDirData, lightDir);
+    if (spotIntensity == 0.0f)
+        return intensity * 0.0f;
+    else
+    {
+        const float distSqr = len * len;
+        const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
+
+        const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
+
+        return brdf * thetaCos * intensity * spotIntensity / distSqr;
+    }
+}
+
 float4 PSMain(const VSOut input) : SV_Target
 {
     if (input.PolyFlags & PF_Masked)
@@ -280,7 +321,7 @@ float4 PSMain(const VSOut input) : SV_Target
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
-    float4 ambientLightLuminance = float4(0.5, 0.5, 0.5, 1);
+    float4 ambientLightLuminance = float4(1.2, 1.2, 1.2, 1);
     float3 directionalLightVector = normalize((float3)LightDir);
 
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
@@ -316,9 +357,25 @@ float4 PSMain(const VSOut input) : SV_Target
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
-            //if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            if (length((float3)lightPosData - posWorld) < lightPosData.w)
             output += PbrM_PointLightContrib(posWorld,
                 lightPosData,
+                intencity,
+                shadingCtx,
+                matInfo);
+        }
+
+        // Spot
+        if (intencity.w == 3) {
+            float4 lightPosData = Lights[lightId + 1];
+            float4 lightDirData = Lights[lightId + 2];
+            float3 posWorld = (float3)input.PosWorld;
+
+            // Skip spot lights that are out of range of the point being shaded.
+            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            output += PbrM_SpotLightContrib(posWorld,
+                lightPosData,
+                lightDirData,
                 intencity,
                 shadingCtx,
                 matInfo);
@@ -331,11 +388,15 @@ float4 PSMain(const VSOut input) : SV_Target
     // Original lightmap
     if (input.TexFlags & 0x00000002)
     {
-        const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;        
+        const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f; // 2.0f;
+	    //const float lightAverage = (Light.r + Light.g + Light.b) / 3.0f;
         //output.rgb *= Light;
-	    output.rgb *= (Light * 1.5f);
+	    //output.rgb *= (Light * 1.5f);
+	    //output.rgb *= 0.5f;	
+	    //output.rgb = float3(lightAverage, lightAverage, lightAverage);
+	    //output.rgb *= float3(1.0f, 1.0f, 1.0f);
         //output.rgb = output.rgb * 0.2f + output.rgb * (0.8f * Light);
-	    //output.rgb = Light;
+	    //output.rgb = Light;	
     }
 
     //output.rgb = input.Normal;

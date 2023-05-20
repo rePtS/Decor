@@ -68,9 +68,79 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
             m_LightSlices[i].clear();
 
         // обрабатываем источники света:
-        int count = 0;
         size_t lightIndex = 0;
-        for (auto& light : m_PointLights)
+
+        ProcessLightSources(c, m_PointLights, lightIndex);
+        ProcessLightSources(c, m_SpotLights, lightIndex);
+        ProcessLightSources(c, m_TriggerLights, lightIndex);
+
+        // TODO Ќекоторые лампы €вл€ютс€ точечными источниками света, а некоторые - прожекторами
+        // Ќужно учитывать это. ѕока все лампы считаем точечными источниками
+        ProcessLightSources(c, m_Lamps, lightIndex);
+
+        // ƒобавл€ем фонарик, если нужно
+        if (m_AugLight != nullptr && m_AugLight->bIsActive)
+        {
+            LightData lightData;
+
+            lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 100000.0f, (float)LightData::LightType::SPOT);
+            lightData.Location = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 4000.0f);
+            lightData.Direction = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.5f);
+            m_LightsData.push_back(lightData);
+
+            m_LightSlices[0].push_back(lightIndex);
+            lightIndex++;
+        }
+
+        size_t lightDataIndex = 0;
+        for (size_t i = 0; i < m_LightsData.size(); ++i)
+        {
+            m_LightsData[i].RealIndex = lightDataIndex;
+            m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
+            m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
+
+            auto lightType = (LightData::LightType)DirectX::XMVectorGetW(m_LightsData[i].Color);
+            if (lightType == LightData::LightType::POINT)
+                lightDataIndex += 2;            
+            else if (lightType == LightData::LightType::SPOT)
+            {
+                m_CBufPerFrame.m_Data.Lights[lightDataIndex + 2] = m_LightsData[i].Direction;
+                lightDataIndex += 3;
+            }
+        }
+
+        size_t indexCounter = 0;
+        for (size_t i = 0; i < SLICE_NUMBER; ++i)
+        {
+            m_CBufPerFrame.m_Data.IndexesOfFirstLightsInSlices[i] = indexCounter;
+
+            for (const auto& index : m_LightSlices[i])
+            {
+                m_CBufPerFrame.m_Data.LightIndexesFromAllSlices[indexCounter] = m_LightsData[index].RealIndex;
+                indexCounter++;
+            }
+        }
+        m_CBufPerFrame.m_Data.IndexesOfFirstLightsInSlices[SLICE_NUMBER] = indexCounter;
+
+        m_CBufPerFrame.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
+        m_CBufPerFrame.m_Data.LightDir = DirectX::XMVector4Transform(lightDir, viewMatrix);
+        m_CBufPerFrame.MarkAsDirty();
+
+        m_Coords = SceneNode.Coords;
+    }    
+}
+
+void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex)
+{
+    static const size_t SLICE_MAX_INDEX = SLICE_NUMBER - 1;
+    static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
+
+    for (auto& light : lights)
+    {
+        // Ќе используем источник, если его тип LT_None (так бывает, если он выключен),
+        // если тип эффекта LE_NonIncidence (вообще-то это точечный источник света, но заполн€ющий большой объем - нам пока такие не нужны),
+        // если €ркость источника света равна 0
+        if (light->LightType != LT_None && light->LightEffect != LE_NonIncidence && light->LightBrightness > 0)
         {
             // вычисл€ем координаты источников во View Space
             auto lightPos = light->Location.TransformPointBy(c);
@@ -95,8 +165,6 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
                 // —оответственно, вектор V становитс€ равен lightPos и переменна€ a = lightPos.Z
                 if (lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos || lightPos.SizeSquared() < lightRadiusSquared)
                 {
-                    count++;
-
                     size_t firstSlice = 0;
                     if (nearLightBoundary > NEAR_CLIPPING_DISTANCE)
                         firstSlice = (size_t)floorf((nearLightBoundary - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
@@ -107,12 +175,29 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
 
                     // добавл€ем источник в список источников
                     LightData lightData;
-                    auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (float)light->LightSaturation / 255.0f, (float)light->LightBrightness / 255.0f);
+                    lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
+
+                    auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (1.0f - (float)light->LightSaturation / 255.0f), (float)light->LightBrightness / 255.0f);
                     color = DirectX::XMVectorScale(color, lightRadius * 500.0f);
-                    color = DirectX::XMVectorSetW(color, (float)LightData::LightType::POINT);
+
+                    if (light->LightEffect == LE_Spotlight)
+                    {
+                        color = DirectX::XMVectorSetW(color, (float)LightData::LightType::SPOT);
+
+                        auto lightVector = light->Rotation.Vector().TransformVectorBy(c);
+
+                        // угол светового конуса
+                        //float spotAngle = (float)light->LightCone / 255.0f * (PI / 2.0f);
+                        float spotAngle = (float)light->LightCone / 510.0f * PI;
+                        lightData.Direction = DirectX::XMVectorSet(lightVector.X, lightVector.Y, lightVector.Z, spotAngle);
+                    }
+                    else
+                    {                        
+                        color = DirectX::XMVectorSetW(color, (float)LightData::LightType::POINT);
+                    }
 
                     lightData.Color = color;
-                    lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
+
                     m_LightsData.push_back(lightData);
 
                     // назначаем источник дл€ слоев
@@ -123,35 +208,7 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
                 }
             };
         }
-
-        size_t lightDataIndex = 0;
-        for (size_t i = 0; i < m_LightsData.size(); ++i)
-        {
-            m_LightsData[i].RealIndex = lightDataIndex;
-            m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
-            m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
-            lightDataIndex += 2;
-        }
-
-        size_t indexCounter = 0;
-        for (size_t i = 0; i < SLICE_NUMBER; ++i)
-        {
-            m_CBufPerFrame.m_Data.IndexesOfFirstLightsInSlices[i] = indexCounter;
-
-            for (const auto& index : m_LightSlices[i])
-            {
-                m_CBufPerFrame.m_Data.LightIndexesFromAllSlices[indexCounter] = m_LightsData[index].RealIndex;
-                indexCounter++;
-            }
-        }
-        m_CBufPerFrame.m_Data.IndexesOfFirstLightsInSlices[SLICE_NUMBER] = indexCounter;
-
-        m_CBufPerFrame.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
-        m_CBufPerFrame.m_Data.LightDir = DirectX::XMVector4Transform(lightDir, viewMatrix);
-        m_CBufPerFrame.MarkAsDirty();
-
-        m_Coords = SceneNode.Coords;
-    }    
+    }
 }
 
 DirectX::XMVECTOR GlobalShaderConstants::HSVtoRGB(float H, float S, float V)
