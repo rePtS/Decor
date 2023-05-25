@@ -267,7 +267,7 @@ void RenDevBackend::NewFrame()
     m_pDeviceContext->ClearRenderTargetView(m_pCullingRTV.Get(), CullingClearColor);
     m_pDeviceContext->ClearDepthStencilView(m_pCullingDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
 
-    const float ClearColor[] = {0.0f, 0.5f, 0.0f, 0.0f};
+    const float ClearColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
     m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);    
     m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
 }

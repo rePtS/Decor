@@ -137,10 +137,12 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
 
     for (auto& light : lights)
     {
-        // Не используем источник, если его тип LT_None (так бывает, если он выключен),
-        // если тип эффекта LE_NonIncidence (вообще-то это точечный источник света, но заполняющий большой объем - нам пока такие не нужны),
-        // если яркость источника света равна 0
-        if (light->LightType != LT_None && light->LightEffect != LE_NonIncidence && light->LightBrightness > 0)
+        // TODO Не используем источник,
+        if (light->LightType != LT_None // если его тип LT_None (так бывает, если он выключен),
+            && light->LightEffect != LE_NonIncidence // если тип эффекта LE_NonIncidence (вообще-то это точечный источник света, но заполняющий большой объем - нам пока такие не нужны),        
+            && light->LightBrightness > 0 // если яркость источника света равна 0,        
+            //&& !light->bSpecialLit) // если не установлен признак специального освещения (по-хорошему, его тоже нужно обрабатывать - освещать таким светом только те пиксели, которые тоже имеют признак bSpecialLit)
+            )
         {
             // вычисляем координаты источников во View Space
             auto lightPos = light->Location.TransformPointBy(c);
@@ -177,8 +179,9 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
                     LightData lightData;
                     lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
 
+                    float lightBrightness = (float)light->LightBrightness / 255.0f;
                     auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (1.0f - (float)light->LightSaturation / 255.0f), (float)light->LightBrightness / 255.0f);
-                    color = DirectX::XMVectorScale(color, lightRadius * 500.0f);
+                    color = DirectX::XMVectorScale(color, lightRadiusSquared / 2.0f);
 
                     if (light->LightEffect == LE_Spotlight)
                     {
@@ -254,6 +257,7 @@ void GlobalShaderConstants::CheckLevelChange(const FSceneNode& SceneNode)
         FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
         FName classNameLight(L"Light", EFindName::FNAME_Find);
         FName classNameSpotlight(L"Spotlight", EFindName::FNAME_Find);
+        FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
 
         for (size_t i = 0; i < SceneNode.Level->Actors.Num(); ++i)
         {
@@ -275,7 +279,7 @@ void GlobalShaderConstants::CheckLevelChange(const FSceneNode& SceneNode)
                     m_AugLight = (AAugmentation*)actor;
 
                 // Проверка, что текущий актор является точечным источником света
-                else if (actorFName == classNameLight)
+                else if (actorFName == classNameLight || actorFName == classNameBarrelFire)
                     m_PointLights.push_back(actor);
 
                 // Проверка, что текущий актор является направленным источником света

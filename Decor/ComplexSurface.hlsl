@@ -1,8 +1,6 @@
 #include "Defines.hlsli"
 #include "Common.hlsli"
 
-static const float PI = 3.14159265f;
-
 Texture2D TexDiffuse : register(t0);
 Texture2D TexLight : register(t1);
 
@@ -54,29 +52,13 @@ float4 PSMain_Old(const VSOut Input) : SV_Target
     return Color;
 }
 
-struct PbrM_MatInfo
-{
-    float4 diffuse;
-    float4 f0;
-    float  alphaSq;
-    float  occlusion;
-
-    float specPower; // temporary blinn-phong approximation
-};
-
-struct PbrM_ShadingCtx
-{
-    float3 normal;
-    float3 viewDir;
-};
-
 PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 {    
     //const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
     //const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // Пока будем использовать фиксированный baseColor, но потом его нужно будет брать из TexDiffuse    
     float4 baseColor;
     if (input.TexFlags & 0x00000001)
-        baseColor = TexDiffuse.Sample(SamLinear, input.TexCoord) * float4(0.5f, 0.5f, 0.5f, 1.f);
+        baseColor = TexDiffuse.Sample(SamLinear, input.TexCoord) * float4(0.5f, 0.5f, 0.5f, 1.0f);
     else
         baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f);
 
@@ -112,199 +94,6 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     return matInfo;
 }
 
-float4 FresnelSchlick(PbrM_MatInfo matInfo, float cosTheta)
-{
-    const float4 f0 = matInfo.f0;
-    return f0 + (1 - f0) * pow(clamp(1 - cosTheta, 0, 1), 5);
-}
-
-float4 FresnelIntegralApprox(float4 f0)
-{
-    return lerp(f0, 1.f, 0.05f); // Very ad-hoc approximation :-)
-}
-
-float4 PbrM_AmbLightContrib(float4 luminance,
-    PbrM_ShadingCtx shadingCtx,
-    PbrM_MatInfo matInfo)
-{
-#if defined USE_SMOOTH_REFRACTION_APPROX
-    const float NdotV = max(dot(shadingCtx.normal, shadingCtx.viewDir), 0.);
-    const float4 fresnelNV = FresnelSchlick(matInfo, NdotV);
-
-    const float4 fresnelIntegral = FresnelIntegralApprox(matInfo.f0);
-
-    const float4 diffuse = matInfo.diffuse * (1.0 - fresnelNV) * (1.0 - fresnelIntegral);
-    const float4 specular = fresnelNV; // assuming that full specular lobe integrates to 1
-#elif defined USE_ROUGH_REFRACTION_APPROX
-    const float NdotV = max(dot(shadingCtx.normal, shadingCtx.viewDir), 0.);
-    const float4 fresnelNV = FresnelSchlick(matInfo, NdotV);
-
-    const float4 fresnelIntegral = FresnelIntegralApprox(matInfo.f0);
-
-    const float4 roughFresnelNV = lerp(fresnelNV, fresnelIntegral, matInfo.alphaSq);
-
-    const float4 diffuse = matInfo.diffuse * (1.0 - roughFresnelNV) /** (1.0 - fresnelIntegral)*/;
-    const float4 specular = roughFresnelNV;
-#else
-    const float4 diffuse = matInfo.diffuse;
-    const float4 specular = matInfo.f0; // assuming that full specular lobe integrates to 1
-#endif
-
-    return (diffuse + specular) * luminance * matInfo.occlusion;
-}
-
-float ThetaCos(float3 normal, float3 lightDir)
-{
-    return max(dot(normal, lightDir), 0.);    
-}
-
-float GgxMicrofacetDistribution(PbrM_MatInfo matInfo, float NdotH)
-{
-    const float alphaSq = matInfo.alphaSq;
-
-    const float f = (NdotH * alphaSq - NdotH) * NdotH + 1.0;
-    return alphaSq / (PI * f * f);
-}
-
-float GgxVisibilityOcclusion(PbrM_MatInfo matInfo, float NdotL, float NdotV)
-{
-    float alphaSq = matInfo.alphaSq;
-
-    float ggxv = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaSq) + alphaSq);
-    float ggxl = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaSq) + alphaSq);
-
-    return 0.5 / (ggxv + ggxl);
-}
-
-float4 DiffuseBRDF()
-{
-    return 1 / PI;
-};
-
-float4 PbrM_BRDF(float3 lightDir, PbrM_ShadingCtx shadingCtx, PbrM_MatInfo matInfo)
-{
-    float4 brdf = float4(0, 0, 0, 1);
-
-    float NdotL = dot(lightDir, shadingCtx.normal);    
-    float NdotV = dot(shadingCtx.viewDir, shadingCtx.normal);
-
-    //if (NdotL < 0)
-    //    return float4(0, 0, 0, 1);
-    if (NdotL >= 0)
-    {
-        NdotL = max(NdotL, 0.01f);
-        NdotV = max(NdotV, 0.01f);
-
-        // Halfway vector
-        const float3 halfwayRaw = lightDir + shadingCtx.viewDir;
-        const float  halfwayLen = length(halfwayRaw);
-        const float3 halfway = (halfwayLen > 0.001f) ? (halfwayRaw / halfwayLen) : shadingCtx.normal;        
-        const float  halfwayCos = max(dot(halfway, shadingCtx.normal), 0.);
-        const float  HdotV = max(dot(halfway, shadingCtx.viewDir), 0.);
-
-        // Microfacet-based specular component
-        const float4 fresnelHV = FresnelSchlick(matInfo, HdotV);
-        const float distr = GgxMicrofacetDistribution(matInfo, halfwayCos);
-        const float vis = GgxVisibilityOcclusion(matInfo, NdotL, NdotV);
-
-        const float4 specular = fresnelHV * vis * distr;
-
-        // Diffuse
-#if defined USE_SMOOTH_REFRACTION_APPROX
-        const float4 fresnelNV = FresnelSchlick(matInfo, NdotV);
-        const float4 fresnelNL = FresnelSchlick(matInfo, NdotL);
-        const float4 diffuse = DiffuseBRDF() * matInfo.diffuse * (1.0 - fresnelNV) * (1.0 - fresnelNL);
-#elif defined USE_ROUGH_REFRACTION_APPROX
-        const float4 fresnelNV = FresnelSchlick(matInfo, NdotV);
-        const float4 fresnelNL = FresnelSchlick(matInfo, NdotL);
-
-        const float4 fresnelIntegral = FresnelIntegralApprox(matInfo.f0);
-
-        const float4 roughFresnelNV = lerp(fresnelNV, fresnelIntegral, matInfo.alphaSq);
-        const float4 roughFresnelNL = lerp(fresnelNL, fresnelIntegral, matInfo.alphaSq);
-
-        const float4 diffuse = DiffuseBRDF() * matInfo.diffuse * (1.0 - roughFresnelNV) * (1.0 - roughFresnelNL);
-#else
-        const float4 diffuse = DiffuseBRDF() * matInfo.diffuse;
-#endif
-
-        //return specular + diffuse;
-        brdf = specular + diffuse;
-    }
-
-    return brdf;
-}
-
-float4 PbrM_DirLightContrib(float3 lightDir,
-    float4 luminance,
-    PbrM_ShadingCtx shadingCtx,
-    PbrM_MatInfo matInfo)
-{
-    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
-
-    const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
-
-    return brdf * thetaCos * luminance;    
-}
-
-float4 PbrM_PointLightContrib(float3 surfPos,
-    float4 lightPos,
-    float4 intensity,
-    PbrM_ShadingCtx shadingCtx,
-    PbrM_MatInfo matInfo)
-{
-    const float3 dirRaw = surfPos - (float3)lightPos;
-    const float  len = length(dirRaw);
-    const float3 lightDir = dirRaw / len;
-    const float  distSqr = len * len;
-
-    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
-
-    const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
-
-    return brdf * thetaCos * intensity / distSqr;
-}
-
-float DoSpotCone(float4 lightDir, float3 L)
-{
-    // If the cosine angle of the light's direction 
-    // vector and the vector from the light source to the point being 
-    // shaded is less than minCos, then the spotlight contribution will be 0.
-    float minCos = cos(lightDir.w);
-    // If the cosine angle of the light's direction vector
-    // and the vector from the light source to the point being shaded
-    // is greater than maxCos, then the spotlight contribution will be 1.
-    float maxCos = lerp(minCos, 1, 0.5f);
-    float cosAngle = dot(normalize((float3)lightDir), normalize(L));
-    // Blend between the maxixmum and minimum cosine angles.
-    return smoothstep(minCos, maxCos, cosAngle);
-}
-
-
-float4 PbrM_SpotLightContrib(float3 surfPos,
-    float4 lightPosData,
-    float4 lightDirData,
-    float4 intensity,
-    PbrM_ShadingCtx shadingCtx,
-    PbrM_MatInfo matInfo)
-{
-    const float3 dirRaw = surfPos - (float3)lightPosData;
-    const float  len = length(dirRaw);
-    const float3 lightDir = dirRaw / len;
-
-    const float spotIntensity = DoSpotCone(lightDirData, lightDir);
-    if (spotIntensity == 0.0f)
-        return intensity * 0.0f;
-    else
-    {
-        const float distSqr = len * len;
-        const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
-
-        const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
-
-        return brdf * thetaCos * intensity * spotIntensity / distSqr;
-    }
-}
 
 float4 PSMain(const VSOut input) : SV_Target
 {
@@ -321,12 +110,12 @@ float4 PSMain(const VSOut input) : SV_Target
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
-    float4 ambientLightLuminance = float4(1.2, 1.2, 1.2, 1);
+    float4 ambientLightLuminance = float4(0.02, 0.02, 0.02, 1);
     float3 directionalLightVector = normalize((float3)LightDir);
 
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
 
-    //output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);
+    output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);
 
     //output += PbrM_DirLightContrib(directionalLightVector,
     //    luminance,
@@ -389,14 +178,22 @@ float4 PSMain(const VSOut input) : SV_Target
     if (input.TexFlags & 0x00000002)
     {
         const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f; // 2.0f;
-	    //const float lightAverage = (Light.r + Light.g + Light.b) / 3.0f;
+	//const float lightAverage = (Light.r + Light.g + Light.b) / 3.0f;
         //output.rgb *= Light;
-	    //output.rgb *= (Light * 1.5f);
-	    //output.rgb *= 0.5f;	
-	    //output.rgb = float3(lightAverage, lightAverage, lightAverage);
-	    //output.rgb *= float3(1.0f, 1.0f, 1.0f);
+	//output.rgb *= (Light * 1.5f);
+	//output.rgb *= (1.5f * Light + 0.3f);
+	//output.rgb = output.rgb * 5.0f * Light;
+	//output.rgb *= 0.5f;
         //output.rgb = output.rgb * 0.2f + output.rgb * (0.8f * Light);
-	    //output.rgb = Light;	
+	//output.rgb = Light;
+	//float p1 = GetPixelPower(Light.rgb);
+	//float p2 = GetPixelPower(output.rgb);
+	//float k = exp(-500.0f * pow(p1 - p2, 2.0f));
+	//output.rgb = output.rgb * k + output.rgb * ((1.0f - k) * Light);
+	//if (k > 0.5f)
+	//    output.rgb *= float3(1, 0, 0);
+	//else
+	//    output.rgb *= float3(0, 1, 0);
     }
 
     //output.rgb = input.Normal;

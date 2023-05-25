@@ -330,6 +330,9 @@ void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextu
         static_assert(sizeof(ppPts[i]->Point) >= sizeof(v.Pos), "Sizes differ, can't use reinterpret_cast");
         v.Pos = reinterpret_cast<decltype(v.Pos)&>(ppPts[i]->Point);
 
+        static_assert(sizeof(ppPts[i]->Normal) >= sizeof(v.Normal), "Sizes differ, can't use reinterpret_cast");
+        v.Normal = reinterpret_cast<decltype(v.Normal)&>(ppPts[i]->Normal);
+
         static_assert(sizeof(ppPts[i]->Light) >= sizeof(v.Color), "Sizes differ, can't use reinterpret_cast");
         v.Color = reinterpret_cast<decltype(v.Color)&>(ppPts[i]->Light);
 
