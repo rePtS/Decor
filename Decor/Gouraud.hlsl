@@ -101,7 +101,12 @@ float4 PSMain(const VSOut input) : SV_Target
     if (input.PolyFlags & (PF_Masked | PF_Modulated))
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);	
-    }	
+    }
+
+    if (input.PolyFlags & PF_Modulated)
+    {
+        return TexDiffuse.Sample(SamPoint, input.TexCoord);
+    }
 
     PbrM_ShadingCtx shadingCtx;
     //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));

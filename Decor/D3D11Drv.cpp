@@ -114,11 +114,6 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
 
-    // Убираем из бэкенда методы для проверки и загрузки сцены.
-    // Все будет делаться в D3D11Drv,
-    // в том числе здесь будет храниться список источников света,
-    // который будет передаваться в рендеры
-
     m_Backend.EnsureCurrentScene(levelIndex, levelPathName);    
 }
 

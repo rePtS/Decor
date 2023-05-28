@@ -148,6 +148,7 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
             auto lightPos = light->Location.TransformPointBy(c);
             // получаем радиус действия источника
             auto lightRadius = light->WorldLightRadius();
+
             auto lightRadiusSquared = lightRadius * lightRadius;
 
             auto nearLightBoundary = lightPos.Z - lightRadius;
@@ -180,8 +181,8 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
                     lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
 
                     float lightBrightness = (float)light->LightBrightness / 255.0f;
-                    auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (1.0f - (float)light->LightSaturation / 255.0f), (float)light->LightBrightness / 255.0f);
-                    color = DirectX::XMVectorScale(color, lightRadiusSquared / 2.0f);
+                    auto& color = HSVtoRGB((float)light->LightHue / 255.0f, (1.0f - (float)light->LightSaturation / 255.0f), 1.0f);
+                    color = DirectX::XMVectorScale(color, lightRadiusSquared * (float)light->LightBrightness / 255.0f);
 
                     if (light->LightEffect == LE_Spotlight)
                     {

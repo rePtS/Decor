@@ -101,6 +101,12 @@ float4 PSMain(const VSOut input) : SV_Target
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
     }
+    
+    if (input.PolyFlags & PF_Unlit)
+    {
+        const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+        return float4(Diffuse, 1.0f);
+    }
 
     PbrM_ShadingCtx shadingCtx;
     //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
