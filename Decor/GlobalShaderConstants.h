@@ -45,8 +45,7 @@ public:
 protected:
     struct PerFrame
     {
-        float fRes[2];
-        float padding[2];
+        float fRes[4];
         DirectX::XMMATRIX ProjectionMatrix;
         DirectX::XMMATRIX ViewMatrix;
         DirectX::XMVECTOR LightDir;
@@ -56,6 +55,15 @@ protected:
         DirectX::XMVECTOR Lights[MAX_LIGHTS_DATA_SIZE];
     };
     ConstantBuffer<PerFrame> m_CBufPerFrame;
+
+    struct PerFrameReal
+    {
+        float fTimeInSeconds;
+        float padding[3];
+    };
+    ConstantBuffer<PerFrameReal> m_CBufPerFrameReal;
+
+    long long m_InitialTime;
 
     // Vars for projection change check
     float m_fFov = 0.0f;
@@ -98,5 +106,7 @@ protected:
 
     DirectX::XMVECTOR HSVtoRGB(float H, float S, float V);
     void ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex);
+
+    float GetTimeSinceStart();
 };
 

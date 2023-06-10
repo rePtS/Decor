@@ -5,6 +5,8 @@ static const uint PF_Modulated = 0x00000040;    // Modulation transparency.
 static const uint PF_Translucent = 0x00000004;	// Poly is transparent.
 static const uint PF_SmallWavy = 0x00002000;	// Small wavy pattern (for water/enviro reflection).
 static const uint PF_Unlit = 0x00400000;	    // Unlit.
+static const uint PF_TwoSided = 0x00000100;	// Poly is visible from both sides.
+static const uint PF_Portal = 0x04000000;	// Portal between iZones.
 
 static const uint PACKED_MAX_SLICE_DATA_SIZE = MAX_SLICE_DATA_SIZE / 4;
 static const uint PACKED_MAX_LIGHTS_INDEX_SIZE = MAX_LIGHTS_INDEX_SIZE / 4;
@@ -23,6 +25,11 @@ cbuffer CBufGlobal : register(b0)
     uint4  IndexesOfFirstLightsInSlices[PACKED_MAX_SLICE_DATA_SIZE];
     uint4  LightIndexesFromAllSlices[PACKED_MAX_LIGHTS_INDEX_SIZE];
     float4 Lights[MAX_LIGHTS_DATA_SIZE];
+};
+
+cbuffer CBufPerFrameReal : register(b1)
+{
+    float4 fTimeInSeconds;
 };
 
 sampler SamLinear : register(s0);

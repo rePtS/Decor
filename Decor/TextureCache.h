@@ -43,5 +43,8 @@ protected:
     //Tracking of which slots need to be bound on BindTextures()
     unsigned int m_iDirtyBeginSlot;
     unsigned int m_iDirtyEndSlot;
+
+    TextureConverter::TextureData m_NoiseTextureData;
+    void CreateNoiseTexture(ID3D11Device& Device);
 };
 

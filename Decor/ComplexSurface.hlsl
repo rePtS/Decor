@@ -3,6 +3,7 @@
 
 Texture2D TexDiffuse : register(t0);
 Texture2D TexLight : register(t1);
+Texture2D TexNoise : register(t2);
 
 struct SPoly
 {
@@ -66,7 +67,7 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // ѕока будем использовать фиксированный metalRoughness
     float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // ѕока будем использовать фиксированный metalRoughness
 
-    if ((input.PolyFlags & PF_Masked) || (input.PolyFlags & PF_Translucent))
+    if (input.PolyFlags & PF_Translucent)    
     {
         metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
     }
@@ -104,13 +105,22 @@ float4 PSMain(const VSOut input) : SV_Target
     
     if (input.PolyFlags & PF_Unlit)
     {
-        const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
-        return float4(Diffuse, 1.0f);
+        //const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+        //return float4(Diffuse, 1.0f);
+	return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
     }
 
-    PbrM_ShadingCtx shadingCtx;
+    PbrM_ShadingCtx shadingCtx;    
+    if (input.PolyFlags & PF_Portal)	
+	shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+    else
+	shadingCtx.normal = normalize(input.Normal);
+
+    //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
     //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
-    shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
+    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
+    //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
     shadingCtx.viewDir = normalize((float3)input.PosWorld);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
@@ -190,7 +200,7 @@ float4 PSMain(const VSOut input) : SV_Target
 	//output.rgb *= (1.5f * Light + 0.3f);
 	//output.rgb = output.rgb * 5.0f * Light;
 	//output.rgb *= 0.5f;
-        //output.rgb = output.rgb * 0.2f + output.rgb * (0.8f * Light);
+        //output.rgb = output.rgb * 0.5f + output.rgb * (0.5f * Light);
 	//output.rgb = Light;
 	//float p1 = GetPixelPower(Light.rgb);
 	//float p2 = GetPixelPower(output.rgb);
@@ -203,7 +213,8 @@ float4 PSMain(const VSOut input) : SV_Target
     }
 
     //output.rgb = input.Normal;
-    //output.rgb = TexNoise.Sample(SamLinear, input.TexCoord).rrr;
+    //output.rgb = TexNoise.Sample(SamLinear, input.TexCoord).rgb;
+    //output.rgb = fTimeInSeconds.rgb;
 
     output.a = 1;
     return output;    

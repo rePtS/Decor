@@ -1,10 +1,13 @@
+#include <chrono>
 #include "GlobalShaderConstants.h"
 #include <cassert>
 
-GlobalShaderConstants::GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-:m_CBufPerFrame(Device, DeviceContext)
+GlobalShaderConstants::GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext):
+    m_CBufPerFrame(Device, DeviceContext),
+    m_CBufPerFrameReal(Device, DeviceContext)
 {
-
+    using namespace std::chrono;
+    m_InitialTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 void GlobalShaderConstants::CheckProjectionChange(const FSceneNode& SceneNode)
@@ -293,6 +296,11 @@ void GlobalShaderConstants::CheckLevelChange(const FSceneNode& SceneNode)
     }
 }
 
+float GlobalShaderConstants::GetTimeSinceStart() {
+    using namespace std::chrono;
+    return float(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - m_InitialTime);
+}
+
 void GlobalShaderConstants::Bind()
 {
     if (m_CBufPerFrame.IsDirty())
@@ -301,6 +309,11 @@ void GlobalShaderConstants::Bind()
     }
 
     m_CBufPerFrame.Bind(0);
+
+    m_CBufPerFrameReal.m_Data.fTimeInSeconds = GetTimeSinceStart();
+    m_CBufPerFrameReal.MarkAsDirty();
+    m_CBufPerFrameReal.Update();
+    m_CBufPerFrameReal.Bind(1);
 }
 
 
