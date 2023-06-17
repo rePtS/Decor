@@ -177,10 +177,8 @@ void UD3D11RenderDevice::Render()
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
     // ѕока отключим неосновной рендеринг (возможно надо учитывать Surface, чтобы отключать не все, а только ненужные поверхности)
-    if (pFrame->Parent != nullptr)
-        return;
-
-    m_pGlobalShaderConstants->CheckViewChange(*pFrame);
+    if (pFrame->Parent == nullptr)
+        m_pGlobalShaderConstants->CheckViewChange(*pFrame);
 
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
     if (m_Backend.IsSceneRenderingEnabled())
@@ -189,7 +187,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             return;
     }
 
-    assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
+    //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
 
     const DWORD PolyFlags = Surface.PolyFlags;
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
@@ -200,6 +198,9 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
     }
 
     unsigned int TexFlags = 0;
+
+    if (pFrame->Parent != nullptr)
+        TexFlags |= 0x00000004;
 
     const TextureConverter::TextureData* pTexDiffuse = nullptr;
     if (Surface.Texture)
@@ -289,7 +290,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             v.TexFlags = TexFlags;
         }
 
-    }
+    }    
 }
 
 void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextureInfo& Info, FTransTexture** const ppPts, const int NumPts, const DWORD PolyFlags, FSpanBuffer* const /*pSpan*/)

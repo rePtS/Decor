@@ -98,6 +98,29 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 
 float4 PSMain(const VSOut input) : SV_Target
 {
+    if (input.TexFlags & 0x00000004)
+    {
+	if (input.PolyFlags & PF_Masked)
+    	{
+            clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
+	}
+
+    	float4 Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    	if (input.TexFlags & 0x00000001)
+    	{
+            const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+            Color.rgb *= Diffuse;
+	}
+    	if (input.TexFlags & 0x00000002)
+    	{
+            const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;
+            Color.rgb *= Light;
+    	}
+    
+    	return Color;
+    }
+
     if (input.PolyFlags & PF_Masked)
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
@@ -197,10 +220,10 @@ float4 PSMain(const VSOut input) : SV_Target
 	//const float lightAverage = (Light.r + Light.g + Light.b) / 3.0f;
         //output.rgb *= Light;
 	//output.rgb *= (Light * 1.5f);
-	//output.rgb *= (1.5f * Light + 0.3f);
-	//output.rgb = output.rgb * 5.0f * Light;
+	//output.rgb *= (1.5f * Light + 0.3f); //!!!
+	//output.rgb = output.rgb * 3.0f * Light;	
 	//output.rgb *= 0.5f;
-        //output.rgb = output.rgb * 0.5f + output.rgb * (0.5f * Light);
+        //output.rgb = output.rgb * 0.2f + output.rgb * (0.8f * Light);
 	//output.rgb = Light;
 	//float p1 = GetPixelPower(Light.rgb);
 	//float p2 = GetPixelPower(output.rgb);

@@ -12,6 +12,7 @@ static const uint PACKED_MAX_SLICE_DATA_SIZE = MAX_SLICE_DATA_SIZE / 4;
 static const uint PACKED_MAX_LIGHTS_INDEX_SIZE = MAX_LIGHTS_INDEX_SIZE / 4;
 static const uint SLICE_MAX_INDEX = SLICE_NUMBER - 1;
 static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
+static const float LIGHT_EDGE_THICKNESS = 0.1f;
 
 static const float PI = 3.14159265f;
 
@@ -201,7 +202,13 @@ float4 PbrM_PointLightContrib(float3 surfPos,
 
     const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
-    return brdf * thetaCos * intensity / distSqr;
+    if (len > lightPos.w * (1.0f - LIGHT_EDGE_THICKNESS))
+    {
+	    float edgeFactor = (lightPos.w - len) / (lightPos.w * LIGHT_EDGE_THICKNESS);
+	    return brdf * thetaCos * intensity * edgeFactor / distSqr;
+    }
+    else
+    	return brdf * thetaCos * intensity / distSqr;
 }
 
 float DoSpotCone(float4 lightDir, float3 L)
@@ -241,7 +248,13 @@ float4 PbrM_SpotLightContrib(float3 surfPos,
 
         const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
-        return brdf * thetaCos * intensity * spotIntensity / distSqr;
+    	if (len > lightPosData.w * (1.0f - LIGHT_EDGE_THICKNESS))
+    	{
+	        float edgeFactor = (lightPosData.w - len) / (lightPosData.w * LIGHT_EDGE_THICKNESS);
+	        return brdf * thetaCos * intensity * spotIntensity * edgeFactor / distSqr;
+    	}
+    	else
+    	    return brdf * thetaCos * intensity * spotIntensity / distSqr;
     }
 }
 
