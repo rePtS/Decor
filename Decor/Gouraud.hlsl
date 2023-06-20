@@ -27,7 +27,7 @@ VSOut VSMain(const SPoly Input)
     VSOut Output;
     Output.Pos = mul(Input.Pos, ProjectionMatrix);
     Output.PosWorld = Input.Pos;	
-    Output.Normal = -Input.Normal;
+    Output.Normal = -normalize(Input.Normal);
     Output.Color = Input.Color;
     Output.TexCoord = Input.TexCoord;
     Output.PolyFlags = Input.PolyFlags;
@@ -98,6 +98,24 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 
 float4 PSMain(const VSOut input) : SV_Target
 {
+/*
+    float4 Color = float4(input.Color, 1.0f);
+
+    if (input.PolyFlags & (PF_Masked | PF_Modulated))
+    {
+        clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);	
+    }
+
+    if (input.PolyFlags & PF_Modulated)
+    {
+        return TexDiffuse.Sample(SamPoint, input.TexCoord);
+    }
+
+    const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+    Color.rgb *= Diffuse;
+
+    return Color;
+*/
     if (input.PolyFlags & (PF_Masked | PF_Modulated))
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);	
@@ -179,5 +197,5 @@ float4 PSMain(const VSOut input) : SV_Target
     //output.rgb = TexNoise.Sample(SamLinear, input.TexCoord).rrr;
 
     output.a = 1;
-    return output;    
+    return output;
 }

@@ -120,6 +120,7 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
 void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashFog*/, const FPlane /*ScreenClear*/, const DWORD /*RenderLockFlags*/, BYTE* const /*pHitData*/, INT* const /*pHitSize*/)
 {
     m_bNoTilesDrawnYet = true;
+
     m_Backend.NewFrame();
     m_pTileRenderer->NewFrame();
     m_pGouraudRenderer->NewFrame();
@@ -176,18 +177,19 @@ void UD3D11RenderDevice::Render()
 
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
-    // Пока отключим неосновной рендеринг (возможно надо учитывать Surface, чтобы отключать не все, а только ненужные поверхности)
+    // Вызываем CheckViewChange только если это рендеринг основной сцены
     if (pFrame->Parent == nullptr)
         m_pGlobalShaderConstants->CheckViewChange(*pFrame);
 
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
-    if (m_Backend.IsSceneRenderingEnabled())
-    {
-        if (Surface.Texture->CacheID != 8978144)
-            return;
-    }
+    
+    //if (m_Backend.IsSceneRenderingEnabled())
+    //{
+    //    if (Surface.Texture->CacheID != 8978144)
+    //        return;
+    //}
 
-    //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
+    //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn    
 
     const DWORD PolyFlags = Surface.PolyFlags;
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
@@ -290,6 +292,30 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             v.TexFlags = TexFlags;
         }
 
+        /*
+        static int currSurf = 0;
+        if(currSurf !=Frame->Level->Model->Nodes(Poly->iNode).iSurf)
+        {
+            currSurf = Frame->Level->Model->Nodes(Poly->iNode).iSurf;
+            if(currSurf>-1)
+            {
+                int lm = Frame->Level->Model->Surfs(currSurf).iLightMap;
+                if(lm>-1)
+                {
+                    int la = Frame->Level->Model->LightMap(lm).iLightActors;
+                    if(la>-1)
+                    {
+                        AActor* l = Frame->Level->Model->Lights(la);
+                        if(l)
+                        {
+                            printf("%f %f %f\n",l->Location.X,l->Location.Y,l->Location.Z);
+                        }
+                    }
+                }
+            }
+
+        }
+        */
     }    
 }
 
@@ -345,6 +371,8 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
     assert(m_pTextureCache);
     assert(m_pDeviceState);
     m_bNoTilesDrawnYet = false;
+
+    //SetSceneNode(pFrame); //Set scene node fix.
 
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 

@@ -202,9 +202,10 @@ float4 PbrM_PointLightContrib(float3 surfPos,
 
     const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
-    if (len > lightPos.w * (1.0f - LIGHT_EDGE_THICKNESS))
-    {
-	    float edgeFactor = (lightPos.w - len) / (lightPos.w * LIGHT_EDGE_THICKNESS);
+    const float lightEdgeStart = lightPos.w * (1.0f - LIGHT_EDGE_THICKNESS);
+    if (len > lightEdgeStart)
+    {	    
+	    float edgeFactor = 1.0f - smoothstep(lightEdgeStart, lightPos.w, len);
 	    return brdf * thetaCos * intensity * edgeFactor / distSqr;
     }
     else
@@ -213,6 +214,22 @@ float4 PbrM_PointLightContrib(float3 surfPos,
 
 float DoSpotCone(float4 lightDir, float3 L)
 {
+    float maxCos = 0.0f;
+    float minCos = 0.0f;
+
+    // ≈сли угол меньше 45 градусов - расшир€ем конус наружу, иначе - сужаем конус внутрь
+    if (lightDir.w < 0.785398f)
+    {
+	maxCos = cos(lightDir.w);
+	minCos = lerp(0.f, maxCos, 0.95f);        
+    }
+    else
+    {
+    	minCos = cos(lightDir.w);
+	maxCos = lerp(minCos, 1, 0.5f);
+    }
+
+/*    
     // If the cosine angle of the light's direction 
     // vector and the vector from the light source to the point being 
     // shaded is less than minCos, then the spotlight contribution will be 0.
@@ -221,9 +238,10 @@ float DoSpotCone(float4 lightDir, float3 L)
     // and the vector from the light source to the point being shaded
     // is greater than maxCos, then the spotlight contribution will be 1.
     float maxCos = lerp(minCos, 1, 0.5f);
+*/
     float cosAngle = dot(normalize((float3)lightDir), normalize(L));
     // Blend between the maxixmum and minimum cosine angles.
-    return smoothstep(minCos, maxCos, cosAngle);
+    return smoothstep(minCos, maxCos, cosAngle);    
 }
 
 
@@ -248,9 +266,10 @@ float4 PbrM_SpotLightContrib(float3 surfPos,
 
         const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
 
-    	if (len > lightPosData.w * (1.0f - LIGHT_EDGE_THICKNESS))
+	const float lightEdgeStart = lightPosData.w * (1.0f - LIGHT_EDGE_THICKNESS);
+    	if (len > lightEdgeStart)
     	{
-	        float edgeFactor = (lightPosData.w - len) / (lightPosData.w * LIGHT_EDGE_THICKNESS);
+	        float edgeFactor = 1.0f - smoothstep(lightEdgeStart, lightPosData.w, len);
 	        return brdf * thetaCos * intensity * spotIntensity * edgeFactor / distSqr;
     	}
     	else
