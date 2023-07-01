@@ -154,13 +154,18 @@ float4 PSMain(const VSOut input) : SV_Target
     slice = min(SLICE_MAX_INDEX, slice);
 
     uint lightId = 0;
+    uint lightType = 0;
     for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; ++i)
     {
         lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
         float4 intencity = Lights[lightId];
 
+        lightType = (uint)intencity.w;
+        if (bool(lightType & LIGHT_SPECIAL) != bool(input.PolyFlags & PF_SpecialLit))
+            continue;
+
         // Point
-        if (intencity.w == 2) {
+        if (lightType & LIGHT_POINT) {
             float4 lightPosData = Lights[lightId + 1];
             float3 posWorld = (float3)input.PosWorld;
 
@@ -174,7 +179,7 @@ float4 PSMain(const VSOut input) : SV_Target
         }
 
         // Spot
-        if (intencity.w == 3) {
+        if (lightType & LIGHT_SPOT) {
             float4 lightPosData = Lights[lightId + 1];
             float4 lightDirData = Lights[lightId + 2];
             float3 posWorld = (float3)input.PosWorld;

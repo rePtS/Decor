@@ -88,13 +88,6 @@ protected:
 
     struct LightData
     {
-        enum class LightType : uint32_t
-        {
-            DIRECT = 1,
-            POINT = 2,
-            SPOT = 3
-        };
-
         DirectX::XMVECTOR Color;
         DirectX::XMVECTOR Location;
         DirectX::XMVECTOR Direction;

@@ -86,7 +86,7 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
         {
             LightData lightData;
 
-            lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 100000.0f, (float)LightData::LightType::SPOT);
+            lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 100000.0f, LIGHT_SPOT);
             lightData.Location = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 4000.0f);
             lightData.Direction = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.5f);
             m_LightsData.push_back(lightData);
@@ -102,10 +102,10 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
             m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
             m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
 
-            auto lightType = (LightData::LightType)DirectX::XMVectorGetW(m_LightsData[i].Color);
-            if (lightType == LightData::LightType::POINT)
+            auto lightType = (uint32_t)DirectX::XMVectorGetW(m_LightsData[i].Color);
+            if (lightType & LIGHT_POINT)
                 lightDataIndex += 2;            
-            else if (lightType == LightData::LightType::SPOT)
+            else if (lightType & LIGHT_SPOT)
             {
                 m_CBufPerFrame.m_Data.Lights[lightDataIndex + 2] = m_LightsData[i].Direction;
                 lightDataIndex += 3;
@@ -189,7 +189,11 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
 
                     if (light->LightEffect == LE_Spotlight)
                     {
-                        color = DirectX::XMVectorSetW(color, (float)LightData::LightType::SPOT);
+                        uint32_t lightType = LIGHT_SPOT;
+                        if (light->bSpecialLit)
+                            lightType |= LIGHT_SPECIAL;
+
+                        color = DirectX::XMVectorSetW(color, lightType);
 
                         auto lightVector = light->Rotation.Vector().TransformVectorBy(c);
 
@@ -199,8 +203,12 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
                         lightData.Direction = DirectX::XMVectorSet(lightVector.X, lightVector.Y, lightVector.Z, spotAngle);
                     }
                     else
-                    {                        
-                        color = DirectX::XMVectorSetW(color, (float)LightData::LightType::POINT);
+                    {
+                        uint32_t lightType = LIGHT_POINT;
+                        if (light->bSpecialLit)
+                            lightType |= LIGHT_SPECIAL;
+
+                        color = DirectX::XMVectorSetW(color, lightType);
                     }
 
                     lightData.Color = color;

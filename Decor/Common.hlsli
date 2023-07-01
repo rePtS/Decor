@@ -7,6 +7,7 @@ static const uint PF_SmallWavy = 0x00002000;	// Small wavy pattern (for water/en
 static const uint PF_Unlit = 0x00400000;	    // Unlit.
 static const uint PF_TwoSided = 0x00000100;	// Poly is visible from both sides.
 static const uint PF_Portal = 0x04000000;	// Portal between iZones.
+static const uint PF_SpecialLit = 0x00100000;	// Only speciallit lights apply to this poly.
 
 static const uint PACKED_MAX_SLICE_DATA_SIZE = MAX_SLICE_DATA_SIZE / 4;
 static const uint PACKED_MAX_LIGHTS_INDEX_SIZE = MAX_LIGHTS_INDEX_SIZE / 4;

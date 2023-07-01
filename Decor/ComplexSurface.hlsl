@@ -130,7 +130,7 @@ float4 PSMain(const VSOut input) : SV_Target
     {
         //const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
         //return float4(Diffuse, 1.0f);
-	return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
+	    return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
     }
 
     PbrM_ShadingCtx shadingCtx;    
@@ -174,40 +174,45 @@ float4 PSMain(const VSOut input) : SV_Target
     //    output = float4(0.7, 0.0, 0.3, 1);    
 
     uint lightId = 0;
+    uint lightType = 0;
     for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; ++i)
     {
         lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
         float4 intencity = Lights[lightId];
 
+        lightType = (uint)intencity.w;
+        if (bool(lightType & LIGHT_SPECIAL) != bool(input.PolyFlags & PF_SpecialLit))
+            continue;
+        
         // Point
-        if (intencity.w == 2) {
+        if (lightType & LIGHT_POINT) {
             float4 lightPosData = Lights[lightId + 1];
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
             if (length((float3)lightPosData - posWorld) < lightPosData.w)
-            output += PbrM_PointLightContrib(posWorld,
-                lightPosData,
-                intencity,
-                shadingCtx,
-                matInfo);
+                output += PbrM_PointLightContrib(posWorld,
+                    lightPosData,
+                    intencity,
+                    shadingCtx,
+                    matInfo);
         }
 
         // Spot
-        if (intencity.w == 3) {
+        if (lightType & LIGHT_SPOT) {
             float4 lightPosData = Lights[lightId + 1];
             float4 lightDirData = Lights[lightId + 2];
             float3 posWorld = (float3)input.PosWorld;
 
             // Skip spot lights that are out of range of the point being shaded.
             if (length((float3)lightPosData - posWorld) < lightPosData.w)
-            output += PbrM_SpotLightContrib(posWorld,
-                lightPosData,
-                lightDirData,
-                intencity,
-                shadingCtx,
-                matInfo);
-        }
+                output += PbrM_SpotLightContrib(posWorld,
+                    lightPosData,
+                    lightDirData,
+                    intencity,
+                    shadingCtx,
+                    matInfo);
+        }        
     }
 
 

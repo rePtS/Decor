@@ -17,4 +17,10 @@
 
 #define MAX_LIGHTS_INDEX_SIZE 1024 // must be multiple of 16
 
+// Типы источников света, которые передаются в шейдер
+#define LIGHT_SPECIAL 1 // специальный/не специальный источник (специальные источники освещают только поверхности с признаком PF_SpecialLit)
+#define LIGHT_AMBIENT 2 // обычный источник света или амбиентный
+#define LIGHT_POINT 4 // 
+#define LIGHT_SPOT 8 // 
+
 #endif // __DEFINES_HLSLI__
