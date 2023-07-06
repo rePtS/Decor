@@ -102,10 +102,10 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
             m_CBufPerFrame.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
             m_CBufPerFrame.m_Data.Lights[lightDataIndex+1] = m_LightsData[i].Location;
 
-            auto lightType = (uint32_t)DirectX::XMVectorGetW(m_LightsData[i].Color);
-            if (lightType & LIGHT_POINT)
+            auto lightType = (uint32_t)DirectX::XMVectorGetW(m_LightsData[i].Color) & LIGHT_TYPE_MASK;
+            if (lightType == LIGHT_POINT || lightType == LIGHT_POINT_AMBIENT)
                 lightDataIndex += 2;            
-            else if (lightType & LIGHT_SPOT)
+            else if (lightType == LIGHT_SPOT)
             {
                 m_CBufPerFrame.m_Data.Lights[lightDataIndex + 2] = m_LightsData[i].Direction;
                 lightDataIndex += 3;
@@ -191,7 +191,7 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
                     {
                         uint32_t lightType = LIGHT_SPOT;
                         if (light->bSpecialLit)
-                            lightType |= LIGHT_SPECIAL;
+                            lightType |= LIGHT_SPECIAL_MASK;
 
                         color = DirectX::XMVectorSetW(color, lightType);
 
@@ -202,11 +202,20 @@ void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vec
                         float spotAngle = (float)light->LightCone / 510.0f * PI;
                         lightData.Direction = DirectX::XMVectorSet(lightVector.X, lightVector.Y, lightVector.Z, spotAngle);
                     }
+                    else if (light->LightEffect == LE_Cylinder)
+                    {
+                        uint32_t lightType = LIGHT_POINT_AMBIENT;
+                        if (light->bSpecialLit)
+                            lightType |= LIGHT_SPECIAL_MASK;
+
+                        color = DirectX::XMVectorScale(color, 0.00005f * lightBrightness);
+                        color = DirectX::XMVectorSetW(color, lightType);
+                    }
                     else
                     {
                         uint32_t lightType = LIGHT_POINT;
                         if (light->bSpecialLit)
-                            lightType |= LIGHT_SPECIAL;
+                            lightType |= LIGHT_SPECIAL_MASK;
 
                         color = DirectX::XMVectorSetW(color, lightType);
                     }

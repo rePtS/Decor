@@ -294,18 +294,18 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
 
         /*
         static int currSurf = 0;
-        if(currSurf !=Frame->Level->Model->Nodes(Poly->iNode).iSurf)
+        if(currSurf != pFrame->Level->Model->Nodes(Poly.iNode).iSurf)
         {
-            currSurf = Frame->Level->Model->Nodes(Poly->iNode).iSurf;
+            currSurf = pFrame->Level->Model->Nodes(Poly.iNode).iSurf;
             if(currSurf>-1)
             {
-                int lm = Frame->Level->Model->Surfs(currSurf).iLightMap;
+                int lm = pFrame->Level->Model->Surfs(currSurf).iLightMap;
                 if(lm>-1)
                 {
-                    int la = Frame->Level->Model->LightMap(lm).iLightActors;
+                    int la = pFrame->Level->Model->LightMap(lm).iLightActors;
                     if(la>-1)
                     {
-                        AActor* l = Frame->Level->Model->Lights(la);
+                        AActor* l = pFrame->Level->Model->Lights(la);
                         if(l)
                         {
                             printf("%f %f %f\n",l->Location.X,l->Location.Y,l->Location.Z);
@@ -313,7 +313,6 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
                     }
                 }
             }
-
         }
         */
     }    

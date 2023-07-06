@@ -64,6 +64,11 @@ float4 FresnelIntegralApprox(float4 f0)
     return lerp(f0, 1.f, 0.05f); // Very ad-hoc approximation :-)
 }
 
+float ThetaCos(float3 normal, float3 lightDir)
+{
+    return max(dot(normal, lightDir), 0.);
+}
+
 float4 PbrM_AmbLightContrib(float4 luminance,
     PbrM_ShadingCtx shadingCtx,
     PbrM_MatInfo matInfo)
@@ -94,9 +99,22 @@ float4 PbrM_AmbLightContrib(float4 luminance,
     return (diffuse + specular) * luminance * matInfo.occlusion;
 }
 
-float ThetaCos(float3 normal, float3 lightDir)
+float4 PbrM_AmbPointLightContrib(float3 surfPos,
+    float4 lightPos,
+    float4 luminance,
+    PbrM_ShadingCtx shadingCtx,
+    PbrM_MatInfo matInfo)
 {
-    return max(dot(normal, lightDir), 0.);    
+    const float3 dirRaw = surfPos - (float3)lightPos;
+    const float  len = length(dirRaw);
+    //const float3 lightDir = dirRaw / len;
+
+    //const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
+
+    float4 ambLightContrib = PbrM_AmbLightContrib(luminance, shadingCtx, matInfo);
+    float attenuation = 1.0f - smoothstep(0, lightPos.w, len);
+    
+    return ambLightContrib * attenuation;
 }
 
 float GgxMicrofacetDistribution(PbrM_MatInfo matInfo, float NdotH)

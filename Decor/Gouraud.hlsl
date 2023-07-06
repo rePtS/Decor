@@ -116,6 +116,7 @@ float4 PSMain(const VSOut input) : SV_Target
 
     return Color;
 */
+
     if (input.PolyFlags & (PF_Masked | PF_Modulated))
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);	
@@ -155,17 +156,20 @@ float4 PSMain(const VSOut input) : SV_Target
 
     uint lightId = 0;
     uint lightType = 0;
+    uint lightInfo = 0;
     for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; ++i)
     {
         lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
         float4 intencity = Lights[lightId];
 
-        lightType = (uint)intencity.w;
-        if (bool(lightType & LIGHT_SPECIAL) != bool(input.PolyFlags & PF_SpecialLit))
+        lightInfo = (uint)intencity.w;
+        if (bool(lightInfo & LIGHT_SPECIAL_MASK) != bool(input.PolyFlags & PF_SpecialLit))
             continue;
 
+        lightType = lightInfo & LIGHT_TYPE_MASK;
+
         // Point
-        if (lightType & LIGHT_POINT) {
+        if (lightType == LIGHT_POINT) {
             float4 lightPosData = Lights[lightId + 1];
             float3 posWorld = (float3)input.PosWorld;
 
@@ -178,8 +182,22 @@ float4 PSMain(const VSOut input) : SV_Target
                 matInfo);
         }
 
+        // "Ambient" Point
+        if (lightType == LIGHT_POINT_AMBIENT) {
+            float4 lightPosData = Lights[lightId + 1];
+            float3 posWorld = (float3)input.PosWorld;
+
+            // Skip point lights that are out of range of the point being shaded.
+            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+                output += PbrM_AmbPointLightContrib(posWorld,
+                    lightPosData,
+                    intencity,
+                    shadingCtx,
+                    matInfo);
+        }
+
         // Spot
-        if (lightType & LIGHT_SPOT) {
+        if (lightType == LIGHT_SPOT) {
             float4 lightPosData = Lights[lightId + 1];
             float4 lightDirData = Lights[lightId + 2];
             float3 posWorld = (float3)input.PosWorld;
@@ -203,4 +221,5 @@ float4 PSMain(const VSOut input) : SV_Target
 
     output.a = 1;
     return output;
+
 }
