@@ -104,12 +104,15 @@ void UD3D11RenderDevice::Flush(const UBOOL /*bAllowPrecache*/)
 }
 
 void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
-{
+{    
     assert(pFrame);
+
+    Render(); // нужно отрисовать все, что еще не отрисовано перед сменой ViewPort'а, иначе объекты будут отрисованы в неправильном месте экрана
+
     m_Backend.SetViewport(*pFrame);
 
     m_pGlobalShaderConstants->CheckLevelChange(*pFrame);
-    m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
+    m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);    
 
     auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
@@ -178,8 +181,8 @@ void UD3D11RenderDevice::Render()
 void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet)
 {
     // Вызываем CheckViewChange только если это рендеринг основной сцены
-    if (pFrame->Parent == nullptr)
-        m_pGlobalShaderConstants->CheckViewChange(*pFrame);
+    //if (pFrame->Parent == nullptr)
+    //    m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
 
     //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
     
@@ -225,6 +228,9 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
         pTexLight = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.LightMap, 1);
         TexFlags |= 0x00000002;
     }
+
+    if (pFrame->Parent == nullptr)
+        m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
 
     m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
     m_pDeviceState->PrepareBlendState(BlendState);
@@ -291,7 +297,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             v.PolyFlags = PolyFlags;
             v.TexFlags = TexFlags;
         }
-
+        
         /*
         static int currSurf = 0;
         if(currSurf != pFrame->Level->Model->Nodes(Poly.iNode).iSurf)
@@ -315,7 +321,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             }
         }
         */
-    }    
+    }
 }
 
 void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextureInfo& Info, FTransTexture** const ppPts, const int NumPts, const DWORD PolyFlags, FSpanBuffer* const /*pSpan*/)

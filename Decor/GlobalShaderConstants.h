@@ -39,7 +39,7 @@ public:
     void Bind();
 
     void CheckProjectionChange(const FSceneNode& SceneNode);
-    void CheckViewChange(const FSceneNode& SceneNode);
+    void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly);
     void CheckLevelChange(const FSceneNode& SceneNode);
 
 protected:
@@ -86,6 +86,8 @@ protected:
     std::vector<AActor*> m_PointLights;
     std::vector<AActor*> m_SpotLights;
 
+    std::vector<AActor*> m_TempLights;
+
     struct LightData
     {
         DirectX::XMVECTOR Color;
@@ -98,7 +100,7 @@ protected:
     std::vector<size_t> m_LightSlices[SLICE_NUMBER];
 
     DirectX::XMVECTOR HSVtoRGB(float H, float S, float V);
-    void ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex);
+    void ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex);    
 
     float GetTimeSinceStart();
 };

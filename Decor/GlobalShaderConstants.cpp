@@ -47,10 +47,32 @@ void GlobalShaderConstants::CheckProjectionChange(const FSceneNode& SceneNode)
     }    
 }
 
-void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
+void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly)
 {
-    if (m_Coords.Origin != SceneNode.Coords.Origin || m_Coords.XAxis != SceneNode.Coords.XAxis || m_Coords.YAxis != SceneNode.Coords.YAxis || m_Coords.ZAxis != SceneNode.Coords.ZAxis)
+    assert(Poly.NumPts >= 3);
+
+    int currSurf = SceneNode.Level->Model->Nodes(Poly.iNode).iSurf;
+    if (currSurf > -1)
     {
+        int lm = SceneNode.Level->Model->Surfs(currSurf).iLightMap;
+        if (lm > -1)
+        {
+            m_TempLights.clear();
+            int la = SceneNode.Level->Model->LightMap(lm).iLightActors;
+            if (la > -1)
+            {                
+                AActor* l = SceneNode.Level->Model->Lights(la);
+                while (l)
+                {
+                    m_TempLights.push_back(l);
+                    l = SceneNode.Level->Model->Lights(++la);
+                }
+            }
+        }
+    }
+
+//    if (m_Coords.Origin != SceneNode.Coords.Origin || m_Coords.XAxis != SceneNode.Coords.XAxis || m_Coords.YAxis != SceneNode.Coords.YAxis || m_Coords.ZAxis != SceneNode.Coords.ZAxis)
+//    {
         static const size_t SLICE_MAX_INDEX = SLICE_NUMBER - 1;
         static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
 
@@ -73,13 +95,15 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
         // обрабатываем источники света:
         size_t lightIndex = 0;
 
-        ProcessLightSources(c, m_PointLights, lightIndex);
-        ProcessLightSources(c, m_SpotLights, lightIndex);
-        ProcessLightSources(c, m_TriggerLights, lightIndex);
+        //ProcessLightSources(c, m_PointLights, lightIndex);
+        //ProcessLightSources(c, m_SpotLights, lightIndex);
+        //ProcessLightSources(c, m_TriggerLights, lightIndex);
 
-        // TODO Некоторые лампы являются точечными источниками света, а некоторые - прожекторами
-        // Нужно учитывать это. Пока все лампы считаем точечными источниками
-        ProcessLightSources(c, m_Lamps, lightIndex);
+        //// TODO Некоторые лампы являются точечными источниками света, а некоторые - прожекторами
+        //// Нужно учитывать это. Пока все лампы считаем точечными источниками
+        //ProcessLightSources(c, m_Lamps, lightIndex);
+
+        ProcessLightSources(c, m_TempLights, lightIndex);
 
         // Добавляем фонарик, если нужно
         if (m_AugLight != nullptr && m_AugLight->bIsActive)
@@ -129,8 +153,8 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode)
         m_CBufPerFrame.m_Data.LightDir = DirectX::XMVector4Transform(lightDir, viewMatrix);
         m_CBufPerFrame.MarkAsDirty();
 
-        m_Coords = SceneNode.Coords;
-    }    
+//        m_Coords = SceneNode.Coords;
+//    }        
 }
 
 void GlobalShaderConstants::ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex)

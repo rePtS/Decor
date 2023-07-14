@@ -45,6 +45,8 @@ public:
         assert(Mapping.pData);
         *static_cast<T*>(Mapping.pData) = m_Data;
         m_DeviceContext.Unmap(m_pBuffer.Get(), 0);
+
+        m_bDirty = false;
     }
 
     void Bind(const unsigned int iSlot)
