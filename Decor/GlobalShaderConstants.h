@@ -24,7 +24,6 @@
 
 class GlobalShaderConstants //: public XMMAligned
 {
-    const float HALF_DEGREE_TO_RADIANS = static_cast<float>(PI) / 360.0f;
 
 public:
     explicit GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& m_DeviceContext);
@@ -41,6 +40,9 @@ public:
     void CheckProjectionChange(const FSceneNode& SceneNode);
     void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly);
     void CheckLevelChange(const FSceneNode& SceneNode);
+
+    float GetRFX2() { return m_RFX2; }
+    float GetRFY2() { return m_RFY2; }
 
 protected:
     struct PerFrame
@@ -70,6 +72,9 @@ protected:
     int m_iViewPortX = 0;
     int m_iViewPortY = 0;
     
+    float m_RFX2 = 0.0f;
+    float m_RFY2 = 0.0f;
+
     // Cosine value (powered by 2) of the view cone's angle
     float m_SquaredViewConeCos = 0.0f;
 

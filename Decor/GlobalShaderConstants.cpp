@@ -22,25 +22,28 @@ void GlobalShaderConstants::CheckProjectionChange(const FSceneNode& SceneNode)
         static const float fZNear = 32760.0f;
         static const float fZFar = 1.0f;
 
-        const float fAspect = SceneNode.FX / SceneNode.FY;
-        const float fFovVert = SceneNode.Viewport->Actor->FovAngle / fAspect * static_cast<float>(PI) / 180.0f;
+        const float halfFovInRadians = SceneNode.Viewport->Actor->FovAngle * static_cast<float>(PI) / 360.0f;
+
+        const float aspect = SceneNode.FY / SceneNode.FX;
+        const float halfFovTan = (float)appTan(halfFovInRadians);
+        const float RProjZ = halfFovTan * fZNear;
 
         m_CBufPerFrame.m_Data.fRes[0] = SceneNode.FX;
         m_CBufPerFrame.m_Data.fRes[1] = SceneNode.FY;
         m_CBufPerFrame.m_Data.fRes[2] = 1.0f / SceneNode.FX;
         m_CBufPerFrame.m_Data.fRes[3] = 1.0f / SceneNode.FY;
-        m_CBufPerFrame.m_Data.ProjectionMatrix = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
+        m_CBufPerFrame.m_Data.ProjectionMatrix = DirectX::XMMatrixPerspectiveOffCenterLH(-RProjZ, RProjZ, -aspect * RProjZ, aspect * RProjZ, fZNear, fZFar);
         m_CBufPerFrame.m_Data.ProjectionMatrix.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
-        m_CBufPerFrame.MarkAsDirty();
+        m_CBufPerFrame.MarkAsDirty();                
         m_fFov = SceneNode.Viewport->Actor->FovAngle;
+        m_RFX2 = 2.0f * halfFovTan / SceneNode.FX;
+        m_RFY2 = 2.0f * halfFovTan * aspect / SceneNode.FY;
         m_iViewPortX = SceneNode.X;
-        m_iViewPortY = SceneNode.Y;
-
-        
-        auto halfFovAngleInRadians = SceneNode.Viewport->Actor->FovAngle * HALF_DEGREE_TO_RADIANS;
-        auto halfFarWidth = fZNear * tan(halfFovAngleInRadians);
-        FVector farTopLeftClippingPoint(halfFarWidth, halfFarWidth / fAspect, fZNear);
+        m_iViewPortY = SceneNode.Y;        
+                
+        auto halfFarWidth = fZNear * tan(halfFovInRadians);
+        FVector farTopLeftClippingPoint(halfFarWidth, halfFarWidth * aspect, fZNear);
 
         auto frustumConeCosine = fZNear / farTopLeftClippingPoint.Size();
         m_SquaredViewConeCos = frustumConeCosine * frustumConeCosine;

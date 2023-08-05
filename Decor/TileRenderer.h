@@ -10,7 +10,8 @@ public:
     struct Tile
     {
         DirectX::XMFLOAT4 XYPos;
-        DirectX::XMFLOAT4 TexCoord;
+        DirectX::XMFLOAT4 ZPos;
+        DirectX::XMFLOAT4 TexCoord;        
         DirectX::XMFLOAT3 Color;
         unsigned int PolyFlags;
     };

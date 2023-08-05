@@ -15,6 +15,7 @@ UD3D11RenderDevice::UD3D11RenderDevice()
     URenderDevice::SupportsTC = 1;
     URenderDevice::SupportsDistanceFog = 0;
     URenderDevice::SupportsLazyTextures = 0;
+    URenderDevice::Coronas = 1;
 }
 
 void UD3D11RenderDevice::StaticConstructor()
@@ -153,7 +154,7 @@ void UD3D11RenderDevice::Render()
     {
         m_pGlobalShaderConstants->Bind();
         m_pDeviceState->Bind();
-        m_pTextureCache->BindTextures();
+        m_pTextureCache->BindTextures();        
 
         if (m_pTileRenderer->IsMapped())
         {
@@ -174,7 +175,7 @@ void UD3D11RenderDevice::Render()
             m_pComplexSurfaceRenderer->Unmap();
             m_pComplexSurfaceRenderer->Bind();
             m_pComplexSurfaceRenderer->Draw();
-        }
+        }        
     }
 }
 
@@ -370,7 +371,7 @@ void UD3D11RenderDevice::DrawGouraudPolygon(FSceneNode* const /*pFrame*/, FTextu
     }
 }
 
-void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& Info, const FLOAT fX, const FLOAT fY, const FLOAT fXL, const FLOAT fYL, const FLOAT fU, const FLOAT fV, const FLOAT fUL, const FLOAT fVL, FSpanBuffer* const /*pSpan*/, const FLOAT fZ, const FPlane Color, const FPlane /*Fog*/, const DWORD PolyFlags)
+void UD3D11RenderDevice::DrawTile(FSceneNode* const pFrame, FTextureInfo& Info, const FLOAT fX, const FLOAT fY, const FLOAT fXL, const FLOAT fYL, const FLOAT fU, const FLOAT fV, const FLOAT fUL, const FLOAT fVL, FSpanBuffer* const /*pSpan*/, const FLOAT fZ, const FPlane Color, const FPlane /*Fog*/, const DWORD PolyFlags)
 {
     assert(m_pTileRenderer);
     assert(m_pTextureCache);
@@ -397,20 +398,28 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const /*pFrame*/, FTextureInfo& In
 
     TileRenderer::Tile& t = m_pTileRenderer->GetTile();
 
-    t.XYPos.x = fX;
-    t.XYPos.y = fX + fXL;
-    t.XYPos.z = fY;
-    t.XYPos.w = fY + fYL;
+    float RFX2 = m_pGlobalShaderConstants->GetRFX2() * fZ;
+    float RFY2 = m_pGlobalShaderConstants->GetRFY2() * fZ;
 
-    t.TexCoord.x = fU / Info.Texture->USize;
-    t.TexCoord.y = (fU + fUL) / Info.Texture->USize;
-    t.TexCoord.z = fV / Info.Texture->VSize;
-    t.TexCoord.w = (fV + fVL) / Info.Texture->VSize;
+    t.XYPos.x = (fX - pFrame->FX2) * RFX2;
+    t.XYPos.y = (fX + fXL - pFrame->FX2) * RFX2;
+    t.XYPos.z = (fY - pFrame->FY2) * RFY2;
+    t.XYPos.w = (fY + fYL - pFrame->FY2) * RFY2;
+
+    float uMult = 1.0f / (Info.UScale * Info.USize);
+    float vMult = 1.0f / (Info.VScale * Info.VSize);
+
+    t.TexCoord.x = fU * uMult;
+    t.TexCoord.y = (fU + fUL) * uMult;
+    t.TexCoord.z = fV * vMult;
+    t.TexCoord.w = (fV + fVL) * vMult;
 
     static_assert(sizeof(Color) >= sizeof(t.Color), "Sizes differ, can't use reinterpret_cast");
     t.Color = reinterpret_cast<const decltype(t.Color)&>(Color);
 
     t.PolyFlags = PolyFlags;
+    
+    t.ZPos.x = fZ;
 }
 
 void UD3D11RenderDevice::Draw2DLine(FSceneNode* const /*pFrame*/, const FPlane /*Color*/, const DWORD /*LineFlags*/, const FVector /*P1*/, const FVector /*P2*/)
