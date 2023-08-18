@@ -389,37 +389,44 @@ void UD3D11RenderDevice::DrawTile(FSceneNode* const pFrame, FTextureInfo& Info, 
     }
 
     m_pDeviceState->PrepareBlendState(BlendState);
-    m_pTextureCache->FindOrInsertAndPrepare(Info, 0);
+    const auto& Texture = m_pTextureCache->FindOrInsertAndPrepare(Info, 0);
 
     if (!m_pTileRenderer->IsMapped())
     {
         m_pTileRenderer->Map();
     }
 
-    TileRenderer::Tile& t = m_pTileRenderer->GetTile();
+    TileRenderer::Tile& tile = m_pTileRenderer->GetTile();    
 
-    float RFX2 = m_pGlobalShaderConstants->GetRFX2() * fZ;
-    float RFY2 = m_pGlobalShaderConstants->GetRFY2() * fZ;
+    if (PolyFlags & PF_NoSmooth)
+    {
+        tile.XYPos.x = fX;
+        tile.XYPos.y = fX + fXL;
+        tile.XYPos.z = fY;
+        tile.XYPos.w = fY + fYL;
+    }
+    else
+    {
+        float RFX2 = m_pGlobalShaderConstants->GetRFX2() * fZ;
+        float RFY2 = m_pGlobalShaderConstants->GetRFY2() * fZ;
 
-    t.XYPos.x = (fX - pFrame->FX2) * RFX2;
-    t.XYPos.y = (fX + fXL - pFrame->FX2) * RFX2;
-    t.XYPos.z = (fY - pFrame->FY2) * RFY2;
-    t.XYPos.w = (fY + fYL - pFrame->FY2) * RFY2;
+        tile.XYPos.x = (fX - pFrame->FX2) * RFX2;
+        tile.XYPos.y = (fX + fXL - pFrame->FX2) * RFX2;
+        tile.XYPos.z = (fY - pFrame->FY2) * RFY2;
+        tile.XYPos.w = (fY + fYL - pFrame->FY2) * RFY2;
+    }
 
-    float uMult = 1.0f / (Info.UScale * Info.USize);
-    float vMult = 1.0f / (Info.VScale * Info.VSize);
+    tile.TexCoord.x = fU * Texture.fMultU;
+    tile.TexCoord.y = (fU + fUL) * Texture.fMultU;
+    tile.TexCoord.z = fV * Texture.fMultV;
+    tile.TexCoord.w = (fV + fVL) * Texture.fMultV;
 
-    t.TexCoord.x = fU * uMult;
-    t.TexCoord.y = (fU + fUL) * uMult;
-    t.TexCoord.z = fV * vMult;
-    t.TexCoord.w = (fV + fVL) * vMult;
+    static_assert(sizeof(Color) >= sizeof(tile.Color), "Sizes differ, can't use reinterpret_cast");
+    tile.Color = reinterpret_cast<const decltype(tile.Color)&>(Color);
 
-    static_assert(sizeof(Color) >= sizeof(t.Color), "Sizes differ, can't use reinterpret_cast");
-    t.Color = reinterpret_cast<const decltype(t.Color)&>(Color);
-
-    t.PolyFlags = PolyFlags;
+    tile.PolyFlags = PolyFlags;
     
-    t.ZPos.x = fZ;
+    tile.ZPos.x = fZ;
 }
 
 void UD3D11RenderDevice::Draw2DLine(FSceneNode* const /*pFrame*/, const FPlane /*Color*/, const DWORD /*LineFlags*/, const FVector /*P1*/, const FVector /*P2*/)

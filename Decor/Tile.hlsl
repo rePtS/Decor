@@ -25,8 +25,12 @@ VSOut VSMain(const STile Tile, const uint VertexID : SV_VertexID)
 
     const uint IndexX = VertexID / 2;
     const uint IndexY = 3 - VertexID % 2;
+        
+    if (Tile.PolyFlags & PF_NoSmooth)
+        Output.Pos = float4(-1.0f + 2.0f * (Tile.XYPos[IndexX] * fRes.z), 1.0f - 2.0f * (Tile.XYPos[IndexY] * fRes.w), 1.0f, 1.0f);
+    else
+        Output.Pos = mul(float4(Tile.XYPos[IndexX], Tile.XYPos[IndexY], Tile.ZPos[0], 1.0f), ProjectionMatrix);
 
-    Output.Pos = mul(float4(Tile.XYPos[IndexX], Tile.XYPos[IndexY], Tile.ZPos[0], 1.0f), ProjectionMatrix);
     Output.TexCoord = float2(Tile.TexCoord[IndexX], Tile.TexCoord[IndexY]);
     Output.Color = Tile.Color;
     Output.PolyFlags = Tile.PolyFlags;
@@ -45,7 +49,9 @@ float3 PSMain(const VSOut Input) : SV_Target
         return TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
     }
 
-    const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;    
+    const float3 Diffuse = Input.PolyFlags & PF_NoSmooth ?
+        TexDiffuse.Sample(SamPoint, Input.TexCoord).rgb :
+        TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
 
     const float3 Color = Diffuse * Input.Color.rgb;
 
