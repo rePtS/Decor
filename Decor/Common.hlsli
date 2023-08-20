@@ -237,16 +237,16 @@ float DoSpotCone(float4 lightDir, float3 L)
     float maxCos = 0.0f;
     float minCos = 0.0f;
 
-    // ≈сли угол меньше 45 градусов - расшир€ем конус наружу, иначе - сужаем конус внутрь
-    if (lightDir.w < 0.785398f)
+    // ≈сли угол меньше 64 градусов - расшир€ем конус наружу, иначе - сужаем конус внутрь
+    if (lightDir.w < 1.1f)
     {
-	maxCos = cos(lightDir.w);
-	minCos = lerp(0.f, maxCos, 0.95f);        
+	    maxCos = cos(lightDir.w);
+	    minCos = lerp(0.f, maxCos, 0.6f);
     }
     else
     {
     	minCos = cos(lightDir.w);
-	maxCos = lerp(minCos, 1, 0.5f);
+	    maxCos = lerp(minCos, 1, 0.8f);
     }
 
 /*    
