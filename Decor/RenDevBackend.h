@@ -55,7 +55,7 @@ public:
     /// <summary>
     /// Checks if we need to load a scene
     /// </summary>
-    void EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName);
+    bool EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName);
 
 protected:
     void CreateRenderTargetViews();

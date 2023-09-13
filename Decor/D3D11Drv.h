@@ -10,6 +10,7 @@
 #include "ComplexSurfaceRenderer.h"
 #include "DeviceState.h"
 #include "TextureCache.h"
+#include "OcclusionMapCache.h"
 
 #include <Engine.h>
 
@@ -46,6 +47,7 @@ protected:
     std::unique_ptr<GouraudRenderer> m_pGouraudRenderer;
     std::unique_ptr<ComplexSurfaceRenderer> m_pComplexSurfaceRenderer;
     std::unique_ptr<TextureCache> m_pTextureCache;
+    std::unique_ptr<OcclusionMapCache> m_pOcclusionMapCache;
 
     bool m_bNoTilesDrawnYet;
 

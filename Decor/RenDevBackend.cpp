@@ -450,13 +450,16 @@ void RenDevBackend::LoadLevel(const TCHAR* szLevelName)
     }
 }
 
-void RenDevBackend::EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName)
+bool RenDevBackend::EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName)
 {
     if (m_CurrentSceneIndex != sceneIndex)
     {
         LoadLevel(sceneName);
         m_CurrentSceneIndex = sceneIndex;
+        return true;
     }
+
+    return false;
 }
 
 void RenDevBackend::ClearDepth()

@@ -54,6 +54,7 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         m_pGlobalShaderConstants = std::make_unique<GlobalShaderConstants>(Device, DeviceContext);
         m_pDeviceState = std::make_unique<DeviceState>(Device, DeviceContext);
         m_pTextureCache = std::make_unique<TextureCache>(Device, DeviceContext);
+        m_pOcclusionMapCache = std::make_unique<OcclusionMapCache>(Device, DeviceContext, 3);
         m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
         m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
         m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
@@ -118,7 +119,8 @@ void UD3D11RenderDevice::SetSceneNode(FSceneNode* const pFrame)
     auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
     auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
 
-    m_Backend.EnsureCurrentScene(levelIndex, levelPathName);    
+    if (m_Backend.EnsureCurrentScene(levelIndex, levelPathName))
+        m_pOcclusionMapCache->Flush();
 }
 
 void UD3D11RenderDevice::Lock(const FPlane /*FlashScale*/, const FPlane /*FlashFog*/, const FPlane /*ScreenClear*/, const DWORD /*RenderLockFlags*/, BYTE* const /*pHitData*/, INT* const /*pHitSize*/)
@@ -154,7 +156,8 @@ void UD3D11RenderDevice::Render()
     {
         m_pGlobalShaderConstants->Bind();
         m_pDeviceState->Bind();
-        m_pTextureCache->BindTextures();        
+        m_pTextureCache->BindTextures();
+        m_pOcclusionMapCache->BindMaps();
 
         if (m_pTileRenderer->IsMapped())
         {
@@ -193,7 +196,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
     //        return;
     //}
 
-    //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn    
+    //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
 
     const DWORD PolyFlags = Surface.PolyFlags;
     const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
@@ -230,8 +233,18 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
         TexFlags |= 0x00000002;
     }
 
+    // TO-DO
+    const auto Poly = *Facet.Polys;
+    const int surfId = pFrame->Level->Model->Nodes(Poly.iNode).iSurf;
+    if (surfId >= 0)
+    {
+        const int mapId = pFrame->Level->Model->Surfs(surfId).iLightMap;
+        if (mapId >= 0)
+            m_pOcclusionMapCache->FindOrInsertAndPrepare(*pFrame->Level->Model, mapId);
+    }
+
     if (pFrame->Parent == nullptr)
-        m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
+        m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);    
 
     m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
     m_pDeviceState->PrepareBlendState(BlendState);
@@ -298,7 +311,7 @@ void UD3D11RenderDevice::DrawComplexSurface(FSceneNode* const pFrame, FSurfaceIn
             v.PolyFlags = PolyFlags;
             v.TexFlags = TexFlags;
         }
-        
+
         /*
         static int currSurf = 0;
         if(currSurf != pFrame->Level->Model->Nodes(Poly.iNode).iSurf)

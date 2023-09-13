@@ -101,6 +101,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClInclude Include="GouraudRenderer.h" />
     <ClInclude Include="IRenderingContext.h" />
     <ClInclude Include="mikktspace.h" />
+    <ClInclude Include="OcclusionMapCache.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="TextureCache.h" />
     <ClInclude Include="ConstantBuffer.h" />
@@ -117,6 +118,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="ComplexSurfaceRenderer.cpp" />
     <ClCompile Include="GouraudRenderer.cpp" />
     <ClCompile Include="mikktspace.cpp" />
+    <ClCompile Include="OcclusionMapCache.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="TextureCache.cpp" />
     <ClCompile Include="D3D11Drv.cpp" />

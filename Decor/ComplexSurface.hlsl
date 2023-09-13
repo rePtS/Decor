@@ -4,6 +4,7 @@
 Texture2D TexDiffuse : register(t0);
 Texture2D TexLight : register(t1);
 Texture2D TexNoise : register(t2);
+Texture2DArray TexOcclusion : register(t3);
 
 struct SPoly
 {
@@ -237,12 +238,15 @@ float4 PSMain(const VSOut input) : SV_Target
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
 
     // Original lightmap
-    /*
+    
     if (input.TexFlags & 0x00000002)
     {
-        const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f; // 2.0f;
+        //const float3 Light = TexOcclusion.Sample(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, 0)).rrr;
+        const float3 Light = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, 0), 2).rrr;
+
+        //const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f; // 2.0f;
 	    //const float lightAverage = (Light.r + Light.g + Light.b) / 3.0f;
-        //output.rgb *= Light;
+        output.rgb *= Light;
 	    //output.rgb *= (Light * 1.5f);
 	    //output.rgb *= (1.5f * Light + 0.3f); //!!!
 	    //output.rgb = output.rgb * 3.0f * Light;	
@@ -258,7 +262,7 @@ float4 PSMain(const VSOut input) : SV_Target
 	    //else
 	    //    output.rgb *= float3(0, 1, 0);
     }
-    */
+    
 
     //output.rgb = input.Normal;
     //output.rgb = TexNoise.Sample(SamLinear, input.TexCoord).rgb;

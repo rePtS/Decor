@@ -61,7 +61,8 @@ void TextureCache::BindTextures()
 
 void TextureCache::Flush()
 {
-    m_DeviceContext.PSSetShaderResources(0, sm_iMaxSlots, nullptr); //To be able to release textures
+    ID3D11ShaderResourceView* const nullSRV[1] = { nullptr };
+    m_DeviceContext.PSSetShaderResources(0, sm_iMaxSlots, nullSRV); //To be able to release textures
     m_Textures.clear();
 
     ResetDirtySlots();

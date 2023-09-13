@@ -119,7 +119,7 @@ void GlobalShaderConstants::CheckViewChange(const FSceneNode& SceneNode, const F
             m_LightsData.push_back(lightData);
 
             m_LightSlices[0].push_back(lightIndex);
-            lightIndex++;
+            ++lightIndex;
         }
 
         size_t lightDataIndex = 0;
