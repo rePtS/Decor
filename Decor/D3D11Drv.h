@@ -9,13 +9,14 @@
 #include "GouraudRenderer.h"
 #include "ComplexSurfaceRenderer.h"
 //#include "DeviceState.h"
-#include "TextureCache.h"
+//#include "TextureCache.h"
 //#include "OcclusionMapCache.h"
 
 #include <Engine.h>
 
 import OcclusionMapCache;
 import DeviceState;
+import TextureCache;
 
 class UD3D11RenderDevice : public URenderDevice
 {

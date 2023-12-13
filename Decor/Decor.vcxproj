@@ -130,7 +130,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
     <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="TextureCache.cpp" />
+    <ClCompile Include="TextureCache.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="D3D11Drv.cpp" />
     <ClCompile Include="DeviceState.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
