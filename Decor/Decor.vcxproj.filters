@@ -112,6 +112,7 @@
       <Filter>_Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="TinyGltf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

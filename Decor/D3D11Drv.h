@@ -8,11 +8,14 @@
 #include "TileRenderer.h" //Can't forward declare as DECLARE_CLASS implements destructor
 #include "GouraudRenderer.h"
 #include "ComplexSurfaceRenderer.h"
-#include "DeviceState.h"
+//#include "DeviceState.h"
 #include "TextureCache.h"
-#include "OcclusionMapCache.h"
+//#include "OcclusionMapCache.h"
 
 #include <Engine.h>
+
+import OcclusionMapCache;
+import DeviceState;
 
 class UD3D11RenderDevice : public URenderDevice
 {

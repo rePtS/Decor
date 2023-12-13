@@ -123,17 +123,28 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
     <ClCompile Include="GouraudRenderer.cpp" />
-    <ClCompile Include="mikktspace.cpp" />
-    <ClCompile Include="OcclusionMapCache.cpp" />
+    <ClCompile Include="mikktspace.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
+    <ClCompile Include="OcclusionMapCache.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="TextureCache.cpp" />
     <ClCompile Include="D3D11Drv.cpp" />
-    <ClCompile Include="DeviceState.cpp" />
+    <ClCompile Include="DeviceState.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="GlobalShaderConstants.cpp" />
     <ClCompile Include="RenDevBackend.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
-    <ClCompile Include="TextureConverter.cpp" />
+    <ClCompile Include="TextureConverter.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="TileRenderer.cpp" />
+    <ClCompile Include="TinyGltf.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ComplexSurface.hlsl" />
