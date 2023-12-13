@@ -1,7 +1,13 @@
 #pragma once
 
-#include "DynamicBuffer.h"
+#include <D3D11.h>
+//#include "DynamicBuffer.h"
 #include <DirectXMath.h>
+#include <wrl\client.h>
+
+import DynamicGPUBuffer;
+
+using Microsoft::WRL::ComPtr;
 
 class GouraudRenderer
 {

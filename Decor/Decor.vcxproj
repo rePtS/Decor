@@ -118,6 +118,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComplexSurfaceRenderer.cpp" />
+    <ClCompile Include="DynamicGPUBuffer.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="Helpers.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">CompileAsCppModule</CompileAs>
@@ -139,7 +142,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     </ClCompile>
     <ClCompile Include="GlobalShaderConstants.cpp" />
     <ClCompile Include="RenDevBackend.cpp" />
-    <ClCompile Include="ShaderCompiler.cpp" />
+    <ClCompile Include="ShaderCompiler.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="TextureConverter.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>

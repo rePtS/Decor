@@ -1,7 +1,10 @@
 #include "GouraudRenderer.h"
-#include "Helpers.h"
-#include "ShaderCompiler.h"
+//#include "Helpers.h"
+//#include "ShaderCompiler.h"
 #include <cassert>
+
+import ShaderCompiler;
+import DynamicGPUBuffer;
 
 GouraudRenderer::GouraudRenderer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
 :m_Device(Device)

@@ -1,7 +1,10 @@
 #include "TileRenderer.h"
-#include "Helpers.h"
-#include "ShaderCompiler.h"
+//#include "Helpers.h"
+//#include "ShaderCompiler.h"
 #include <cassert>
+
+import ShaderCompiler;
+import DynamicGPUBuffer;
 
 TileRenderer::TileRenderer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
 :m_Device(Device)

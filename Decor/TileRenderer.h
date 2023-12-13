@@ -2,7 +2,12 @@
 
 #include <D3D11.h>
 #include <DirectXMath.h>
-#include "DynamicBuffer.h"
+//#include "DynamicBuffer.h"
+#include <wrl\client.h>
+
+import DynamicGPUBuffer;
+
+using Microsoft::WRL::ComPtr;
 
 class TileRenderer
 {
