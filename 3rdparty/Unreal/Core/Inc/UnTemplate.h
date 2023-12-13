@@ -670,7 +670,7 @@ public:
 	{
 		guardSlow(TTransArray::Empty);
 		if( GUndo )
-			GUndo->SaveArray( Owner, this, 0, ArrayNum, -1, sizeof(T), SerializeItem, DestructItem );
+			GUndo->SaveArray( Owner, this, 0, FArray::ArrayNum, -1, sizeof(T), SerializeItem, DestructItem );
 		TArray<T>::Empty( Slack );
 		unguardSlow;
 	}
@@ -707,7 +707,7 @@ public:
 	INT AddUniqueItem( const T& Item )
 	{
 		guardSlow(TTransArray::AddUniqueItem);
-		for( INT Index=0; Index<ArrayNum; Index++ )
+		for( INT Index=0; Index<FArray::ArrayNum; Index++ )
 			if( (*this)(Index)==Item )
 				return Index;
 		return AddItem( Item );
@@ -716,11 +716,11 @@ public:
 	INT RemoveItem( const T& Item )
 	{
 		guardSlow(TTransArray::RemoveItem);
-		INT OriginalNum=ArrayNum;
-		for( INT Index=0; Index<ArrayNum; Index++ )
+		INT OriginalNum=FArray::ArrayNum;
+		for( INT Index=0; Index<FArray::ArrayNum; Index++ )
 			if( (*this)(Index)==Item )
 				Remove( Index-- );
-		return OriginalNum - ArrayNum;
+		return OriginalNum - FArray::ArrayNum;
 		unguardSlow;
 	}
 
@@ -740,7 +740,7 @@ public:
 	{
 		guardSlow(TTransArray::ModifyAllItems);
 		if( GUndo )
-			GUndo->SaveArray( Owner, this, 0, Num(), 0, sizeof(T), SerializeItem, DestructItem );
+			GUndo->SaveArray( Owner, this, 0, FArray::Num(), 0, sizeof(T), SerializeItem, DestructItem );
 		unguardSlow;
 	}
 	friend FArchive& operator<<( FArchive& Ar, TTransArray& A )
@@ -878,7 +878,7 @@ public:
 		if( SavedPos<0 )
 		{
 			// Unload it now.
-			Empty();
+			TLazyArray::Empty();
 			SavedPos *= -1;
 		}
 		unguard;
@@ -1553,7 +1553,7 @@ public:
 	void MultiFind( const TK& Key, TArray<TI>& Values ) 
 	{
 		guardSlow(TMap::MultiFind);
-		for( INT i=Hash[(GetTypeHash(Key) & (HashCount-1))]; i!=INDEX_NONE; i=Pairs(i).HashNext )
+		for( INT i=TMapBase::Hash[(GetTypeHash(Key) & (TMapBase::HashCount - 1))]; i != INDEX_NONE; i = Pairs(i).HashNext)
 			if( Pairs(i).Key==Key )
 				new(Values)TI(Pairs(i).Value);
 		unguardSlow;
@@ -1564,7 +1564,7 @@ public:
 	}
 	TI& AddUnique(typename TTypeInfo<TK>::ConstInitType InKey,typename TTypeInfo<TI>::ConstInitType InValue )
 	{
-		for( INT i=Hash[(GetTypeHash(InKey) & (HashCount-1))]; i!=INDEX_NONE; i=Pairs(i).HashNext )
+		for( INT i=TMapBase::Hash[(GetTypeHash(InKey) & (TMapBase::HashCount-1))]; i!=INDEX_NONE; i=Pairs(i).HashNext )
 			if( Pairs(i).Key==InKey && Pairs(i).Value==InValue )
 				return Pairs(i).Value;
 		return Add( InKey, InValue );
@@ -1573,18 +1573,18 @@ public:
 	{
 		guardSlow(TMap::Remove);
 		INT Count=0;
-		for( INT i=Pairs.Num()-1; i>=0; i-- )
-			if( Pairs(i).Key==InKey && Pairs(i).Value==InValue )
-				{Pairs.Remove(i); Count++;}
+		for( INT i=TMapBase::Pairs.Num()-1; i>=0; i-- )
+			if( TMapBase::Pairs(i).Key==InKey && TMapBase::Pairs(i).Value==InValue )
+				{TMapBase::Pairs.Remove(i); Count++;}
 		if( Count )
-			Relax();
+			TMapBase::Relax();
 		return Count;
 		unguardSlow;
 	}
 	TI* FindPair( const TK& Key, const TK& Value )
 	{
 		guardSlow(TMap::Find);
-		for( INT i=Hash[(GetTypeHash(Key) & (HashCount-1))]; i!=INDEX_NONE; i=Pairs(i).HashNext )
+		for( INT i=TMapBase::Hash[(GetTypeHash(Key) & (TMapBase::HashCount-1))]; i!=INDEX_NONE; i=Pairs(i).HashNext )
 			if( Pairs(i).Key==Key && Pairs(i).Value==Value )
 				return &Pairs(i).Value;
 		return NULL;

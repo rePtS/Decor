@@ -23,7 +23,7 @@ protected:
     template<class T, class Func>
     ComPtr<T> CompileXShader(const char* const pszEntryPoint, const char* const pszTarget, const Func& CreationFunc);
 
-    void ShaderCompiler::CompileShader(const char* const pszEntryPoint, const char* const pszTarget);
+    void CompileShader(const char* const pszEntryPoint, const char* const pszTarget);
 
     ID3D11Device& m_Device;
     const wchar_t* const m_pszFileName;

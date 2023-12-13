@@ -136,7 +136,7 @@ template <class T> class TFieldIterator
 public:
 	TFieldIterator( UStruct* InStruct )
 	: Struct( InStruct )
-	, Field( InStruct ? InStruct->Children : NULL )
+	, Field( InStruct ? InStruct->UStruct::Children : NULL )
 	{
 		IterateToNext();
 	}

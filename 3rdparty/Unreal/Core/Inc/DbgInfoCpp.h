@@ -23,8 +23,8 @@
 
 // these declare and use a timer named iTimer to get the timing data
 #define DbgDeclareTimer(iTimer)             int iTimer=0;
-#define DbgClock(iTimer)					do { clock(iTimer); } while (0)
-#define DbgUnclock(iTimer)					do { unclock(iTimer); } while (0)
+#define DbgClock(iTimer)					do { clock_(iTimer); } while (0)
+#define DbgUnclock(iTimer)					do { unclock_(iTimer); } while (0)
 
 // actual calls to the debug object functions
 #define DbgAddTiming(sObj,sEv,iTime)		GetDebugObj()->AddTimingData(sObj,sEv,iTime,this)
@@ -81,12 +81,12 @@ class CORE_API UDebugAutoTimer
 			m_pMe=me;
 			m_iTimer=0;
 			m_iReleased=0;
-			clock(m_iTimer);
+			clock_(m_iTimer);
 		}
 
 		void StoreTimer(void)
 		{
-			unclock(m_iTimer);
+			unclock_(m_iTimer);
 			GUD3D10RenderDevice::debugsys.AddTimingData(m_psObj, m_psEvent, m_iTimer, m_pMe);
 			m_iReleased=1;
 		}

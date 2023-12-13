@@ -695,7 +695,7 @@ bool Scene::Init(IRenderingContext &ctx)
 
     // Vertex shader
     ID3DBlob* pVsBlob = nullptr;
-    if (!ctx.CreateVertexShader(L"Decor/Scene.hlsl", "VS", "vs_4_0", pVsBlob, mVertexShader))
+    if (!ctx.CreateVertexShader((WCHAR*)L"Decor/Scene.hlsl", "VS", "vs_4_0", pVsBlob, mVertexShader))
         return false;
 
     // Input layout
@@ -709,17 +709,17 @@ bool Scene::Init(IRenderingContext &ctx)
         return false;    
 
     // Culling vertex shader
-    if (!ctx.CreateVertexShader(L"Decor/Culling.hlsl", "VSMain", "vs_4_0", pVsBlob, mVsCulling))
+    if (!ctx.CreateVertexShader((WCHAR*)L"Decor/Culling.hlsl", "VSMain", "vs_4_0", pVsBlob, mVsCulling))
         return false;    
 
     // Pixel shaders
-    if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
+    if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
         return false;
-    if (!ctx.CreatePixelShader(L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
+    if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
         return false;
     
     // Culling pixel shader
-    if (!ctx.CreatePixelShader(L"Decor/Culling.hlsl", "PSMain", "ps_4_0", mPsCulling))
+    if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Culling.hlsl", "PSMain", "ps_4_0", mPsCulling))
         return false;
 
 
@@ -1122,7 +1122,7 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
     // Если это корневой узел, то проверяем имя узла (оно должно начинаться с "Node")    
     if (sceneNode.mIsRootNode)
     {
-        auto& nodeNameParts = split(node.name, '_');
+        auto nodeNameParts = split(node.name, '_');
         if (nodeNameParts.size() > 1 && nodeNameParts[0] == "Node")
             // Сохрянем имя корневого узла (или лучше сохраним список ид источников света, которые освещаются данным узлом???)
             sceneNode.mName = nodeNameParts[1];
@@ -1143,7 +1143,7 @@ bool Scene::LoadSceneNodeFromGLTF(IRenderingContext &ctx,
         // Set direction of the light
         XMStoreFloat4(&mLights[lightIdx].direction, XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
 
-        auto & lightNameParts = split(node.name, '_');
+        auto lightNameParts = split(node.name, '_');
         if (lightNameParts.size() > 1)
             mLights[lightIdx].affectedNodes.assign(++lightNameParts.begin(), lightNameParts.end());
     }

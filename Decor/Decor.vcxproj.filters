@@ -111,6 +111,7 @@
     <ClCompile Include="OcclusionMapCache.cpp">
       <Filter>_Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

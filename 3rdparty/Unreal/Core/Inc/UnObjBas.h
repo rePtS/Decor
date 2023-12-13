@@ -916,7 +916,7 @@ template< class T, class U > T* CastChecked( U* Src )
 // Construct an object of a particular class.
 template< class T > T* ConstructObject( UClass* Class, UObject* Outer=(UObject*)-1, FName Name=NAME_None, DWORD SetFlags=0 )
 {
-	check(Class->IsChildOf(T::StaticClass()));
+	check(Class->UStruct::IsChildOf(T::StaticClass()));
 	if( Outer==(UObject*)-1 )
 		Outer = UObject::GetTransientPackage();
 	return (T*)UObject::StaticConstructObject( Class, Outer, Name, SetFlags );
