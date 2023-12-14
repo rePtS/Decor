@@ -182,6 +182,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
       <FileType>Document</FileType>
     </None>
     <None Include="Defines.hlsli" />
+    <None Include="SceneConstants.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

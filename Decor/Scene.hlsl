@@ -1,11 +1,4 @@
-//#include "Constants.h"
-
-#define LIGHTS_DATA_MAX_SIZE 1024
-
-#define CONVERT_SRGB_INPUT_TO_LINEAR
-#define CONVERT_LINEAR_OUTPUT_TO_SRGB
-
-#define NODE_LIGHTS_MAX_COUNT 64
+#include "SceneConstants.hlsli"
 
 //#define USE_SMOOTH_REFRACTION_APPROX
 //#define USE_ROUGH_REFRACTION_APPROX

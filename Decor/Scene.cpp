@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #include <codecvt>
@@ -7,7 +7,7 @@
 #include <map>
 
 #include "Scene.h"
-#include "Helpers.h"
+//#include "Helpers.h"
 //#include "mikktspace.h"
 
 //#define TINYGLTF_IMPLEMENTATION
@@ -15,6 +15,7 @@
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
 //#define STBI_MSC_SECURE_CRT
 //#include <tiny_gltf.h>
+#include <UnRender.h>
 
 #define UNUSED_COLOR XMFLOAT4(1.f, 0.f, 1.f, 1.f)
 #define STRIP_BREAK static_cast<uint32_t>(-1)

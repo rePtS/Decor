@@ -21,8 +21,7 @@ export namespace tinygltf
 	class Accessor;
 	class Light;
 
-	enum Mode
-	{
+	enum Mode {
 		MODE_POINTS = TINYGLTF_MODE_POINTS,
 		MODE_LINE = TINYGLTF_MODE_LINE,
 		MODE_LINE_LOOP = TINYGLTF_MODE_LINE_LOOP,

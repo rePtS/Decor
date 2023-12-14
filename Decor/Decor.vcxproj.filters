@@ -138,5 +138,8 @@
     <None Include="Defines.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="SceneConstants.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

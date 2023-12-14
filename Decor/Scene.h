@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "Constants.h"
+#include "SceneConstants.hlsli"
 //#include "IRenderingContext.h"
 #include <fstream>
 
