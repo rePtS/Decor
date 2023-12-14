@@ -2,7 +2,7 @@
 
 
 #include "Constants.h"
-#include "IRenderingContext.h"
+//#include "IRenderingContext.h"
 #include <fstream>
 
 #include <d3d11.h>
@@ -10,6 +10,8 @@
 #include <tiny_gltf.h> // just the interfaces (no implementation)
 
 #include <Engine.h>
+
+import IRenderingContext;
 
 using namespace DirectX;
 

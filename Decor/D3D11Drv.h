@@ -1,22 +1,30 @@
 #pragma once
 #include <windows.h>
 #include <memory>
+#include <cassert>
 
-#include "RenDevBackend.h"
-#include "GlobalShaderConstants.h"
+//#include "RenDevBackend.h"
+//#include "GlobalShaderConstants.h"
 
-#include "TileRenderer.h" //Can't forward declare as DECLARE_CLASS implements destructor
-#include "GouraudRenderer.h"
-#include "ComplexSurfaceRenderer.h"
+//#include "TileRenderer.h" //Can't forward declare as DECLARE_CLASS implements destructor
+//#include "GouraudRenderer.h"
+//#include "ComplexSurfaceRenderer.h"
 //#include "DeviceState.h"
 //#include "TextureCache.h"
 //#include "OcclusionMapCache.h"
 
 #include <Engine.h>
+#include <UnRender.h>
 
-import OcclusionMapCache;
 import DeviceState;
 import TextureCache;
+import OcclusionMapCache;
+import TileRenderer;
+import GouraudRenderer;
+import ComplexSurfaceRenderer;
+import RenDevBackend;
+import GlobalShaderConstants;
+import Helpers;
 
 class UD3D11RenderDevice : public URenderDevice
 {

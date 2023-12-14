@@ -1,5 +1,5 @@
 #include "D3D11Drv.h"
-#include "Helpers.h"
+//#include "Helpers.h"
 #include <tchar.h>
 
 #pragma warning(push, 1)
@@ -31,20 +31,20 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
     pInViewport->Exec(L"ShowLog");
 #endif
 
-    LOGMESSAGE(L"Initializing Direct3D 11 Renderer.");
+    Decor2::LogMessagef(L"Initializing Direct3D 11 Renderer.");
 
     try
     {
         if (!m_Backend.Init(static_cast<HWND>(pInViewport->GetWindow())))
         {
-            LOGWARNING(L"Failed to initialize Direct3D 11 Renderer.");
+            Decor2::LogWarningf(L"Failed to initialize Direct3D 11 Renderer.");
             return false;
         }
 
         URenderDevice::Viewport = pInViewport;
         if (!SetRes(iNewX, iNewY, iNewColorBytes, bFullscreen))
         {
-            LOGWARNING(L"Failed to set resolution during Init().");
+            Decor2::LogWarningf(L"Failed to set resolution during Init().");
             return false;
         }
 
@@ -59,9 +59,9 @@ UBOOL UD3D11RenderDevice::Init(UViewport* const pInViewport, const INT iNewX, co
         m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
         m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
     }
-    catch (const Decor::ComException& ex)
+    catch (const Decor2::ComException& ex)
     {
-        LOGWARNINGF("Exception: %s", ex.what());
+        Decor2::LogWarningf(L"Exception: %s", ex.what());
         return false;
     }
 
@@ -78,7 +78,7 @@ UBOOL UD3D11RenderDevice::SetRes(const INT iNewX, const INT iNewY, const INT iNe
     //Without BLIT_Direct3D renderer only ever gets one draw call, and SetRes() isn't called on window resize
     if (!URenderDevice::Viewport->ResizeViewport(EViewportBlitFlags::BLIT_HardwarePaint | EViewportBlitFlags::BLIT_Direct3D, iNewX, iNewY, iNewColorBytes))
     {
-        LOGWARNINGF(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
+        Decor2::LogWarningf(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
         return false;
     }
 
@@ -86,9 +86,9 @@ UBOOL UD3D11RenderDevice::SetRes(const INT iNewX, const INT iNewY, const INT iNe
     {
         m_Backend.SetRes(iNewX, iNewY);
     }
-    catch (const Decor::ComException& ex)
+    catch (const Decor2::ComException& ex)
     {
-        LOGWARNINGF("Exception: %s", ex.what());
+        Decor2::LogWarningf(L"Exception: %s", ex.what());
         return false;
     }
 

@@ -11,11 +11,11 @@ module;
 //#include "Helpers.h"
 #include <cassert>
 
-using Microsoft::WRL::ComPtr;
-
 export module TextureConverter;
 
 import Helpers;
+
+using Microsoft::WRL::ComPtr;
 
 export class TextureConverter
 {
