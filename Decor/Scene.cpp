@@ -4,6 +4,7 @@
 #include <codecvt>
 #include <locale>
 #include <sstream>
+#include <map>
 
 #include "Scene.h"
 #include "Helpers.h"
@@ -329,15 +330,15 @@ namespace GltfUtils
     {
         switch (mode)
         {
-        case TINYGLTF_MODE_POINTS:
+        case tinygltf::MODE_POINTS:
             return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-        case TINYGLTF_MODE_LINE:
+        case tinygltf::MODE_LINE:
             return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-        case TINYGLTF_MODE_LINE_STRIP:
+        case tinygltf::MODE_LINE_STRIP:
             return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-        case TINYGLTF_MODE_TRIANGLES:
+        case tinygltf::MODE_TRIANGLES:
             return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        case TINYGLTF_MODE_TRIANGLE_STRIP:
+        case tinygltf::MODE_TRIANGLE_STRIP:
             return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
             //case TINYGLTF_MODE_LINE_LOOP:
             //case TINYGLTF_MODE_TRIANGLE_FAN:
@@ -348,17 +349,17 @@ namespace GltfUtils
 
     std::wstring ModeToWstring(int mode)
     {
-        if (mode == TINYGLTF_MODE_POINTS)
+        if (mode == tinygltf::MODE_POINTS)
             return L"POINTS";
-        else if (mode == TINYGLTF_MODE_LINE)
+        else if (mode == tinygltf::MODE_LINE)
             return L"LINE";
-        else if (mode == TINYGLTF_MODE_LINE_LOOP)
+        else if (mode == tinygltf::MODE_LINE_LOOP)
             return L"LINE_LOOP";
-        else if (mode == TINYGLTF_MODE_TRIANGLES)
+        else if (mode == tinygltf::MODE_TRIANGLES)
             return L"TRIANGLES";
-        else if (mode == TINYGLTF_MODE_TRIANGLE_FAN)
+        else if (mode == tinygltf::MODE_TRIANGLE_FAN)
             return L"TRIANGLE_FAN";
-        else if (mode == TINYGLTF_MODE_TRIANGLE_STRIP)
+        else if (mode == tinygltf::MODE_TRIANGLE_STRIP)
             return L"TRIANGLE_STRIP";
         else
             return L"**UNKNOWN**";
@@ -381,23 +382,23 @@ namespace GltfUtils
 
     std::wstring TypeToWstring(int ty)
     {
-        if (ty == TINYGLTF_TYPE_SCALAR)
+        if (ty == tinygltf::TYPE_SCALAR)
             return L"SCALAR";
-        else if (ty == TINYGLTF_TYPE_VECTOR)
+        else if (ty == tinygltf::TYPE_VECTOR)
             return L"VECTOR";
-        else if (ty == TINYGLTF_TYPE_VEC2)
+        else if (ty == tinygltf::TYPE_VEC2)
             return L"VEC2";
-        else if (ty == TINYGLTF_TYPE_VEC3)
+        else if (ty == tinygltf::TYPE_VEC3)
             return L"VEC3";
-        else if (ty == TINYGLTF_TYPE_VEC4)
+        else if (ty == tinygltf::TYPE_VEC4)
             return L"VEC4";
-        else if (ty == TINYGLTF_TYPE_MATRIX)
+        else if (ty == tinygltf::TYPE_MATRIX)
             return L"MATRIX";
-        else if (ty == TINYGLTF_TYPE_MAT2)
+        else if (ty == tinygltf::TYPE_MAT2)
             return L"MAT2";
-        else if (ty == TINYGLTF_TYPE_MAT3)
+        else if (ty == tinygltf::TYPE_MAT3)
             return L"MAT3";
-        else if (ty == TINYGLTF_TYPE_MAT4)
+        else if (ty == tinygltf::TYPE_MAT4)
             return L"MAT4";
         return L"**UNKNOWN**";
     }
@@ -405,21 +406,21 @@ namespace GltfUtils
 
     std::wstring ComponentTypeToWstring(int ty)
     {
-        if (ty == TINYGLTF_COMPONENT_TYPE_BYTE)
+        if (ty == tinygltf::COMPONENT_TYPE_BYTE)
             return L"BYTE";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
+        else if (ty == tinygltf::COMPONENT_TYPE_UNSIGNED_BYTE)
             return L"UNSIGNED_BYTE";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_SHORT)
+        else if (ty == tinygltf::COMPONENT_TYPE_SHORT)
             return L"SHORT";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+        else if (ty == tinygltf::COMPONENT_TYPE_UNSIGNED_SHORT)
             return L"UNSIGNED_SHORT";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_INT)
+        else if (ty == tinygltf::COMPONENT_TYPE_INT)
             return L"INT";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+        else if (ty == tinygltf::COMPONENT_TYPE_UNSIGNED_INT)
             return L"UNSIGNED_INT";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_FLOAT)
+        else if (ty == tinygltf::COMPONENT_TYPE_FLOAT)
             return L"FLOAT";
-        else if (ty == TINYGLTF_COMPONENT_TYPE_DOUBLE)
+        else if (ty == tinygltf::COMPONENT_TYPE_DOUBLE)
             return L"DOUBLE";
 
         return L"**UNKNOWN**";
@@ -1573,8 +1574,8 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
     if (!success)
         return false;
 
-    if ((posAccessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) ||
-        (posAccessor.type != TINYGLTF_TYPE_VEC3))
+    if ((posAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
+        (posAccessor.type != tinygltf::TYPE_VEC3))
     {
         Log::Error(L"%sUnsupported POSITION data type!", subItemsLogPrefix.c_str());
         return false;
@@ -1617,8 +1618,8 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
                                                     false, "NORMAL", subItemsLogPrefix.c_str());
     if (success)
     {
-        if ((normalAccessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) ||
-            (normalAccessor.type != TINYGLTF_TYPE_VEC3))
+        if ((normalAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
+            (normalAccessor.type != tinygltf::TYPE_VEC3))
         {
             Log::Error(L"%sUnsupported NORMAL data type!", subItemsLogPrefix.c_str());
             return false;
@@ -1660,8 +1661,8 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
                                                      false, "TANGENT", subItemsLogPrefix.c_str());
     if (success)
     {
-        if ((tangentAccessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) ||
-            (tangentAccessor.type != TINYGLTF_TYPE_VEC4))
+        if ((tangentAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
+            (tangentAccessor.type != tinygltf::TYPE_VEC4))
         {
             Log::Error(L"%sUnsupported TANGENT data type!", subItemsLogPrefix.c_str());
             return false;
@@ -1708,8 +1709,8 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
                                                        false, "TEXCOORD_0", subItemsLogPrefix.c_str());
     if (success)
     {
-        if ((texCoord0Accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) ||
-            (texCoord0Accessor.type != TINYGLTF_TYPE_VEC2))
+        if ((texCoord0Accessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
+            (texCoord0Accessor.type != tinygltf::TYPE_VEC2))
         {
             Log::Error(L"%sUnsupported TEXCOORD_0 data type!", subItemsLogPrefix.c_str());
             return false;
@@ -1757,13 +1758,13 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
 
     const auto &indicesAccessor = model.accessors[indicesAccessorIdx];
 
-    if (indicesAccessor.type != TINYGLTF_TYPE_SCALAR)
+    if (indicesAccessor.type != tinygltf::TYPE_SCALAR)
     {
         Log::Error(L"%sUnsupported indices data type (must be scalar)!", subItemsLogPrefix.c_str());
         return false;
     }
-    if ((indicesAccessor.componentType < TINYGLTF_COMPONENT_TYPE_BYTE) ||
-        (indicesAccessor.componentType > TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT))
+    if ((indicesAccessor.componentType < tinygltf::COMPONENT_TYPE_BYTE) ||
+        (indicesAccessor.componentType > tinygltf::COMPONENT_TYPE_UNSIGNED_INT))
     {
         Log::Error(L"%sUnsupported indices data component type (%d)!",
                    subItemsLogPrefix.c_str(), indicesAccessor.componentType);
@@ -1785,12 +1786,12 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
     {
         switch (indicesComponentType)
         {
-        case TINYGLTF_COMPONENT_TYPE_BYTE:              mIndices.push_back(*reinterpret_cast<const int8_t*>(ptr)); break;
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:     mIndices.push_back(*reinterpret_cast<const uint8_t*>(ptr)); break;
-        case TINYGLTF_COMPONENT_TYPE_SHORT:             mIndices.push_back(*reinterpret_cast<const int16_t*>(ptr)); break;
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:    mIndices.push_back(*reinterpret_cast<const uint16_t*>(ptr)); break;
-        case TINYGLTF_COMPONENT_TYPE_INT:               mIndices.push_back(*reinterpret_cast<const int32_t*>(ptr)); break;
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:      mIndices.push_back(*reinterpret_cast<const uint32_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_BYTE:              mIndices.push_back(*reinterpret_cast<const int8_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_UNSIGNED_BYTE:     mIndices.push_back(*reinterpret_cast<const uint8_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_SHORT:             mIndices.push_back(*reinterpret_cast<const int16_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_UNSIGNED_SHORT:    mIndices.push_back(*reinterpret_cast<const uint16_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_INT:               mIndices.push_back(*reinterpret_cast<const int32_t*>(ptr)); break;
+        case tinygltf::COMPONENT_TYPE_UNSIGNED_INT:      mIndices.push_back(*reinterpret_cast<const uint32_t*>(ptr)); break;
         }
 
         // debug
@@ -1804,42 +1805,42 @@ bool ScenePrimitive::LoadDataFromGLTF(const tinygltf::Model &model,
     // TODO: Wrap into IterateGltfAccesorData(componentType, ...)? std::forward()?
     switch (indicesComponentType)
     {
-    case TINYGLTF_COMPONENT_TYPE_BYTE:
+    case tinygltf::COMPONENT_TYPE_BYTE:
         IterateGltfAccesorData<const int8_t, 1>(model,
                                                 indicesAccessor,
                                                 IndexDataConsumer,
                                                 subItemsLogPrefix.c_str(),
                                                 L"Indices");
         break;
-    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+    case tinygltf::COMPONENT_TYPE_UNSIGNED_BYTE:
         IterateGltfAccesorData<uint8_t, 1>(model,
                                            indicesAccessor,
                                            IndexDataConsumer,
                                            subItemsLogPrefix.c_str(),
                                            L"Indices");
         break;
-    case TINYGLTF_COMPONENT_TYPE_SHORT:
+    case tinygltf::COMPONENT_TYPE_SHORT:
         IterateGltfAccesorData<int16_t, 1>(model,
                                            indicesAccessor,
                                            IndexDataConsumer,
                                            subItemsLogPrefix.c_str(),
                                            L"Indices");
         break;
-    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+    case tinygltf::COMPONENT_TYPE_UNSIGNED_SHORT:
         IterateGltfAccesorData<uint16_t, 1>(model,
                                             indicesAccessor,
                                             IndexDataConsumer,
                                             subItemsLogPrefix.c_str(),
                                             L"Indices");
         break;
-    case TINYGLTF_COMPONENT_TYPE_INT:
+    case tinygltf::COMPONENT_TYPE_INT:
         IterateGltfAccesorData<int32_t, 1>(model,
                                            indicesAccessor,
                                            IndexDataConsumer,
                                            subItemsLogPrefix.c_str(),
                                            L"Indices");
         break;
-    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+    case tinygltf::COMPONENT_TYPE_UNSIGNED_INT:
         IterateGltfAccesorData<uint32_t, 1>(model,
                                             indicesAccessor,
                                             IndexDataConsumer,
@@ -2625,7 +2626,7 @@ bool SceneTexture::LoadTextureFromGltf(const int textureIndex,
         image.height <= 0 ||
         image.component != 4 ||
         image.bits != 8 ||
-        image.pixel_type != TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE ||
+        image.pixel_type != tinygltf::COMPONENT_TYPE_UNSIGNED_BYTE ||
         image.image.size() != expectedSrcDataSize)
     {
         Log::Error(L"%sInvalid image \"%s\": \"%s\", %dx%d, %dx%db %s, data size %dB",

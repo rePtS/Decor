@@ -120,7 +120,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="ComplexSurfaceRenderer.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
-    <ClCompile Include="ConstantGPUBuffer.ixx" />
+    <ClCompile Include="ConstantGPUBuffer.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="DynamicGPUBuffer.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
@@ -131,7 +133,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="GouraudRenderer.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
-    <ClCompile Include="IRenderingContext.ixx" />
+    <ClCompile Include="IRenderingContext.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    </ClCompile>
     <ClCompile Include="mikktspace.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>

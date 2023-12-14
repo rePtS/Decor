@@ -7,11 +7,13 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
-#include <tiny_gltf.h> // just the interfaces (no implementation)
+#include <vector>
+//#include <tiny_gltf.h> // just the interfaces (no implementation)
 
 #include <Engine.h>
 
 import IRenderingContext;
+import TinyGltf;
 
 using namespace DirectX;
 
