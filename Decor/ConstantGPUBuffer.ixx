@@ -1,7 +1,6 @@
 module;
 
 #include <D3D11.h>
-//#include "Helpers.h"
 #include <typeinfo>
 #include <cassert>
 #include <wrl\client.h>
@@ -12,8 +11,8 @@ import Helpers;
 
 using Microsoft::WRL::ComPtr;
 
-//#pragma warning(push)
-//#pragma warning(disable: 4324) //structure was padded due to __declspec(align())
+#pragma warning(push)
+#pragma warning(disable: 4324) //structure was padded due to __declspec(align())
 export template <class T>
 class ConstantBuffer
 {
@@ -74,4 +73,4 @@ private:
 
     bool m_bDirty;
 };
-//#pragma warning(pop)
+#pragma warning(pop)

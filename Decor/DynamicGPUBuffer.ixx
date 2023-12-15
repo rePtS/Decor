@@ -1,7 +1,6 @@
 module;
 
 #include <D3D11.h>
-//#include <typeinfo>
 #include <limits>
 #include <cassert>
 #include <wrl\client.h>
@@ -26,10 +25,10 @@ public:
 
     DynamicGPUBuffer(const DynamicGPUBuffer&) = delete;
     DynamicGPUBuffer& operator=(const DynamicGPUBuffer&) = delete;
-
-    /**
-    It's best to call this at the start of each frame
-    */
+    
+    /// <summary>
+    /// It's best to call this at the start of each frame
+    /// </summary>
     void Clear()
     {
         m_iSize = 0;

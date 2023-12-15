@@ -26,8 +26,6 @@ module;
 #include <float.h>
 #include <stdlib.h>
 
-//#include "mikktspace.h"
-
 #define TFALSE		0
 #define TTRUE		1
 

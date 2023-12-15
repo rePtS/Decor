@@ -97,53 +97,33 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ComplexSurfaceRenderer.h" />
-    <ClInclude Include="Constants.h" />
-    <ClInclude Include="DynamicBuffer.h" />
-    <ClInclude Include="GouraudRenderer.h" />
-    <ClInclude Include="IRenderingContext.h" />
-    <ClInclude Include="mikktspace.h" />
-    <ClInclude Include="OcclusionMapCache.h" />
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="TextureCache.h" />
-    <ClInclude Include="ConstantBuffer.h" />
-    <ClInclude Include="D3D11Drv.h" />
-    <ClInclude Include="DeviceState.h" />
-    <ClInclude Include="Helpers.h" />
-    <ClInclude Include="GlobalShaderConstants.h" />
-    <ClInclude Include="RenDevBackend.h" />
-    <ClInclude Include="ShaderCompiler.h" />
-    <ClInclude Include="TextureConverter.h" />
-    <ClInclude Include="TileRenderer.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ComplexSurfaceRenderer.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="ComplexSurfaceRenderer.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="ConstantGPUBuffer.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="ConstantGPUBuffer.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="DynamicGPUBuffer.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="DynamicGPUBuffer.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="Helpers.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="Helpers.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="GouraudRenderer.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="GouraudRenderer.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="Scene.GltfUtils.ixx" />
-    <ClCompile Include="Scene.IRenderingContext.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="Scene.IRenderingContext.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="MikkTSpace.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="MikkTSpace.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="OcclusionMapCache.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="OcclusionMapCache.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Scene.ixx" />
     <ClCompile Include="Scene.Log.ixx" />
     <ClCompile Include="Scene.Material.ixx" />
@@ -152,30 +132,32 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="Scene.TangentCalculator.ixx" />
     <ClCompile Include="Scene.Texture.ixx" />
     <ClCompile Include="Scene.Utils.ixx" />
-    <ClCompile Include="TextureCache.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="TextureCache.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="D3D11Drv.cpp" />
-    <ClCompile Include="DeviceState.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="D3D11Drv.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="GlobalShaderConstants.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="DeviceState.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="RenDevBackend.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="GlobalShaderConstants.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="ShaderCompiler.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="RenDevBackend.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TextureConverter.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="ShaderCompiler.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TileRenderer.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="TextureConverter.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TinyGltf.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
+    <ClCompile Include="TileRenderer.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
+    </ClCompile>
+    <ClCompile Include="TinyGltf.ixx">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

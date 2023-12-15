@@ -1,3 +1,5 @@
+module;
+
 #include <D3D11.h>
 #include <DirectXMath.h>
 #include <string>
@@ -8,18 +10,18 @@
 #include <Engine.h>
 #include <UnRender.h>
 
-#define UNUSED_COLOR XMFLOAT4(1.f, 0.f, 1.f, 1.f)
+#define UNUSED_COLOR DirectX::XMFLOAT4(1.f, 0.f, 1.f, 1.f)
 
 export module Scene;
 
 import Scene.IRenderingContext;
-import Scene.Primitive;
-import Scene.Node;
-import Scene.Texture;
-import Scene.Material;
 import Scene.GltfUtils;
 import Scene.Utils;
 import Scene.Log;
+import Scene.Texture;
+import Scene.Material;
+import Scene.Primitive;
+import Scene.Node;
 import TinyGltf;
 
 using namespace DirectX;

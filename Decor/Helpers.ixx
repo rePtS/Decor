@@ -1,11 +1,14 @@
+module;
+
+#include <d3dcommon.h>
+#include <wrl\client.h>
+#include <Core.h>
+
 export module Helpers;
 
-import <d3dcommon.h>;
-import <wrl\client.h>;
 import <exception>;
 import <string>;
 import <cassert>;
-import <Core.h>;
 
 using Microsoft::WRL::ComPtr;
 

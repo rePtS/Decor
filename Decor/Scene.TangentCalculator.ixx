@@ -1,3 +1,5 @@
+module;
+
 #include <DirectXMath.h>
 #include <cstddef>
 

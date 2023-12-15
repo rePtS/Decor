@@ -1,121 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="_Header Files">
-      <UniqueIdentifier>{233a5d14-a10e-4f39-864f-38bf05fa26f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_Source Files">
-      <UniqueIdentifier>{a867f5da-4045-41eb-90a6-896d6c056194}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{f77b2fbe-192e-4648-89ea-6583b0f8a31f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D11Drv.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenDevBackend.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Helpers.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderCompiler.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConstantBuffer.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalShaderConstants.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TileRenderer.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceState.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureCache.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureConverter.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DynamicBuffer.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GouraudRenderer.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComplexSurfaceRenderer.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IRenderingContext.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mikktspace.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OcclusionMapCache.h">
-      <Filter>_Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="D3D11Drv.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenDevBackend.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderCompiler.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GlobalShaderConstants.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TileRenderer.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DeviceState.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureCache.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureConverter.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GouraudRenderer.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ComplexSurfaceRenderer.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MikkTSpace.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OcclusionMapCache.cpp">
-      <Filter>_Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="TinyGltf.cpp" />
-    <ClCompile Include="DynamicGPUBuffer.cpp" />
-    <ClCompile Include="Scene.IRenderingContext.cpp" />
-    <ClCompile Include="ConstantGPUBuffer.cpp" />
+    <ClCompile Include="Helpers.ixx" />
+    <ClCompile Include="TinyGltf.ixx" />
+    <ClCompile Include="DynamicGPUBuffer.ixx" />
+    <ClCompile Include="Scene.IRenderingContext.ixx" />
+    <ClCompile Include="ConstantGPUBuffer.ixx" />
     <ClCompile Include="Scene.ixx" />
     <ClCompile Include="Scene.Primitive.ixx" />
     <ClCompile Include="Scene.Node.ixx" />
@@ -125,6 +20,18 @@
     <ClCompile Include="Scene.GltfUtils.ixx" />
     <ClCompile Include="Scene.Utils.ixx" />
     <ClCompile Include="Scene.TangentCalculator.ixx" />
+    <ClCompile Include="ComplexSurfaceRenderer.ixx" />
+    <ClCompile Include="DeviceState.ixx" />
+    <ClCompile Include="GlobalShaderConstants.ixx" />
+    <ClCompile Include="GouraudRenderer.ixx" />
+    <ClCompile Include="MikkTSpace.ixx" />
+    <ClCompile Include="OcclusionMapCache.ixx" />
+    <ClCompile Include="RenDevBackend.ixx" />
+    <ClCompile Include="ShaderCompiler.ixx" />
+    <ClCompile Include="TextureCache.ixx" />
+    <ClCompile Include="TextureConverter.ixx" />
+    <ClCompile Include="TileRenderer.ixx" />
+    <ClCompile Include="D3D11Drv.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">
