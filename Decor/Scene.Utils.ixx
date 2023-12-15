@@ -7,7 +7,7 @@ module;
 
 export module Scene.Utils;
 
-export namespace Utils
+export namespace SceneUtils
 {
     template<class T, class U = T>
     T Exchange(T& obj, U&& new_value)

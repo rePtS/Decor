@@ -106,7 +106,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="DynamicGPUBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="Helpers.ixx">
+    <ClCompile Include="Utils.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">Default</CompileAs>
     </ClCompile>

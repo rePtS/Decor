@@ -14,7 +14,7 @@ export module RenDevBackend;
 
 import Scene.IRenderingContext;
 import Scene;
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -69,7 +69,7 @@ public:
         m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL    
         //Todo: waitable swap chain IDXGISwapChain2::GetFrameLatencyWaitableObject
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             D3D11CreateDeviceAndSwapChain(
                 pSelectedAdapter,
                 DriverType,
@@ -86,35 +86,35 @@ public:
             ),
             "Failed to create device and / or swap chain."
         );
-        Decor2::SetResourceName(m_pDeviceContext, "MainDeviceContext");
-        Decor2::SetResourceName(m_pSwapChain, "MainSwapChain");
+        Utils::SetResourceName(m_pDeviceContext, "MainDeviceContext");
+        Utils::SetResourceName(m_pSwapChain, "MainSwapChain");
 
-        Decor2::LogMessagef(L"Device created with Feature Level %x.", FeatureLevel);
+        Utils::LogMessagef(L"Device created with Feature Level %x.", FeatureLevel);
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice.As(&m_pDXGIDevice),
             "Failed to get DXGI device."
         );
-        Decor2::SetResourceName(m_pDevice, "MainDevice");
+        Utils::SetResourceName(m_pDevice, "MainDevice");
 
         ComPtr<IDXGIAdapter> pAdapter;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDXGIDevice->GetAdapter(&pAdapter),
             "Failed to get DXGI adapter."
         );
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             pAdapter.As(&m_pAdapter),
             "Failed to cast DXGI adapter."
         );
 
         DXGI_ADAPTER_DESC1 AdapterDesc;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pAdapter->GetDesc1(&AdapterDesc),
             "Failed to get adapter descriptor."
         );
 
-        Decor2::LogMessagef(L"Adapter: %s.", AdapterDesc.Description);
+        Utils::LogMessagef(L"Adapter: %s.", AdapterDesc.Description);
 
         return true;
     }
@@ -133,7 +133,7 @@ public:
         m_pStageCullingTexture = nullptr;
         m_pCullingDepthStencilView = nullptr;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pSwapChain->ResizeBuffers(
                 m_SwapChainDesc.BufferCount,
                 m_SwapChainDesc.BufferDesc.Width,
@@ -396,22 +396,22 @@ protected:
         cullingTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_STAGING;
         cullingTextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateTexture2D(&cullingTextureDesc, nullptr, m_pStageCullingTexture.GetAddressOf()),
             "Failed to create stage culling texture."
         );
-        Decor2::SetResourceName(m_pStageCullingTexture, "StageCullingTexture");
+        Utils::SetResourceName(m_pStageCullingTexture, "StageCullingTexture");
 
         // Culling buffer texture
         cullingTextureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_RENDER_TARGET; //| D3D11_BIND_SHADER_RESOURCE;
         cullingTextureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
         cullingTextureDesc.CPUAccessFlags = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateTexture2D(&cullingTextureDesc, nullptr, m_pCullingTexture.GetAddressOf()),
             "Failed to create culling buffer texture."
         );
-        Decor2::SetResourceName(m_pCullingTexture, "CullingTexture");
+        Utils::SetResourceName(m_pCullingTexture, "CullingTexture");
 
         // Culling Render Target    
         D3D11_RENDER_TARGET_VIEW_DESC cullingRenderTargetViewDesc;
@@ -419,25 +419,25 @@ protected:
         cullingRenderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
         cullingRenderTargetViewDesc.Texture2D.MipSlice = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateRenderTargetView(m_pCullingTexture.Get(), &cullingRenderTargetViewDesc, &m_pCullingRTV),
             "Failed to create RTV for back buffer texture."
         );
-        Decor2::SetResourceName(m_pCullingRTV, "CullingRTV");
+        Utils::SetResourceName(m_pCullingRTV, "CullingRTV");
 
         //Backbuffer
         ComPtr<ID3D11Texture2D> pBackBufferTex;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(pBackBufferTex.GetAddressOf())),
             "Failed to get back buffer texture."
         );
-        Decor2::SetResourceName(pBackBufferTex, "BackBuffer");
+        Utils::SetResourceName(pBackBufferTex, "BackBuffer");
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateRenderTargetView(pBackBufferTex.Get(), nullptr, &m_pBackBufferRTV),
             "Failed to create RTV for back buffer texture."
         );
-        Decor2::SetResourceName(m_pBackBufferRTV, "BackBufferRTV");
+        Utils::SetResourceName(m_pBackBufferRTV, "BackBufferRTV");
 
         // Culling Depth stencil
         D3D11_TEXTURE2D_DESC cullingDepthTextureDesc;
@@ -454,17 +454,17 @@ protected:
         cullingDepthTextureDesc.MiscFlags = 0;
 
         ComPtr<ID3D11Texture2D> pCullingDepthTexture;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateTexture2D(&cullingDepthTextureDesc, nullptr, pCullingDepthTexture.GetAddressOf()),
             "Failed to create culling depth-stencil texture."
         );
-        Decor2::SetResourceName(pCullingDepthTexture, "CullingDepthStencil");
+        Utils::SetResourceName(pCullingDepthTexture, "CullingDepthStencil");
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateDepthStencilView(pCullingDepthTexture.Get(), nullptr, m_pCullingDepthStencilView.GetAddressOf()),
             "Failed to create culling depth-stencil view."
         );
-        Decor2::SetResourceName(m_pCullingDepthStencilView, "CullingDepthStencilView");
+        Utils::SetResourceName(m_pCullingDepthStencilView, "CullingDepthStencilView");
 
         //Depth stencil
         D3D11_TEXTURE2D_DESC depthTextureDesc;
@@ -481,17 +481,17 @@ protected:
         depthTextureDesc.MiscFlags = 0;
 
         ComPtr<ID3D11Texture2D> pDepthTexture;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateTexture2D(&depthTextureDesc, nullptr, pDepthTexture.GetAddressOf()),
             "Failed to create depth-stencil texture."
         );
-        Decor2::SetResourceName(pDepthTexture, "DepthStencil");
+        Utils::SetResourceName(pDepthTexture, "DepthStencil");
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_pDevice->CreateDepthStencilView(pDepthTexture.Get(), nullptr, m_pDepthStencilView.GetAddressOf()),
             "Failed to create depth-stencil view."
         );
-        Decor2::SetResourceName(m_pDepthStencilView, "DepthStencilView");
+        Utils::SetResourceName(m_pDepthStencilView, "DepthStencilView");
 
         SetDefaultRenderTarget();
     }

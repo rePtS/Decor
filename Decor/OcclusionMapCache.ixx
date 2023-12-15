@@ -11,7 +11,7 @@ module;
 
 export module OcclusionMapCache;
 
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -72,11 +72,11 @@ public:
         PlaceHolderData.pSysMem = &PlaceholderPixel;
         PlaceHolderData.SysMemPitch = sizeof(uint8_t);
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateTexture2D(&TextureDesc, &PlaceHolderData, &m_PlaceholderMap.pTexture),
             "Failed to create placeholder occlusion map."
         );
-        Decor2::SetResourceName(m_PlaceholderMap.pTexture, "Placeholder occlusion map");
+        Utils::SetResourceName(m_PlaceholderMap.pTexture, "Placeholder occlusion map");
 
         D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
         ShaderResourceViewDesc.Format = TextureDesc.Format;
@@ -84,11 +84,11 @@ public:
         ShaderResourceViewDesc.Texture2D.MipLevels = 1;
         ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateShaderResourceView(m_PlaceholderMap.pTexture.Get(), &ShaderResourceViewDesc, &m_PlaceholderMap.pShaderResourceView),
             "Failed to create placeholder occlusion map SRV."
         );
-        Decor2::SetResourceName(m_PlaceholderMap.pShaderResourceView, "Placeholder occlusion map");
+        Utils::SetResourceName(m_PlaceholderMap.pShaderResourceView, "Placeholder occlusion map");
     }
 
     OcclusionMapCache(const OcclusionMapCache&) = delete;
@@ -232,11 +232,11 @@ protected:
         auto texName = std::wstring(L"OcclusionMap") + std::to_wstring(mapId);
         const wchar_t* const pszTexName = texName.c_str();
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateTexture2D(&TextureDesc, OutputTexture.pSubResourceData.data(), &OutputTexture.pTexture),
             "Failed to create texture '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(OutputTexture.pTexture, pszTexName);
+        Utils::SetResourceNameW(OutputTexture.pTexture, pszTexName);
 
         D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
         ShaderResourceViewDesc.Format = TextureDesc.Format;
@@ -246,11 +246,11 @@ protected:
         ShaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0;
         ShaderResourceViewDesc.Texture2DArray.ArraySize = numLights;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateShaderResourceView(OutputTexture.pTexture.Get(), &ShaderResourceViewDesc, &OutputTexture.pShaderResourceView),
             "Failed to create SRV for '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(OutputTexture.pShaderResourceView, pszTexName);
+        Utils::SetResourceNameW(OutputTexture.pShaderResourceView, pszTexName);
 
         //m_DeviceContext.GenerateMips(OutputTexture.pShaderResourceView.Get());
 

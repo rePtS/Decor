@@ -7,7 +7,7 @@ module;
 
 export module ShaderCompiler;
 
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -44,7 +44,7 @@ public:
 
         if (!m_pReflection) //Create reflection on first use
         {
-            Decor2::ThrowIfFailed(
+            Utils::ThrowIfFailed(
                 D3DReflect(m_pBlob->GetBufferPointer(), m_pBlob->GetBufferSize(), __uuidof(m_pReflection), &m_pReflection),
                 "Failed to create shader reflection instance."
             );
@@ -65,11 +65,11 @@ public:
 
         ComPtr<ID3D11InputLayout> pInputLayout;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateInputLayout(InputElementDescs, NumElements, m_pBlob->GetBufferPointer(), m_pBlob->GetBufferSize(), &pInputLayout),
             "Failed to create input layout from '%s'.", m_pszFileName
         );
-        Decor2::SetResourceNameW(pInputLayout, m_pszFileName);
+        Utils::SetResourceNameW(pInputLayout, m_pszFileName);
 
         return pInputLayout;
     }
@@ -81,18 +81,18 @@ protected:
         CompileShader(pszEntryPoint, pszTarget);
 
         ComPtr<T> pShader;
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             (m_Device.*CreationFunc)(m_pBlob->GetBufferPointer(), m_pBlob->GetBufferSize(), nullptr, &pShader),
             "Failed to create shader '%s'.", m_pszFileName
         );
-        Decor2::SetResourceNameW(pShader, m_pszFileName);
+        Utils::SetResourceNameW(pShader, m_pszFileName);
 
         return pShader;
     }
 
     void CompileShader(const char* const pszEntryPoint, const char* const pszTarget)
     {
-        Decor2::LogMessagef(L"Compiling \"%s\" for target %S.", m_pszFileName, pszTarget);
+        Utils::LogMessagef(L"Compiling \"%s\" for target %S.", m_pszFileName, pszTarget);
 
         UINT iFlags = 0;
 #ifdef _DEBUG
@@ -105,12 +105,12 @@ protected:
 
         if (pMessages)
         {
-            Decor2::LogWarningf(L"Shader compilation:\r\n%S", static_cast<char*>(pMessages->GetBufferPointer()));
+            Utils::LogWarningf(L"Shader compilation:\r\n%S", static_cast<char*>(pMessages->GetBufferPointer()));
             OutputDebugStringA(static_cast<char*>(pMessages->GetBufferPointer()));
             DebugBreak();
         }
 
-        Decor2::ThrowIfFailed(hResult, "Failed to compile shader '%s'.", m_pszFileName);
+        Utils::ThrowIfFailed(hResult, "Failed to compile shader '%s'.", m_pszFileName);
     }
 
     ID3D11Device& m_Device;

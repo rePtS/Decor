@@ -45,18 +45,18 @@ public:
         mMaterialIdx(src.mMaterialIdx)
     {
         // We are creating new references of device resources
-        Utils::SafeAddRef(mVertexBuffer);
-        Utils::SafeAddRef(mIndexBuffer);
+        SceneUtils::SafeAddRef(mVertexBuffer);
+        SceneUtils::SafeAddRef(mIndexBuffer);
     }
 
     ScenePrimitive(ScenePrimitive&& src) :
         mVertices(std::move(src.mVertices)),
         mIndices(std::move(src.mIndices)),
-        mIsTangentPresent(Utils::Exchange(src.mIsTangentPresent, false)),
-        mTopology(Utils::Exchange(src.mTopology, D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED)),
-        mVertexBuffer(Utils::Exchange(src.mVertexBuffer, nullptr)),
-        mIndexBuffer(Utils::Exchange(src.mIndexBuffer, nullptr)),
-        mMaterialIdx(Utils::Exchange(src.mMaterialIdx, -1))
+        mIsTangentPresent(SceneUtils::Exchange(src.mIsTangentPresent, false)),
+        mTopology(SceneUtils::Exchange(src.mTopology, D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED)),
+        mVertexBuffer(SceneUtils::Exchange(src.mVertexBuffer, nullptr)),
+        mIndexBuffer(SceneUtils::Exchange(src.mIndexBuffer, nullptr)),
+        mMaterialIdx(SceneUtils::Exchange(src.mMaterialIdx, -1))
     {}
 
     ~ScenePrimitive()
@@ -74,8 +74,8 @@ public:
         mIndexBuffer = src.mIndexBuffer;
 
         // We are creating new references of device resources
-        Utils::SafeAddRef(mVertexBuffer);
-        Utils::SafeAddRef(mIndexBuffer);
+        SceneUtils::SafeAddRef(mVertexBuffer);
+        SceneUtils::SafeAddRef(mIndexBuffer);
 
         mMaterialIdx = src.mMaterialIdx;
 
@@ -86,12 +86,12 @@ public:
     {
         mVertices = std::move(src.mVertices);
         mIndices = std::move(src.mIndices);
-        mIsTangentPresent = Utils::Exchange(src.mIsTangentPresent, false);
-        mTopology = Utils::Exchange(src.mTopology, D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED);
-        mVertexBuffer = Utils::Exchange(src.mVertexBuffer, nullptr);
-        mIndexBuffer = Utils::Exchange(src.mIndexBuffer, nullptr);
+        mIsTangentPresent = SceneUtils::Exchange(src.mIsTangentPresent, false);
+        mTopology = SceneUtils::Exchange(src.mTopology, D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED);
+        mVertexBuffer = SceneUtils::Exchange(src.mVertexBuffer, nullptr);
+        mIndexBuffer = SceneUtils::Exchange(src.mIndexBuffer, nullptr);
 
-        mMaterialIdx = Utils::Exchange(src.mMaterialIdx, -1);
+        mMaterialIdx = SceneUtils::Exchange(src.mMaterialIdx, -1);
 
         return *this;
     }
@@ -121,11 +121,11 @@ public:
         // TODO: Only for triangles?
         if (!IsTangentPresent())
         {
-            Log::Debug(L"%sComputing tangents...", logPrefix.c_str());
+            SceneLog::Debug(L"%sComputing tangents...", logPrefix.c_str());
 
             if (!TangentCalculator::Calculate(*this))
             {
-                Log::Error(L"%sTangents computation failed!", logPrefix.c_str());
+                SceneLog::Error(L"%sTangents computation failed!", logPrefix.c_str());
                 return false;
             }
             mIsTangentPresent = true;
@@ -341,10 +341,10 @@ private:
         const auto attrIt = attributes.find(attrName);
         if (attrIt == attributes.end())
         {
-            Log::Write(requiredData ? Log::eError : Log::eDebug,
+            SceneLog::Write(requiredData ? SceneLog::eError : SceneLog::eDebug,
                 L"%sNo %s attribute present in primitive %d!",
                 logPrefix.c_str(),
-                Utils::StringToWstring(attrName).c_str(),
+                SceneUtils::StringToWstring(attrName).c_str(),
                 primitiveIdx);
             accessorLoaded = false;
             return dummyAccessor;
@@ -353,9 +353,9 @@ private:
         const auto accessorIdx = attrIt->second;
         if ((accessorIdx < 0) || (accessorIdx >= model.accessors.size()))
         {
-            Log::Error(L"%sInvalid %s accessor index (%d/%d)!",
+            SceneLog::Error(L"%sInvalid %s accessor index (%d/%d)!",
                 logPrefix.c_str(),
-                Utils::StringToWstring(attrName).c_str(),
+                SceneUtils::StringToWstring(attrName).c_str(),
                 accessorIdx,
                 model.accessors.size());
             accessorLoaded = false;
@@ -375,10 +375,10 @@ private:
         const wchar_t* logPrefix,
         const wchar_t* logDataName)
     {
-        Log::Debug(L"%s%s accesor \"%s\": view %d, offset %d, type %s<%s>, count %d",
+        SceneLog::Debug(L"%s%s accesor \"%s\": view %d, offset %d, type %s<%s>, count %d",
             logPrefix,
             logDataName,
-            Utils::StringToWstring(accessor.name).c_str(),
+            SceneUtils::StringToWstring(accessor.name).c_str(),
             accessor.bufferView,
             accessor.byteOffset,
             GltfUtils::TypeToWstring(accessor.type).c_str(),
@@ -390,7 +390,7 @@ private:
 
         if ((bufferViewIdx < 0) || (bufferViewIdx >= model.bufferViews.size()))
         {
-            Log::Error(L"%sInvalid %s view buffer index (%d/%d)!",
+            SceneLog::Error(L"%sInvalid %s view buffer index (%d/%d)!",
                 logPrefix, logDataName, bufferViewIdx, model.bufferViews.size());
             return false;
         }
@@ -414,7 +414,7 @@ private:
 
         if ((bufferIdx < 0) || (bufferIdx >= model.buffers.size()))
         {
-            Log::Error(L"%sInvalid %s buffer index (%d/%d)!",
+            SceneLog::Error(L"%sInvalid %s buffer index (%d/%d)!",
                 logPrefix, logDataName, bufferIdx, model.buffers.size());
             return false;
         }
@@ -424,7 +424,7 @@ private:
         const auto byteEnd = bufferView.byteOffset + bufferView.byteLength;
         if (byteEnd > buffer.data.size())
         {
-            Log::Error(L"%sAccessing data chunk outside %s buffer %d!",
+            SceneLog::Error(L"%sAccessing data chunk outside %s buffer %d!",
                 logPrefix, logDataName, bufferIdx);
             return false;
         }
@@ -466,7 +466,7 @@ private:
         const auto subItemsLogPrefix = logPrefix + L"   ";
         const auto dataConsumerLogPrefix = subItemsLogPrefix + L"   ";
 
-        Log::Debug(L"%sPrimitive %d/%d: mode %s, attributes [%s], indices %d, material %d",
+        SceneLog::Debug(L"%sPrimitive %d/%d: mode %s, attributes [%s], indices %d, material %d",
             logPrefix.c_str(),
             primitiveIdx,
             mesh.primitives.size(),
@@ -484,7 +484,7 @@ private:
         if ((posAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
             (posAccessor.type != tinygltf::TYPE_VEC3))
         {
-            Log::Error(L"%sUnsupported POSITION data type!", subItemsLogPrefix.c_str());
+            SceneLog::Error(L"%sUnsupported POSITION data type!", subItemsLogPrefix.c_str());
             return false;
         }
 
@@ -492,7 +492,7 @@ private:
         mVertices.reserve(posAccessor.count);
         if (mVertices.capacity() < posAccessor.count)
         {
-            Log::Error(L"%sUnable to allocate %d vertices!", subItemsLogPrefix.c_str(), posAccessor.count);
+            SceneLog::Error(L"%sUnable to allocate %d vertices!", subItemsLogPrefix.c_str(), posAccessor.count);
             mVertices.clear();
             return false;
         }
@@ -528,13 +528,13 @@ private:
             if ((normalAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
                 (normalAccessor.type != tinygltf::TYPE_VEC3))
             {
-                Log::Error(L"%sUnsupported NORMAL data type!", subItemsLogPrefix.c_str());
+                SceneLog::Error(L"%sUnsupported NORMAL data type!", subItemsLogPrefix.c_str());
                 return false;
             }
 
             if (normalAccessor.count != posAccessor.count)
             {
-                Log::Error(L"%sNormals count (%d) is different from position count (%d)!",
+                SceneLog::Error(L"%sNormals count (%d) is different from position count (%d)!",
                     subItemsLogPrefix.c_str(), normalAccessor.count, posAccessor.count);
                 return false;
             }
@@ -571,13 +571,13 @@ private:
             if ((tangentAccessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
                 (tangentAccessor.type != tinygltf::TYPE_VEC4))
             {
-                Log::Error(L"%sUnsupported TANGENT data type!", subItemsLogPrefix.c_str());
+                SceneLog::Error(L"%sUnsupported TANGENT data type!", subItemsLogPrefix.c_str());
                 return false;
             }
 
             if (tangentAccessor.count != posAccessor.count)
             {
-                Log::Error(L"%sTangents count (%d) is different from position count (%d)!",
+                SceneLog::Error(L"%sTangents count (%d) is different from position count (%d)!",
                     subItemsLogPrefix.c_str(), tangentAccessor.count, posAccessor.count);
                 return false;
             }
@@ -591,7 +591,7 @@ private:
                     //           tangent.x, tangent.y, tangent.z, tangent.w);
 
                     if ((tangent.w != 1.f) && (tangent.w != -1.f))
-                        Log::Warning(L"%s%d: tangent w component (handedness) is not equal to 1 or -1 but to %7.4f",
+                        SceneLog::Warning(L"%s%d: tangent w component (handedness) is not equal to 1 or -1 but to %7.4f",
                             dataConsumerLogPrefix.c_str(), itemIdx, tangent.w);
 
                     mVertices[itemIdx].Tangent = tangent;
@@ -608,7 +608,7 @@ private:
         }
         else
         {
-            Log::Debug(L"%sTangents are not present", subItemsLogPrefix.c_str());
+            SceneLog::Debug(L"%sTangents are not present", subItemsLogPrefix.c_str());
         }
 
         // Texture coordinates
@@ -619,13 +619,13 @@ private:
             if ((texCoord0Accessor.componentType != tinygltf::COMPONENT_TYPE_FLOAT) ||
                 (texCoord0Accessor.type != tinygltf::TYPE_VEC2))
             {
-                Log::Error(L"%sUnsupported TEXCOORD_0 data type!", subItemsLogPrefix.c_str());
+                SceneLog::Error(L"%sUnsupported TEXCOORD_0 data type!", subItemsLogPrefix.c_str());
                 return false;
             }
 
             if (texCoord0Accessor.count != posAccessor.count)
             {
-                Log::Error(L"%sTexture coords count (%d) is different from position count (%d)!",
+                SceneLog::Error(L"%sTexture coords count (%d) is different from position count (%d)!",
                     subItemsLogPrefix.c_str(), texCoord0Accessor.count, posAccessor.count);
                 return false;
             }
@@ -652,13 +652,13 @@ private:
         const auto indicesAccessorIdx = primitive.indices;
         if (indicesAccessorIdx >= model.accessors.size())
         {
-            Log::Error(L"%sInvalid indices accessor index (%d/%d)!",
+            SceneLog::Error(L"%sInvalid indices accessor index (%d/%d)!",
                 subItemsLogPrefix.c_str(), indicesAccessorIdx, model.accessors.size());
             return false;
         }
         if (indicesAccessorIdx < 0)
         {
-            Log::Error(L"%sNon-indexed geometry is not supported!", subItemsLogPrefix.c_str());
+            SceneLog::Error(L"%sNon-indexed geometry is not supported!", subItemsLogPrefix.c_str());
             return false;
         }
 
@@ -666,13 +666,13 @@ private:
 
         if (indicesAccessor.type != tinygltf::TYPE_SCALAR)
         {
-            Log::Error(L"%sUnsupported indices data type (must be scalar)!", subItemsLogPrefix.c_str());
+            SceneLog::Error(L"%sUnsupported indices data type (must be scalar)!", subItemsLogPrefix.c_str());
             return false;
         }
         if ((indicesAccessor.componentType < tinygltf::COMPONENT_TYPE_BYTE) ||
             (indicesAccessor.componentType > tinygltf::COMPONENT_TYPE_UNSIGNED_INT))
         {
-            Log::Error(L"%sUnsupported indices data component type (%d)!",
+            SceneLog::Error(L"%sUnsupported indices data component type (%d)!",
                 subItemsLogPrefix.c_str(), indicesAccessor.componentType);
             return false;
         }
@@ -681,7 +681,7 @@ private:
         mIndices.reserve(indicesAccessor.count);
         if (mIndices.capacity() < indicesAccessor.count)
         {
-            Log::Error(L"%sUnable to allocate %d indices!", subItemsLogPrefix.c_str(), indicesAccessor.count);
+            SceneLog::Error(L"%sUnable to allocate %d indices!", subItemsLogPrefix.c_str(), indicesAccessor.count);
             return false;
         }
 
@@ -756,7 +756,7 @@ private:
         }
         if (mIndices.size() != indicesAccessor.count)
         {
-            Log::Error(L"%sFailed to load indices (loaded %d instead of %d))!",
+            SceneLog::Error(L"%sFailed to load indices (loaded %d instead of %d))!",
                 subItemsLogPrefix.c_str(), mIndices.size(), indicesAccessor.count);
             return false;
         }
@@ -765,7 +765,7 @@ private:
         mTopology = GltfUtils::ModeToTopology(primitive.mode);
         if (mTopology == D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED)
         {
-            Log::Error(L"%sUnsupported primitive topology!", subItemsLogPrefix.c_str());
+            SceneLog::Error(L"%sUnsupported primitive topology!", subItemsLogPrefix.c_str());
             return false;
         }
 
@@ -775,7 +775,7 @@ private:
         {
             if (matIdx >= model.materials.size())
             {
-                Log::Error(L"%sInvalid material index (%d/%d)!",
+                SceneLog::Error(L"%sInvalid material index (%d/%d)!",
                     subItemsLogPrefix.c_str(), matIdx, model.materials.size());
                 return false;
             }
@@ -900,8 +900,8 @@ private:
 
     void DestroyDeviceBuffers()
     {
-        Utils::ReleaseAndMakeNull(mVertexBuffer);
-        Utils::ReleaseAndMakeNull(mIndexBuffer);
+        SceneUtils::ReleaseAndMakeNull(mVertexBuffer);
+        SceneUtils::ReleaseAndMakeNull(mIndexBuffer);
     }
 
 private:

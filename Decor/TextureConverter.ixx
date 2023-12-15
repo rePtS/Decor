@@ -10,7 +10,7 @@ module;
 
 export module TextureConverter;
 
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -66,11 +66,11 @@ public:
         PlaceHolderData.pSysMem = &PlaceholderPixel;
         PlaceHolderData.SysMemPitch = sizeof(uint32_t);
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateTexture2D(&TextureDesc, &PlaceHolderData, &m_PlaceholderTexture.pTexture),
             "Failed to create placeholder texture."
         );
-        Decor2::SetResourceName(m_PlaceholderTexture.pTexture, "Placeholder texture");
+        Utils::SetResourceName(m_PlaceholderTexture.pTexture, "Placeholder texture");
 
         D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
         ShaderResourceViewDesc.Format = TextureDesc.Format;
@@ -78,11 +78,11 @@ public:
         ShaderResourceViewDesc.Texture2D.MipLevels = 1;
         ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateShaderResourceView(m_PlaceholderTexture.pTexture.Get(), &ShaderResourceViewDesc, &m_PlaceholderTexture.pShaderResourceView),
             "Failed to create placeholder texture SRV."
         );
-        Decor2::SetResourceName(m_PlaceholderTexture.pShaderResourceView, "Placeholder texture");
+        Utils::SetResourceName(m_PlaceholderTexture.pShaderResourceView, "Placeholder texture");
     };
 
     TextureConverter(const TextureConverter&) = delete;
@@ -119,11 +119,11 @@ public:
 
         const wchar_t* const pszTexName = Texture.Texture ? Texture.Texture->GetName() : nullptr;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateTexture2D(&TextureDesc, m_ConvertedTextureData.GetSubResourceDataArray(), &OutputTexture.pTexture),
             "Failed to create texture '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(OutputTexture.pTexture, pszTexName);
+        Utils::SetResourceNameW(OutputTexture.pTexture, pszTexName);
 
         D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
         ShaderResourceViewDesc.Format = TextureDesc.Format;
@@ -131,11 +131,11 @@ public:
         ShaderResourceViewDesc.Texture2D.MipLevels = Texture.NumMips;
         ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateShaderResourceView(OutputTexture.pTexture.Get(), &ShaderResourceViewDesc, &OutputTexture.pShaderResourceView),
             "Failed to create SRV for '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(OutputTexture.pShaderResourceView, pszTexName);
+        Utils::SetResourceNameW(OutputTexture.pShaderResourceView, pszTexName);
 
         OutputTexture.fMultU = 1.0f / (Texture.UClamp * Texture.UScale);
         OutputTexture.fMultV = 1.0f / (Texture.VClamp * Texture.VScale);

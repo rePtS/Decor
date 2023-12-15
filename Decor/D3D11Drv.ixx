@@ -18,7 +18,7 @@ import GouraudRenderer;
 import ComplexSurfaceRenderer;
 import RenDevBackend;
 import GlobalShaderConstants;
-import Helpers;
+import Utils;
 
 export 
 {
@@ -111,20 +111,20 @@ export
             pInViewport->Exec(L"ShowLog");
             #endif
 
-            Decor2::LogMessagef(L"Initializing Direct3D 11 Renderer.");
+            Utils::LogMessagef(L"Initializing Direct3D 11 Renderer.");
 
             try
             {
                 if (!m_Backend.Init(static_cast<HWND>(pInViewport->GetWindow())))
                 {
-                    Decor2::LogWarningf(L"Failed to initialize Direct3D 11 Renderer.");
+                    Utils::LogWarningf(L"Failed to initialize Direct3D 11 Renderer.");
                     return false;
                 }
 
                 URenderDevice::Viewport = pInViewport;
                 if (!SetRes(iNewX, iNewY, iNewColorBytes, bFullscreen))
                 {
-                    Decor2::LogWarningf(L"Failed to set resolution during Init().");
+                    Utils::LogWarningf(L"Failed to set resolution during Init().");
                     return false;
                 }
 
@@ -139,9 +139,9 @@ export
                 m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
                 m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
             }
-            catch (const Decor2::ComException& ex)
+            catch (const Utils::ComException& ex)
             {
-                Decor2::LogWarningf(L"Exception: %s", ex.what());
+                Utils::LogWarningf(L"Exception: %s", ex.what());
                 return false;
             }
 
@@ -158,7 +158,7 @@ export
             //Without BLIT_Direct3D renderer only ever gets one draw call, and SetRes() isn't called on window resize
             if (!URenderDevice::Viewport->ResizeViewport(EViewportBlitFlags::BLIT_HardwarePaint | EViewportBlitFlags::BLIT_Direct3D, iNewX, iNewY, iNewColorBytes))
             {
-                Decor2::LogWarningf(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
+                Utils::LogWarningf(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
                 return false;
             }
 
@@ -166,9 +166,9 @@ export
             {
                 m_Backend.SetRes(iNewX, iNewY);
             }
-            catch (const Decor2::ComException& ex)
+            catch (const Utils::ComException& ex)
             {
-                Decor2::LogWarningf(L"Exception: %s", ex.what());
+                Utils::LogWarningf(L"Exception: %s", ex.what());
                 return false;
             }
 

@@ -7,7 +7,7 @@ module;
 
 export module DynamicGPUBuffer;
 
-import Helpers;
+import Utils;
 import <typeinfo>;
 
 using Microsoft::WRL::ComPtr;
@@ -149,12 +149,12 @@ protected:
         Desc.CPUAccessFlags = D3D11_CPU_ACCESS_FLAG::D3D11_CPU_ACCESS_WRITE;
         Desc.MiscFlags = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             m_Device.CreateBuffer(&Desc, nullptr, &m_pBuffer),
             "Failed to create buffer %s", typeid(T).name()
         );
 
-        Decor2::SetResourceName(m_pBuffer, typeid(T).name());
+        Utils::SetResourceName(m_pBuffer, typeid(T).name());
 
         m_iReserved = iSize;
     }

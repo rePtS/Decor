@@ -12,7 +12,7 @@ module;
 export module TextureCache;
 
 import TextureConverter;
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -178,11 +178,11 @@ protected:
         D3D11_SUBRESOURCE_DATA initData = { image.data(), lineMemPitch, 0 };
 
         const wchar_t* const pszTexName = L"Noise";
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             Device.CreateTexture2D(&TextureDesc, &initData, &m_NoiseTextureData.pTexture),
             "Failed to create texture '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(m_NoiseTextureData.pTexture, pszTexName);
+        Utils::SetResourceNameW(m_NoiseTextureData.pTexture, pszTexName);
 
         D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
         ShaderResourceViewDesc.Format = TextureDesc.Format;
@@ -190,11 +190,11 @@ protected:
         ShaderResourceViewDesc.Texture2D.MipLevels = 1;
         ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             Device.CreateShaderResourceView(m_NoiseTextureData.pTexture.Get(), &ShaderResourceViewDesc, &m_NoiseTextureData.pShaderResourceView),
             "Failed to create SRV for '%s'.", pszTexName
         );
-        Decor2::SetResourceNameW(m_NoiseTextureData.pShaderResourceView, pszTexName);
+        Utils::SetResourceNameW(m_NoiseTextureData.pShaderResourceView, pszTexName);
 
         m_NoiseTextureData.fMultU = 1.0f; // / (Texture.UClamp * Texture.UScale);
         m_NoiseTextureData.fMultV = 1.0f; // / (Texture.VClamp * Texture.VScale);

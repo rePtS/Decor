@@ -4,7 +4,7 @@ module;
 #include <wrl\client.h>
 #include <Core.h>
 
-export module Helpers;
+export module Utils;
 
 import <exception>;
 import <string>;
@@ -12,7 +12,7 @@ import <cassert>;
 
 using Microsoft::WRL::ComPtr;
 
-export namespace Decor2
+export namespace Utils
 {
     /// <summary>
     /// Helper class for COM exceptions

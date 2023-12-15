@@ -5,7 +5,7 @@ module;
 
 export module Scene.Log;
 
-namespace Log
+namespace SceneLog
 {
     enum ELoggingLevel
     {
@@ -17,7 +17,7 @@ namespace Log
 
     static std::wstringstream wstream;
 
-    export ELoggingLevel sLoggingLevel = Log::eInfo;
+    export ELoggingLevel sLoggingLevel = SceneLog::eInfo;
 
     const wchar_t* LogLevelToString(ELoggingLevel level)
     {

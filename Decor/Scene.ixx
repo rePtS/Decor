@@ -109,7 +109,7 @@ public:
     virtual ~Scene()
     {
         Destroy();
-        Log::Flush();
+        SceneLog::Flush();
     }
 
     virtual bool Init(IRenderingContext& ctx)
@@ -224,22 +224,22 @@ public:
 
     virtual void Destroy()
     {
-        Utils::ReleaseAndMakeNull(mVsCulling);
-        Utils::ReleaseAndMakeNull(mPsCulling);
-
-        Utils::ReleaseAndMakeNull(mVertexShader);
-
-        Utils::ReleaseAndMakeNull(mPsPbrMetalness);
-        Utils::ReleaseAndMakeNull(mPsConstEmmisive);
-
-        Utils::ReleaseAndMakeNull(mVertexLayout);
-
-        Utils::ReleaseAndMakeNull(mCbScene);
-        Utils::ReleaseAndMakeNull(mCbFrame);
-        Utils::ReleaseAndMakeNull(mCbSceneNode);
-        Utils::ReleaseAndMakeNull(mCbScenePrimitive);
-
-        Utils::ReleaseAndMakeNull(mSamplerLinear);
+        SceneUtils::ReleaseAndMakeNull(mVsCulling);
+        SceneUtils::ReleaseAndMakeNull(mPsCulling);
+        
+        SceneUtils::ReleaseAndMakeNull(mVertexShader);
+        
+        SceneUtils::ReleaseAndMakeNull(mPsPbrMetalness);
+        SceneUtils::ReleaseAndMakeNull(mPsConstEmmisive);
+        
+        SceneUtils::ReleaseAndMakeNull(mVertexLayout);
+        
+        SceneUtils::ReleaseAndMakeNull(mCbScene);
+        SceneUtils::ReleaseAndMakeNull(mCbFrame);
+        SceneUtils::ReleaseAndMakeNull(mCbSceneNode);
+        SceneUtils::ReleaseAndMakeNull(mCbScenePrimitive);
+        
+        SceneUtils::ReleaseAndMakeNull(mSamplerLinear);
 
         mRootNodes.clear();
     }
@@ -394,7 +394,7 @@ private:
 
     bool LoadExternal(IRenderingContext& ctx, const std::wstring& filePath)
     {
-        const auto fileExt = Utils::GetFilePathExt(filePath);
+        const auto fileExt = SceneUtils::GetFilePathExt(filePath);
         if ((fileExt.compare(L"glb") == 0) ||
             (fileExt.compare(L"gltf") == 0))
         {
@@ -402,7 +402,7 @@ private:
         }
         else
         {
-            Log::Error(L"The scene file has an unsupported file format extension (%s)!", fileExt.c_str());
+            SceneLog::Error(L"The scene file has an unsupported file format extension (%s)!", fileExt.c_str());
             return false;
         }
     }
@@ -411,7 +411,7 @@ private:
     {
         if (mLights.size() > LIGHTS_MAX_COUNT)
         {
-            Log::Error(L"Lights count (%d) exceeded maximum limit (%d)!",
+            SceneLog::Error(L"Lights count (%d) exceeded maximum limit (%d)!",
                 mLights.size(), LIGHTS_MAX_COUNT);
             return false;
         }
@@ -433,7 +433,7 @@ private:
 
             if (material.GetNormalTexture().IsLoaded() && !primitive.IsTangentPresent())
             {
-                Log::Error(L"A scene primitive without tangent data uses a material with normal map!");
+                SceneLog::Error(L"A scene primitive without tangent data uses a material with normal map!");
                 return false;
             }
         }
@@ -451,14 +451,14 @@ private:
     {
         using namespace std;
 
-        Log::Debug(L"");
+        SceneLog::Debug(L"");
         const std::wstring logPrefix = L"LoadGLTF: ";
 
         tinygltf::Model model;
         if (!GltfUtils::LoadModel(model, filePath))
             return false;
 
-        Log::Debug(L"");
+        SceneLog::Debug(L"");
 
         if (!LoadMaterialsFromGltf(ctx, model, logPrefix))
             return false;
@@ -468,7 +468,7 @@ private:
 
         SetupDefaultLights();
 
-        Log::Debug(L"");
+        SceneLog::Debug(L"");
 
         return true;
     }
@@ -479,7 +479,7 @@ private:
     {
         const auto& materials = model.materials;
 
-        Log::Debug(L"%sMaterials: %d", logPrefix.c_str(), materials.size());
+        SceneLog::Debug(L"%sMaterials: %d", logPrefix.c_str(), materials.size());
 
         const std::wstring materialLogPrefix = logPrefix + L"   ";
         const std::wstring valueLogPrefix = materialLogPrefix + L"   ";
@@ -490,11 +490,11 @@ private:
         {
             const auto& material = materials[matIdx];
 
-            Log::Debug(L"%s%d/%d \"%s\"",
+            SceneLog::Debug(L"%s%d/%d \"%s\"",
                 materialLogPrefix.c_str(),
                 matIdx,
                 materials.size(),
-                Utils::StringToWstring(material.name).c_str());
+                SceneUtils::StringToWstring(material.name).c_str());
 
             SceneMaterial sceneMaterial;
             if (!sceneMaterial.LoadFromGltf(ctx, model, material, valueLogPrefix))
@@ -513,16 +513,16 @@ private:
         // Choose one scene
         if (model.scenes.size() < 1)
         {
-            Log::Error(L"%sNo scenes present in the model!", logPrefix.c_str());
+            SceneLog::Error(L"%sNo scenes present in the model!", logPrefix.c_str());
             return false;
         }
         if (model.scenes.size() > 1)
-            Log::Warning(L"%sMore scenes present in the model. Loading just the first one.", logPrefix.c_str());
+            SceneLog::Warning(L"%sMore scenes present in the model. Loading just the first one.", logPrefix.c_str());
         const auto& scene = model.scenes[0];
 
-        Log::Debug(L"%sScene 0 \"%s\": %d root node(s)",
+        SceneLog::Debug(L"%sScene 0 \"%s\": %d root node(s)",
             logPrefix.c_str(),
-            Utils::StringToWstring(scene.name).c_str(),
+            SceneUtils::StringToWstring(scene.name).c_str(),
             scene.nodes.size());
 
         // Light sources
@@ -580,7 +580,7 @@ private:
     {
         if (nodeIdx >= model.nodes.size())
         {
-            Log::Error(L"%sInvalid node index (%d/%d)!", logPrefix.c_str(), nodeIdx, model.nodes.size());
+            SceneLog::Error(L"%sInvalid node index (%d/%d)!", logPrefix.c_str(), nodeIdx, model.nodes.size());
             return false;
         }
 
@@ -589,7 +589,7 @@ private:
         // Если это корневой узел, то проверяем имя узла (оно должно начинаться с "Node")    
         if (sceneNode.mIsRootNode)
         {
-            auto nodeNameParts = Utils::split(node.name, '_');
+            auto nodeNameParts = SceneUtils::split(node.name, '_');
             if (nodeNameParts.size() > 1 && nodeNameParts[0] == "Node")
                 // Сохрянем имя корневого узла (или лучше сохраним список ид источников света, которые освещаются данным узлом???)
                 sceneNode.mName = nodeNameParts[1];
@@ -610,7 +610,7 @@ private:
             // Set direction of the light
             XMStoreFloat4(&mLights[lightIdx].direction, XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
 
-            auto lightNameParts = Utils::split(node.name, '_');
+            auto lightNameParts = SceneUtils::split(node.name, '_');
             if (lightNameParts.size() > 1)
                 mLights[lightIdx].affectedNodes.assign(++lightNameParts.begin(), lightNameParts.end());
         }
@@ -623,7 +623,7 @@ private:
         {
             if ((childIdx < 0) || (childIdx >= model.nodes.size()))
             {
-                Log::Error(L"%sInvalid child node index (%d/%d)!", childLogPrefix.c_str(), childIdx, model.nodes.size());
+                SceneLog::Error(L"%sInvalid child node index (%d/%d)!", childLogPrefix.c_str(), childIdx, model.nodes.size());
                 return false;
             }
 

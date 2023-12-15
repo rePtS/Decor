@@ -10,7 +10,7 @@ module;
 
 export module DeviceState;
 
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -132,12 +132,12 @@ protected:
     {
         for (size_t i = 0; i < Num; i++)
         {
-            Decor2::ThrowIfFailed(
+            Utils::ThrowIfFailed(
                 (m_Device.*CreationFunc)(&Descs[i], &States[i]),
                 "Failed to create state (%Iu).", i
             );
 
-            Decor2::SetResourceName(States[i], "DeviceState");
+            Utils::SetResourceName(States[i], "DeviceState");
         }
     }
 

@@ -7,7 +7,7 @@ module;
 
 export module ConstantGPUBuffer;
 
-import Helpers;
+import Utils;
 
 using Microsoft::WRL::ComPtr;
 
@@ -29,12 +29,12 @@ public:
         BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_FLAG::D3D11_CPU_ACCESS_WRITE;
         BufferDesc.MiscFlags = 0;
 
-        Decor2::ThrowIfFailed(
+        Utils::ThrowIfFailed(
             Device.CreateBuffer(&BufferDesc, nullptr, &m_pBuffer),
             "Failed to create constant buffer %s.", typeid(T).name()
         );
 
-        Decor2::SetResourceName(m_pBuffer, typeid(T).name());
+        Utils::SetResourceName(m_pBuffer, typeid(T).name());
     }
 
     ConstantBuffer(const ConstantBuffer&) = delete;

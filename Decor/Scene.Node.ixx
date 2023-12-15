@@ -69,7 +69,7 @@ public:
         if (vec.size() != 3)
         {
             if (vec.size() != 0)
-                Log::Warning(L"SceneNode::AddScale: vector of incorrect size (%d instead of 3)",
+                SceneLog::Warning(L"SceneNode::AddScale: vector of incorrect size (%d instead of 3)",
                     vec.size());
             return;
         }
@@ -84,7 +84,7 @@ public:
         if (vec.size() != 4)
         {
             if (vec.size() != 0)
-                Log::Warning(L"SceneNode::AddRotationQuaternion: vector of incorrect size (%d instead of 4)",
+                SceneLog::Warning(L"SceneNode::AddRotationQuaternion: vector of incorrect size (%d instead of 4)",
                     vec.size());
             return;
         }
@@ -101,7 +101,7 @@ public:
         if (vec.size() != 3)
         {
             if (vec.size() != 0)
-                Log::Warning(L"SceneNode::AddTranslation: vector of incorrect size (%d instead of 3)",
+                SceneLog::Warning(L"SceneNode::AddTranslation: vector of incorrect size (%d instead of 3)",
                     vec.size());
             return;
         }
@@ -116,7 +116,7 @@ public:
         if (vec.size() != 16)
         {
             if (vec.size() != 0)
-                Log::Warning(L"SceneNode::AddMatrix: vector of incorrect size (%d instead of 16)",
+                SceneLog::Warning(L"SceneNode::AddMatrix: vector of incorrect size (%d instead of 16)",
                     vec.size());
             return;
         }
@@ -137,7 +137,7 @@ public:
         const std::wstring& logPrefix)
     {
         // debug
-        if (Log::sLoggingLevel >= Log::eDebug)
+        if (SceneLog::sLoggingLevel >= SceneLog::eDebug)
         {
             std::wstring transforms;
             if (!node.rotation.empty())
@@ -150,11 +150,11 @@ public:
                 transforms += L"matrix ";
             if (transforms.empty())
                 transforms = L"none";
-            Log::Debug(L"%sNode %d/%d \"%s\": mesh %d, transform %s, children %d",
+            SceneLog::Debug(L"%sNode %d/%d \"%s\": mesh %d, transform %s, children %d",
                 logPrefix.c_str(),
                 nodeIdx,
                 model.nodes.size(),
-                Utils::StringToWstring(node.name).c_str(),
+                SceneUtils::StringToWstring(node.name).c_str(),
                 node.mesh,
                 transforms.c_str(),
                 node.children.size());
@@ -170,23 +170,23 @@ public:
 
             // Sanity checking
             if (!node.scale.empty())
-                Log::Warning(L"%sNode %d/%d \"%s\": node.scale is not empty when tranformation matrix is provided. Ignoring.",
+                SceneLog::Warning(L"%sNode %d/%d \"%s\": node.scale is not empty when tranformation matrix is provided. Ignoring.",
                     logPrefix.c_str(),
                     nodeIdx,
                     model.nodes.size(),
-                    Utils::StringToWstring(node.name).c_str());
+                    SceneUtils::StringToWstring(node.name).c_str());
             if (!node.rotation.empty())
-                Log::Warning(L"%sNode %d/%d \"%s\": node.rotation is not empty when tranformation matrix is provided. Ignoring.",
+                SceneLog::Warning(L"%sNode %d/%d \"%s\": node.rotation is not empty when tranformation matrix is provided. Ignoring.",
                     logPrefix.c_str(),
                     nodeIdx,
                     model.nodes.size(),
-                    Utils::StringToWstring(node.name).c_str());
+                    SceneUtils::StringToWstring(node.name).c_str());
             if (!node.translation.empty())
-                Log::Warning(L"%sNode %d/%d \"%s\": node.translation is not empty when tranformation matrix is provided. Ignoring.",
+                SceneLog::Warning(L"%sNode %d/%d \"%s\": node.translation is not empty when tranformation matrix is provided. Ignoring.",
                     logPrefix.c_str(),
                     nodeIdx,
                     model.nodes.size(),
-                    Utils::StringToWstring(node.name).c_str());
+                    SceneUtils::StringToWstring(node.name).c_str());
         }
         else
         {
@@ -199,18 +199,18 @@ public:
         const auto meshIdx = node.mesh;
         if (meshIdx >= (int)model.meshes.size())
         {
-            Log::Error(L"%sInvalid mesh index (%d/%d)!", subItemsLogPrefix.c_str(), meshIdx, model.meshes.size());
+            SceneLog::Error(L"%sInvalid mesh index (%d/%d)!", subItemsLogPrefix.c_str(), meshIdx, model.meshes.size());
             return false;
         }
         if (meshIdx >= 0)
         {
             const auto& mesh = model.meshes[meshIdx];
 
-            Log::Debug(L"%sMesh %d/%d \"%s\": %d primitive(s)",
+            SceneLog::Debug(L"%sMesh %d/%d \"%s\": %d primitive(s)",
                 subItemsLogPrefix.c_str(),
                 meshIdx,
                 model.meshes.size(),
-                Utils::StringToWstring(mesh.name).c_str(),
+                SceneUtils::StringToWstring(mesh.name).c_str(),
                 mesh.primitives.size());
 
             // Primitives

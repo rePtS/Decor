@@ -6,7 +6,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Helpers.ixx" />
+    <ClCompile Include="Utils.ixx" />
     <ClCompile Include="TinyGltf.ixx" />
     <ClCompile Include="DynamicGPUBuffer.ixx" />
     <ClCompile Include="Scene.IRenderingContext.ixx" />

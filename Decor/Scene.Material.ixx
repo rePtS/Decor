@@ -68,7 +68,7 @@ public:
 
         GltfUtils::FloatArrayToColor(mBaseColorFactor, pbrMR.baseColorFactor);
 
-        Log::Debug(L"%s%s: %s",
+        SceneLog::Debug(L"%s%s: %s",
             logPrefix.c_str(),
             L"BaseColorFactor",
             GltfUtils::ColorToWstring(mBaseColorFactor).c_str());
@@ -79,7 +79,7 @@ public:
         GltfUtils::FloatToColorComponent<2>(mMetallicRoughnessFactor, pbrMR.metallicFactor);
         GltfUtils::FloatToColorComponent<1>(mMetallicRoughnessFactor, pbrMR.roughnessFactor);
 
-        Log::Debug(L"%s%s: %s",
+        SceneLog::Debug(L"%s%s: %s",
             logPrefix.c_str(),
             L"MetallicRoughnessFactor",
             GltfUtils::ColorToWstring(mBaseColorFactor).c_str());
@@ -95,7 +95,7 @@ public:
 
         GltfUtils::FloatArrayToColor(mEmissionFactor, material.emissiveFactor);
 
-        Log::Debug(L"%s%s: %s",
+        SceneLog::Debug(L"%s%s: %s",
             logPrefix.c_str(),
             L"EmissionFactor",
             GltfUtils::ColorToWstring(mEmissionFactor).c_str());

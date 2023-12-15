@@ -20,34 +20,34 @@ export namespace GltfUtils
         using namespace std;
 
         // Convert to plain string for tinygltf
-        string filePathA = Utils::WstringToString(filePath);
+        string filePathA = SceneUtils::WstringToString(filePath);
 
         tinygltf::TinyGLTF tinyGltf;
         string errA, warnA;
-        wstring ext = Utils::GetFilePathExt(filePath);
+        wstring ext = SceneUtils::GetFilePathExt(filePath);
 
         bool ret = false;
         if (ext.compare(L"glb") == 0)
         {
-            Log::Debug(L"Gltf::LoadModel: Reading binary glTF from \"%s\"", filePath.c_str());
+            SceneLog::Debug(L"Gltf::LoadModel: Reading binary glTF from \"%s\"", filePath.c_str());
             ret = tinyGltf.LoadBinaryFromFile(&model, &errA, &warnA, filePathA);
         }
         else
         {
-            Log::Debug(L"Gltf::LoadModel: Reading ASCII glTF from \"%s\"", filePath.c_str());
+            SceneLog::Debug(L"Gltf::LoadModel: Reading ASCII glTF from \"%s\"", filePath.c_str());
             ret = tinyGltf.LoadASCIIFromFile(&model, &errA, &warnA, filePathA);
         }
 
         if (!errA.empty())
-            Log::Debug(L"Gltf::LoadModel: Error: %s", Utils::StringToWstring(errA).c_str());
+            SceneLog::Debug(L"Gltf::LoadModel: Error: %s", SceneUtils::StringToWstring(errA).c_str());
 
         if (!warnA.empty())
-            Log::Debug(L"Gltf::LoadModel: Warning: %s", Utils::StringToWstring(warnA).c_str());
+            SceneLog::Debug(L"Gltf::LoadModel: Warning: %s", SceneUtils::StringToWstring(warnA).c_str());
 
         if (ret)
-            Log::Debug(L"Gltf::LoadModel: Succesfully loaded model");
+            SceneLog::Debug(L"Gltf::LoadModel: Succesfully loaded model");
         else
-            Log::Error(L"Gltf::LoadModel: Failed to parse glTF file \"%s\"", filePath.c_str());
+            SceneLog::Error(L"Gltf::LoadModel: Failed to parse glTF file \"%s\"", filePath.c_str());
 
         return ret;
     }
@@ -103,7 +103,7 @@ export namespace GltfUtils
                 first = false;
             ss << item.first << ": " << item.second;
         }
-        return Utils::StringToWstring(ss.str());
+        return SceneUtils::StringToWstring(ss.str());
     }
 
     std::wstring TypeToWstring(int ty)
@@ -176,7 +176,7 @@ export namespace GltfUtils
             ss << arr[i] << ((i != arr.size() - 1) ? ", " : "");
         ss << " ]";
 
-        return Utils::StringToWstring(ss.str());
+        return SceneUtils::StringToWstring(ss.str());
     }
 
     std::wstring StringDoubleMapToWstring(const std::map<std::string, double>& mp)
@@ -195,7 +195,7 @@ export namespace GltfUtils
         }
         ss << " ]";
 
-        return Utils::StringToWstring(ss.str());
+        return SceneUtils::StringToWstring(ss.str());
     }
 
     std::wstring ParameterValueToWstring(const tinygltf::Parameter& param)
@@ -211,7 +211,7 @@ export namespace GltfUtils
             return ss.str();
         }
         else
-            return Utils::StringToWstring("\"" + param.string_value + "\"");
+            return SceneUtils::StringToWstring("\"" + param.string_value + "\"");
     }
 
     bool FloatArrayToColor(DirectX::XMFLOAT4& color, const std::vector<double>& vector)

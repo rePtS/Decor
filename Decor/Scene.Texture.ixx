@@ -39,7 +39,7 @@ public:
         srv(src.srv)
     {
         // We are creating new reference of device resource
-        Utils::SafeAddRef(srv);
+        SceneUtils::SafeAddRef(srv);
     }
 
     SceneTexture& operator =(const SceneTexture& src)
@@ -51,7 +51,7 @@ public:
         srv = src.srv;
 
         // We are creating new reference of device resource
-        Utils::SafeAddRef(srv);
+        SceneUtils::SafeAddRef(srv);
 
         return *this;
     }
@@ -59,25 +59,25 @@ public:
     SceneTexture(SceneTexture&& src) :
         mName(src.mName),
         mValueType(src.mValueType),
-        mNeutralValue(Utils::Exchange(src.mNeutralValue, XMFLOAT4(0.f, 0.f, 0.f, 0.f))),
-        mIsLoaded(Utils::Exchange(src.mIsLoaded, false)),
-        srv(Utils::Exchange(src.srv, nullptr))
+        mNeutralValue(SceneUtils::Exchange(src.mNeutralValue, XMFLOAT4(0.f, 0.f, 0.f, 0.f))),
+        mIsLoaded(SceneUtils::Exchange(src.mIsLoaded, false)),
+        srv(SceneUtils::Exchange(src.srv, nullptr))
     {}
 
     SceneTexture& operator =(SceneTexture&& src)
     {
         mName = src.mName;
         mValueType = src.mValueType;
-        mNeutralValue = Utils::Exchange(src.mNeutralValue, XMFLOAT4(0.f, 0.f, 0.f, 0.f));
-        mIsLoaded = Utils::Exchange(src.mIsLoaded, false);
-        srv = Utils::Exchange(src.srv, nullptr);
+        mNeutralValue = SceneUtils::Exchange(src.mNeutralValue, XMFLOAT4(0.f, 0.f, 0.f, 0.f));
+        mIsLoaded = SceneUtils::Exchange(src.mIsLoaded, false);
+        srv = SceneUtils::Exchange(src.srv, nullptr);
 
         return *this;
     }
 
     ~SceneTexture()
     {
-        Utils::ReleaseAndMakeNull(srv);
+        SceneUtils::ReleaseAndMakeNull(srv);
     }
 
     bool Create(IRenderingContext& ctx, const wchar_t* path)
@@ -138,7 +138,7 @@ public:
 
         if (textureIndex >= (int)textures.size())
         {
-            Log::Error(L"%sInvalid texture index (%d/%d) in \"%s\""
+            SceneLog::Error(L"%sInvalid texture index (%d/%d) in \"%s\""
                 L"!",
                 logPrefix.c_str(),
                 textureIndex,
@@ -151,14 +151,14 @@ public:
         if (textureIndex < 0)
         {
             // No texture - load neutral constant one
-            Log::Debug(L"%s%s: Not specified - creating neutral constant texture",
+            SceneLog::Debug(L"%s%s: Not specified - creating neutral constant texture",
                 logPrefix.c_str(),
                 GetName().c_str()
             );
 
             if (!CreateConstantTextureSRV(ctx, srv, mNeutralValue))
             {
-                Log::Error(L"%sFailed to create neutral constant texture for \"%s\"!",
+                SceneLog::Error(L"%sFailed to create neutral constant texture for \"%s\"!",
                     logPrefix.c_str(),
                     GetName().c_str());
                 return false;
@@ -172,7 +172,7 @@ public:
         const auto texSource = texture.source;
         if ((texSource < 0) || (texSource >= images.size()))
         {
-            Log::Error(L"%sInvalid source image index (%d/%d) in texture %d!",
+            SceneLog::Error(L"%sInvalid source image index (%d/%d) in texture %d!",
                 logPrefix.c_str(),
                 texSource,
                 images.size(),
@@ -182,11 +182,11 @@ public:
 
         const auto& image = images[texSource];
 
-        Log::Debug(L"%s%s: \"%s\"/\"%s\", %dx%d, %dx%db %s, data size %dB",
+        SceneLog::Debug(L"%s%s: \"%s\"/\"%s\", %dx%d, %dx%db %s, data size %dB",
             logPrefix.c_str(),
             GetName().c_str(),
-            Utils::StringToWstring(image.name).c_str(),
-            Utils::StringToWstring(image.uri).c_str(),
+            SceneUtils::StringToWstring(image.name).c_str(),
+            SceneUtils::StringToWstring(image.uri).c_str(),
             image.width,
             image.height,
             image.component,
@@ -203,10 +203,10 @@ public:
             image.pixel_type != tinygltf::COMPONENT_TYPE_UNSIGNED_BYTE ||
             image.image.size() != expectedSrcDataSize)
         {
-            Log::Error(L"%sInvalid image \"%s\": \"%s\", %dx%d, %dx%db %s, data size %dB",
+            SceneLog::Error(L"%sInvalid image \"%s\": \"%s\", %dx%d, %dx%db %s, data size %dB",
                 logPrefix.c_str(),
-                Utils::StringToWstring(image.name).c_str(),
-                Utils::StringToWstring(image.uri).c_str(),
+                SceneUtils::StringToWstring(image.name).c_str(),
+                SceneUtils::StringToWstring(image.uri).c_str(),
                 image.width,
                 image.height,
                 image.component,
@@ -232,10 +232,10 @@ public:
             image.image.data(),
             image.width * 4 * sizeof(uint8_t)))
         {
-            Log::Error(L"%sFailed to create texture & SRV for image \"%s\": \"%s\", %dx%d",
+            SceneLog::Error(L"%sFailed to create texture & SRV for image \"%s\": \"%s\", %dx%d",
                 logPrefix.c_str(),
-                Utils::StringToWstring(image.name).c_str(),
-                Utils::StringToWstring(image.uri).c_str(),
+                SceneUtils::StringToWstring(image.name).c_str(),
+                SceneUtils::StringToWstring(image.uri).c_str(),
                 image.width,
                 image.height);
             return false;
@@ -296,7 +296,7 @@ private:
         descSRV.Texture2D.MipLevels = 1;
         descSRV.Texture2D.MostDetailedMip = 0;
         hr = device.CreateShaderResourceView(tex, &descSRV, &srv);
-        Utils::ReleaseAndMakeNull(tex);
+        SceneUtils::ReleaseAndMakeNull(tex);
         if (FAILED(hr))
             return false;
 
@@ -340,7 +340,7 @@ public:
 
         mScale = (float)normalTextureInfo.scale;
 
-        Log::Debug(L"%s%s: scale %f",
+        SceneLog::Debug(L"%s%s: scale %f",
             logPrefix.c_str(),
             GetName().c_str(),
             mScale);
@@ -379,7 +379,7 @@ public:
 
         mStrength = (float)occlusionTextureInfo.strength;
 
-        Log::Debug(L"%s%s: strength %f",
+        SceneLog::Debug(L"%s%s: strength %f",
             logPrefix.c_str(),
             GetName().c_str(),
             mStrength);
