@@ -12,14 +12,14 @@ export namespace tinygltf
 {
 	class TinyGLTF;
 	class Model;
-	class Mesh;
+	struct Mesh;
 	class Node;
-	class NormalTextureInfo;
-	class OcclusionTextureInfo;
-	class Material;
-	class Parameter;
-	class Accessor;
-	class Light;
+	struct NormalTextureInfo;
+	struct OcclusionTextureInfo;
+	struct Material;
+	struct Parameter;
+	struct Accessor;
+	struct Light;
 
 	enum Mode {
 		MODE_POINTS = TINYGLTF_MODE_POINTS,

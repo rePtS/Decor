@@ -12,7 +12,7 @@
 
 #include <Engine.h>
 
-import IRenderingContext;
+import Scene.IRenderingContext;
 import TinyGltf;
 
 using namespace DirectX;

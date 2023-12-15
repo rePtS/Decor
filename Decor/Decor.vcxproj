@@ -133,16 +133,25 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="GouraudRenderer.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
-    <ClCompile Include="IRenderingContext.cpp">
+    <ClCompile Include="Scene.GltfUtils.ixx" />
+    <ClCompile Include="Scene.IRenderingContext.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
-    <ClCompile Include="mikktspace.cpp">
+    <ClCompile Include="MikkTSpace.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
     <ClCompile Include="OcclusionMapCache.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Scene.ixx" />
+    <ClCompile Include="Scene.Log.ixx" />
+    <ClCompile Include="Scene.Material.ixx" />
+    <ClCompile Include="Scene.Node.ixx" />
+    <ClCompile Include="Scene.Primitive.ixx" />
+    <ClCompile Include="Scene.TangentCalculator.ixx" />
+    <ClCompile Include="Scene.Texture.ixx" />
+    <ClCompile Include="Scene.Utils.ixx" />
     <ClCompile Include="TextureCache.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">CompileAsCppModule</CompileAs>
     </ClCompile>

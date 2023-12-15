@@ -105,7 +105,7 @@
     <ClCompile Include="Scene.cpp">
       <Filter>_Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mikktspace.cpp">
+    <ClCompile Include="MikkTSpace.cpp">
       <Filter>_Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OcclusionMapCache.cpp">
@@ -114,8 +114,17 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="TinyGltf.cpp" />
     <ClCompile Include="DynamicGPUBuffer.cpp" />
-    <ClCompile Include="IRenderingContext.cpp" />
+    <ClCompile Include="Scene.IRenderingContext.cpp" />
     <ClCompile Include="ConstantGPUBuffer.cpp" />
+    <ClCompile Include="Scene.ixx" />
+    <ClCompile Include="Scene.Primitive.ixx" />
+    <ClCompile Include="Scene.Node.ixx" />
+    <ClCompile Include="Scene.Texture.ixx" />
+    <ClCompile Include="Scene.Material.ixx" />
+    <ClCompile Include="Scene.Log.ixx" />
+    <ClCompile Include="Scene.GltfUtils.ixx" />
+    <ClCompile Include="Scene.Utils.ixx" />
+    <ClCompile Include="Scene.TangentCalculator.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

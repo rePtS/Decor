@@ -4,7 +4,7 @@ module;
 #include <cstdint>
 #include <bitset>
 
-export module IRenderingContext;
+export module Scene.IRenderingContext;
 
 // Used by a scene to access necessary renderer internals
 export class IRenderingContext

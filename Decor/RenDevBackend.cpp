@@ -16,7 +16,7 @@ module;
 export module RenDevBackend;
 
 import Helpers;
-import IRenderingContext;
+import Scene.IRenderingContext;
 
 using Microsoft::WRL::ComPtr;
 
