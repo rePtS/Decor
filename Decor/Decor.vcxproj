@@ -100,6 +100,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
+    <ClCompile Include="DeusEx.SceneManager.ixx" />
     <ClCompile Include="GPU.ConstantBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
@@ -144,7 +145,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="GlobalShaderConstants.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="RenDevBackend.ixx">
+    <ClCompile Include="GPU.RenDevBackend.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="GPU.ShaderCompiler.ixx">

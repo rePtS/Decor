@@ -6,13 +6,9 @@ module;
 #include <cassert>
 #include <fstream>
 
-#include <Engine.h>
-#include <UnRender.h>
-
-export module RenDevBackend;
+export module GPU.RenDevBackend;
 
 import Scene.IRenderingContext;
-import Scene;
 import Utils;
 
 using Microsoft::WRL::ComPtr;
@@ -30,15 +26,9 @@ public:
     
     ~RenDevBackend()
     {
-        if (m_Scene)
-        {
-            delete m_Scene;
-            m_Scene = nullptr;
-        }
     }
 
     bool Init(const HWND hWnd)
-
     {
         IDXGIAdapter1* const pSelectedAdapter = nullptr;
         const D3D_DRIVER_TYPE DriverType = D3D_DRIVER_TYPE::D3D_DRIVER_TYPE_HARDWARE;
@@ -174,22 +164,24 @@ public:
         m_pSwapChain->Present(0, 0);
     }
 
-    void SetViewport(const FSceneNode& SceneNode)
+    /// <summary>
+    /// Sets current viewport according given width, height and top left position
+    /// </summary>
+    /// <param name="FX">Width</param>
+    /// <param name="FY">Height</param>
+    /// <param name="XB">Top Left X</param>
+    /// <param name="YB">Top Left Y</param>
+    void SetViewport(float FX, float FY, int XB, int YB) //(const FSceneNode& SceneNode)
     {
-        if (m_Scene)
-        {
-            m_Scene->SetCamera(*this, SceneNode);
-        }
-
-        if (m_Viewport.TopLeftX == static_cast<float>(SceneNode.XB) && m_Viewport.TopLeftY == static_cast<float>(SceneNode.YB) && m_Viewport.Width == SceneNode.FX && m_Viewport.Height == SceneNode.FY)
+        if (m_Viewport.TopLeftX == static_cast<float>(XB) && m_Viewport.TopLeftY == static_cast<float>(YB) && m_Viewport.Width == FX && m_Viewport.Height == FY)
         {
             return;
         }
 
-        m_Viewport.TopLeftX = static_cast<float>(SceneNode.XB);
-        m_Viewport.TopLeftY = static_cast<float>(SceneNode.YB);
-        m_Viewport.Width = SceneNode.FX;
-        m_Viewport.Height = SceneNode.FY;
+        m_Viewport.TopLeftX = static_cast<float>(XB);
+        m_Viewport.TopLeftY = static_cast<float>(YB);
+        m_Viewport.Width = FX;
+        m_Viewport.Height = FY;
         m_Viewport.MinDepth = 0.0;
         m_Viewport.MaxDepth = 1.0;
 
@@ -267,48 +259,6 @@ public:
         return true;
     }
 
-    void DrawScene()
-    {
-        if (m_Scene)
-        {
-            m_Scene->AnimateFrame(*this);
-            m_Scene->CullFrame(*this); // пока отключим
-            m_Scene->RenderFrame(*this);
-        }
-    }
-
-    void LoadLevel(const TCHAR* szLevelName)
-    {
-        // Выгрузка текущего уровня
-        if (m_Scene)
-        {
-            delete m_Scene;
-            m_Scene = nullptr;
-        };
-
-        // Получаем относительное имя gltf-файла с геометрией уровня
-        wchar_t levelFileName[256];
-        wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
-
-        // Проверяем, есть ли файл на диске
-        std::ifstream levelFile(levelFileName);
-        if (levelFile.good())
-        {
-            // Load new scene
-            auto scene = new Scene(levelFileName);
-            scene->Init(*this);
-
-            // Все загружено, можно продолжать
-            m_Scene = scene;
-        }
-        else
-        {
-            // Уровень загрузить не удалось, используем обычный рендеринг            
-        }
-    }
-
-    bool IsSceneRenderingEnabled() { return false; /*m_Scene != nullptr; */ };
-
     void ClearDepth()
     {
         m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
@@ -352,21 +302,6 @@ public:
         //m_pDeviceContext->Unmap(m_pStageCullingTexture.Get(), 0);
 
         return usedNodes;
-    }
-
-    /// <summary>
-    /// Checks if we need to load a scene
-    /// </summary>
-    bool EnsureCurrentScene(int sceneIndex, const TCHAR* sceneName)
-    {
-        if (m_CurrentSceneIndex != sceneIndex)
-        {
-            LoadLevel(sceneName);
-            m_CurrentSceneIndex = sceneIndex;
-            return true;
-        }
-
-        return false;
     }
 
 protected:
@@ -555,5 +490,4 @@ protected:
     size_t m_CullingBufferSize;
 
     int m_CurrentSceneIndex;
-    Scene* m_Scene = nullptr;
 };

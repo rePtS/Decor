@@ -26,12 +26,13 @@
     <ClCompile Include="DeusEx.Renderer.Gouraud.ixx" />
     <ClCompile Include="MikkTSpace.ixx" />
     <ClCompile Include="DeusEx.OcclusionMapCache.ixx" />
-    <ClCompile Include="RenDevBackend.ixx" />
+    <ClCompile Include="GPU.RenDevBackend.ixx" />
     <ClCompile Include="GPU.ShaderCompiler.ixx" />
     <ClCompile Include="DeusEx.TextureCache.ixx" />
     <ClCompile Include="DeusEx.TextureConverter.ixx" />
     <ClCompile Include="DeusEx.Renderer.Tile.ixx" />
     <ClCompile Include="DeusEx.Drv.ixx" />
+    <ClCompile Include="DeusEx.SceneManager.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

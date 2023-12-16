@@ -9,12 +9,13 @@ module;
 export module DeusEx.Drv;
 
 import GPU.DeviceState;
+import GPU.RenDevBackend;
 import DeusEx.TextureCache;
 import DeusEx.OcclusionMapCache;
 import DeusEx.Renderer.Tile;
 import DeusEx.Renderer.Gouraud;
 import DeusEx.Renderer.ComplexSurface;
-import RenDevBackend;
+import DeusEx.SceneManager;
 import GlobalShaderConstants;
 import Utils;
 
@@ -27,7 +28,8 @@ export
 #pragma warning(pop)
 
     public:
-        explicit UD3D11RenderDevice()
+        explicit UD3D11RenderDevice() :
+            m_SceneManager(m_Backend)
         {
             URenderDevice::SpanBased = 0;
             URenderDevice::FullscreenOnly = 0;
@@ -89,6 +91,7 @@ export
         }
 
         RenDevBackend m_Backend;
+        SceneManager m_SceneManager;
         std::unique_ptr<GlobalShaderConstants> m_pGlobalShaderConstants;
         std::unique_ptr<DeviceState> m_pDeviceState;
         std::unique_ptr<TileRenderer> m_pTileRenderer;
@@ -190,10 +193,10 @@ export
             m_pGouraudRenderer->NewFrame();
             m_pComplexSurfaceRenderer->NewFrame();
 
-            if (m_Backend.IsSceneRenderingEnabled())
+            if (m_SceneManager.IsSceneRenderingEnabled())
             {
                 m_pDeviceState->BindDefault();
-                m_Backend.DrawScene();
+                m_SceneManager.DrawScene();
             }
         }
 
@@ -510,19 +513,20 @@ export
         virtual void ReadPixels(FColor* const pPixels) override
         {
         };
-
-        /**
-        This optional function can be used to set the frustum and viewport parameters per scene change instead of per drawXXXX() call.
-        \param Frame Contains various information with which to build frustum and viewport.
-        \note Standard Z parameters: near 1, far 32760.
-        */
+        
+        /// <summary>
+        /// This optional function can be used to set the frustum and viewport parameters per scene change instead of per drawXXXX() call.
+        /// Standard Z parameters: near 1, far 32760.
+        /// </summary>
+        /// <param name="pFrame">Contains various information with which to build frustum and viewport.</param>
         virtual void SetSceneNode(FSceneNode* const pFrame) override
         {
             assert(pFrame);
 
             Render(); // нужно отрисовать все, что еще не отрисовано перед сменой ViewPort'а, иначе объекты будут отрисованы в неправильном месте экрана
 
-            m_Backend.SetViewport(*pFrame);
+            m_SceneManager.SetViewport(*pFrame);
+            m_Backend.SetViewport(pFrame->FX, pFrame->FY, pFrame->XB, pFrame->YB);
 
             m_pGlobalShaderConstants->CheckLevelChange(*pFrame);
             m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
@@ -530,7 +534,7 @@ export
             auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
             auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
 
-            if (m_Backend.EnsureCurrentScene(levelIndex, levelPathName))
+            if (m_SceneManager.EnsureCurrentScene(levelIndex, levelPathName))
                 m_pOcclusionMapCache->Flush();
         }
 
