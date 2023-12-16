@@ -5,7 +5,7 @@ module;
 #include <cassert>
 #include <wrl\client.h>
 
-export module DynamicGPUBuffer;
+export module GPU.DynamicBuffer;
 
 import Utils;
 import <typeinfo>;

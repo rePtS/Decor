@@ -1,32 +1,30 @@
 module;
 
-#include <windows.h>
 #include <memory>
 #include <cassert>
-#include <tchar.h>
 
 #include <Engine.h>
 #include <UnRender.h>
 
-export module D3D11Drv;
+export module DeusEx.Drv;
 
-import DeviceState;
-import TextureCache;
-import OcclusionMapCache;
-import TileRenderer;
-import GouraudRenderer;
-import ComplexSurfaceRenderer;
+import GPU.DeviceState;
+import DeusEx.TextureCache;
+import DeusEx.OcclusionMapCache;
+import DeusEx.Renderer.Tile;
+import DeusEx.Renderer.Gouraud;
+import DeusEx.Renderer.ComplexSurface;
 import RenDevBackend;
 import GlobalShaderConstants;
 import Utils;
 
-export 
+export
 {
     class UD3D11RenderDevice : public URenderDevice
     {
-        #pragma warning(push, 1)
+#pragma warning(push, 1)
         DECLARE_CLASS(UD3D11RenderDevice, URenderDevice, CLASS_Config)
-        #pragma warning(pop)
+#pragma warning(pop)
 
     public:
         explicit UD3D11RenderDevice()
@@ -107,9 +105,9 @@ export
         {
             assert(pInViewport);
 
-            #ifdef _DEBUG
+#ifdef _DEBUG
             pInViewport->Exec(L"ShowLog");
-            #endif
+#endif
 
             Utils::LogMessagef(L"Initializing Direct3D 11 Renderer.");
 
@@ -554,5 +552,4 @@ export
     IMPLEMENT_PACKAGE(Decor);
     IMPLEMENT_CLASS(UD3D11RenderDevice);
     #pragma warning(pop)
-
-};
+}

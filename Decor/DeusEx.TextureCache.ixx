@@ -1,7 +1,6 @@
 module;
 
 #include <D3D11.h>
-#include <array>
 #include <unordered_map>
 #include <map>
 #include <wrl\client.h>
@@ -9,9 +8,9 @@ module;
 #include "FastNoiseLite.h"
 #include <Engine.h>
 
-export module TextureCache;
+export module DeusEx.TextureCache;
 
-import TextureConverter;
+import DeusEx.TextureConverter;
 import Utils;
 
 using Microsoft::WRL::ComPtr;

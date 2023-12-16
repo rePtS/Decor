@@ -2,7 +2,6 @@ module;
 
 #include <D3D11.h>
 #include <D3DCompiler.inl>
-#include <winuser.h>
 #include <wrl\client.h>
 #include <cassert>
 #include <fstream>

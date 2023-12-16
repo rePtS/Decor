@@ -5,27 +5,29 @@ module;
 #include <cassert>
 #include <wrl\client.h>
 
-export module TileRenderer;
+export module DeusEx.Renderer.Tile;
 
-import ShaderCompiler;
-import DynamicGPUBuffer;
+import GPU.ShaderCompiler;
+import GPU.DynamicBuffer;
 
 using Microsoft::WRL::ComPtr;
+using DirectX::XMFLOAT3;
+using DirectX::XMFLOAT4;
 
 export class TileRenderer
 {
 public:
     struct Tile
     {
-        DirectX::XMFLOAT4 XYPos;
-        DirectX::XMFLOAT4 ZPos;
-        DirectX::XMFLOAT4 TexCoord;
-        DirectX::XMFLOAT3 Color;
+        XMFLOAT4 XYPos;
+        XMFLOAT4 ZPos;
+        XMFLOAT4 TexCoord;
+        XMFLOAT3 Color;
         unsigned int PolyFlags;
     };
 
     explicit TileRenderer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        :m_Device(Device)
+        : m_Device(Device)
         , m_DeviceContext(DeviceContext)
         , m_InstanceBuffer(Device, DeviceContext, 4096)
     {

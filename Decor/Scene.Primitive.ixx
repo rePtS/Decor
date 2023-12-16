@@ -5,7 +5,6 @@ module;
 #include <string>
 #include <vector>
 #include <map>
-#include <algorithm>
 
 #define STRIP_BREAK static_cast<uint32_t>(-1)
 
@@ -18,18 +17,20 @@ import Scene.Utils;
 import Scene.Log;
 import TinyGltf;
 
-using namespace DirectX;
-
-struct SceneVertex
-{
-    XMFLOAT3 Pos;
-    XMFLOAT3 Normal;
-    XMFLOAT4 Tangent; // w represents handedness of the tangent basis and is either 1 or -1
-    XMFLOAT2 Tex;
-};
+using DirectX::XMFLOAT2;
+using DirectX::XMFLOAT3;
+using DirectX::XMFLOAT4;
 
 export class ScenePrimitive : public ITangentCalculable
 {
+    struct SceneVertex
+    {
+        XMFLOAT3 Pos;
+        XMFLOAT3 Normal;
+        XMFLOAT4 Tangent; // w represents handedness of the tangent basis and is either 1 or -1
+        XMFLOAT2 Tex;
+    };
+
 public:
 
     ScenePrimitive()
@@ -201,9 +202,69 @@ public:
         default:
             return 0; // Unsupported
         }
+    }    
+
+    void GetPosition(float outpos[], const int face, const int vertex) const override
+    {
+        const auto& pos = GetConstVertex(face, vertex).Pos;
+        outpos[0] = pos.x;
+        outpos[1] = pos.y;
+        outpos[2] = pos.z;
     }
 
-    const SceneVertex& GetVertex(const int face, const int vertex) const
+    void GetNormal(float outnormal[], const int face, const int vertex) const override
+    {
+        const auto& normal = GetConstVertex(face, vertex).Normal;
+        outnormal[0] = normal.x;
+        outnormal[1] = normal.y;
+        outnormal[2] = normal.z;
+    }
+
+    void GetTextCoord(float outuv[], const int face, const int vertex) const override
+    {
+        const auto& tex = GetConstVertex(face, vertex).Tex;
+        outuv[0] = tex.x;
+        outuv[1] = tex.y;
+    }
+
+    void SetTangent(const float intangent[], const float sign, const int face, const int vertex) override
+    {
+        auto& tangent = GetVertex(face, vertex).Tangent;
+        tangent.x = intangent[0];
+        tangent.y = intangent[1];
+        tangent.z = intangent[2];
+        tangent.w = sign;
+    }
+
+    bool IsTangentPresent() const { return mIsTangentPresent; }
+
+    void DrawGeometry(IRenderingContext& ctx, ID3D11InputLayout* vertexLayout) const
+    {
+        auto& deviceContext = ctx.GetDeviceContext();
+
+        deviceContext.IASetInputLayout(vertexLayout);
+        UINT stride = sizeof(SceneVertex);
+        UINT offset = 0;
+        deviceContext.IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
+        deviceContext.IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        deviceContext.IASetPrimitiveTopology(mTopology);
+
+        deviceContext.DrawIndexed((UINT)mIndices.size(), 0, 0);
+    }
+
+    void SetMaterialIdx(int idx) { mMaterialIdx = idx; };
+
+    int GetMaterialIdx() const { return mMaterialIdx; };
+
+    void Destroy()
+    {
+        DestroyGeomData();
+        DestroyDeviceBuffers();
+    }
+
+private:
+
+    const SceneVertex& GetConstVertex(const int face, const int vertex) const
     {
         static const SceneVertex invalidVert{};
 
@@ -265,68 +326,8 @@ public:
         return
             const_cast<SceneVertex&>(
                 static_cast<const ScenePrimitive&>(*this).
-                GetVertex(face, vertex));
+                GetConstVertex(face, vertex));
     }
-
-    void GetPosition(float outpos[], const int face, const int vertex) const override
-    {
-        const auto& pos = GetVertex(face, vertex).Pos;
-        outpos[0] = pos.x;
-        outpos[1] = pos.y;
-        outpos[2] = pos.z;
-    }
-
-    void GetNormal(float outnormal[], const int face, const int vertex) const override
-    {
-        const auto& normal = GetVertex(face, vertex).Normal;
-        outnormal[0] = normal.x;
-        outnormal[1] = normal.y;
-        outnormal[2] = normal.z;
-    }
-
-    void GetTextCoord(float outuv[], const int face, const int vertex) const override
-    {
-        const auto& tex = GetVertex(face, vertex).Tex;
-        outuv[0] = tex.x;
-        outuv[1] = tex.y;
-    }
-
-    void SetTangent(const float intangent[], const float sign, const int face, const int vertex) override
-    {
-        auto& tangent = GetVertex(face, vertex).Tangent;
-        tangent.x = intangent[0];
-        tangent.y = intangent[1];
-        tangent.z = intangent[2];
-        tangent.w = sign;
-    }
-
-    bool IsTangentPresent() const { return mIsTangentPresent; }
-
-    void DrawGeometry(IRenderingContext& ctx, ID3D11InputLayout* vertexLayout) const
-    {
-        auto& deviceContext = ctx.GetDeviceContext();
-
-        deviceContext.IASetInputLayout(vertexLayout);
-        UINT stride = sizeof(SceneVertex);
-        UINT offset = 0;
-        deviceContext.IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
-        deviceContext.IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-        deviceContext.IASetPrimitiveTopology(mTopology);
-
-        deviceContext.DrawIndexed((UINT)mIndices.size(), 0, 0);
-    }
-
-    void SetMaterialIdx(int idx) { mMaterialIdx = idx; };
-
-    int GetMaterialIdx() const { return mMaterialIdx; };
-
-    void Destroy()
-    {
-        DestroyGeomData();
-        DestroyDeviceBuffers();
-    }
-
-private:
 
     const tinygltf::Accessor& GetPrimitiveAttrAccessor(bool& accessorLoaded,
         const tinygltf::Model& model,

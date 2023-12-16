@@ -97,20 +97,20 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ComplexSurfaceRenderer.ixx">
+    <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="ConstantGPUBuffer.ixx">
+    <ClCompile Include="GPU.ConstantBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="DynamicGPUBuffer.ixx">
+    <ClCompile Include="GPU.DynamicBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="Utils.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="GouraudRenderer.ixx">
+    <ClCompile Include="DeusEx.Renderer.Gouraud.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="Scene.GltfUtils.ixx" />
@@ -121,7 +121,7 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Release|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="OcclusionMapCache.ixx">
+    <ClCompile Include="DeusEx.OcclusionMapCache.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="Scene.ixx" />
@@ -132,13 +132,13 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="Scene.TangentCalculator.ixx" />
     <ClCompile Include="Scene.Texture.ixx" />
     <ClCompile Include="Scene.Utils.ixx" />
-    <ClCompile Include="TextureCache.ixx">
+    <ClCompile Include="DeusEx.TextureCache.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="D3D11Drv.ixx">
+    <ClCompile Include="DeusEx.Drv.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="DeviceState.ixx">
+    <ClCompile Include="GPU.DeviceState.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="GlobalShaderConstants.ixx">
@@ -147,13 +147,13 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
     <ClCompile Include="RenDevBackend.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="ShaderCompiler.ixx">
+    <ClCompile Include="GPU.ShaderCompiler.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TextureConverter.ixx">
+    <ClCompile Include="DeusEx.TextureConverter.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TileRenderer.ixx">
+    <ClCompile Include="DeusEx.Renderer.Tile.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="TinyGltf.ixx">

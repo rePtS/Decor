@@ -1,11 +1,10 @@
 module;
 
 #include <D3D11.h>
-#include <typeinfo>
 #include <cassert>
 #include <wrl\client.h>
 
-export module ConstantGPUBuffer;
+export module GPU.ConstantBuffer;
 
 import Utils;
 

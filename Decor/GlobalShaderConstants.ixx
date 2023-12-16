@@ -5,19 +5,20 @@ module;
 #include <vector>
 #include <chrono>
 #include <cassert>
-#include <typeinfo>
-#include "Defines.hlsli"
 
+#include "Defines.hlsli"
 #include <DeusEx.h>
 #include <UnRender.h>
 
 export module GlobalShaderConstants;
 
-import ConstantGPUBuffer;
+import GPU.ConstantBuffer;
+
+using DirectX::XMVECTOR;
+using DirectX::XMMATRIX;
 
 export class GlobalShaderConstants
 {
-
 public:
     explicit GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
         : m_CBufPerFrame(Device, DeviceContext)
@@ -94,7 +95,6 @@ public:
     }
 
     void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly)
-
     {
         assert(Poly.NumPts >= 3);
 
@@ -267,13 +267,13 @@ protected:
     struct PerFrame
     {
         float fRes[4];
-        DirectX::XMMATRIX ProjectionMatrix;
-        DirectX::XMMATRIX ViewMatrix;
-        DirectX::XMVECTOR LightDir;
+        XMMATRIX ProjectionMatrix;
+        XMMATRIX ViewMatrix;
+        XMVECTOR LightDir;
 
         uint32_t IndexesOfFirstLightsInSlices[MAX_SLICE_DATA_SIZE];
         uint32_t LightIndexesFromAllSlices[MAX_LIGHTS_DATA_SIZE];
-        DirectX::XMVECTOR Lights[MAX_LIGHTS_DATA_SIZE];
+        XMVECTOR Lights[MAX_LIGHTS_DATA_SIZE];
     };
     ConstantBuffer<PerFrame> m_CBufPerFrame;
 
@@ -314,16 +314,16 @@ protected:
 
     struct LightData
     {
-        DirectX::XMVECTOR Color;
-        DirectX::XMVECTOR Location;
-        DirectX::XMVECTOR Direction;
+        XMVECTOR Color;
+        XMVECTOR Location;
+        XMVECTOR Direction;
         size_t RealIndex;
     };
 
     std::vector<LightData> m_LightsData;
     std::vector<size_t> m_LightSlices[SLICE_NUMBER];
 
-    DirectX::XMVECTOR HSVtoRGB(float H, float S, float V)
+    XMVECTOR HSVtoRGB(float H, float S, float V)
     {
         if (S == 0.0)
             return DirectX::XMVectorSet(V, V, V, 0.0f);

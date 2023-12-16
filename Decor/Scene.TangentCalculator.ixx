@@ -1,7 +1,6 @@
 module;
 
 #include <DirectXMath.h>
-#include <cstddef>
 
 export module Scene.TangentCalculator;
 

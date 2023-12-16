@@ -8,9 +8,9 @@
   <ItemGroup>
     <ClCompile Include="Utils.ixx" />
     <ClCompile Include="TinyGltf.ixx" />
-    <ClCompile Include="DynamicGPUBuffer.ixx" />
+    <ClCompile Include="GPU.DynamicBuffer.ixx" />
     <ClCompile Include="Scene.IRenderingContext.ixx" />
-    <ClCompile Include="ConstantGPUBuffer.ixx" />
+    <ClCompile Include="GPU.ConstantBuffer.ixx" />
     <ClCompile Include="Scene.ixx" />
     <ClCompile Include="Scene.Primitive.ixx" />
     <ClCompile Include="Scene.Node.ixx" />
@@ -20,18 +20,18 @@
     <ClCompile Include="Scene.GltfUtils.ixx" />
     <ClCompile Include="Scene.Utils.ixx" />
     <ClCompile Include="Scene.TangentCalculator.ixx" />
-    <ClCompile Include="ComplexSurfaceRenderer.ixx" />
-    <ClCompile Include="DeviceState.ixx" />
+    <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx" />
+    <ClCompile Include="GPU.DeviceState.ixx" />
     <ClCompile Include="GlobalShaderConstants.ixx" />
-    <ClCompile Include="GouraudRenderer.ixx" />
+    <ClCompile Include="DeusEx.Renderer.Gouraud.ixx" />
     <ClCompile Include="MikkTSpace.ixx" />
-    <ClCompile Include="OcclusionMapCache.ixx" />
+    <ClCompile Include="DeusEx.OcclusionMapCache.ixx" />
     <ClCompile Include="RenDevBackend.ixx" />
-    <ClCompile Include="ShaderCompiler.ixx" />
-    <ClCompile Include="TextureCache.ixx" />
-    <ClCompile Include="TextureConverter.ixx" />
-    <ClCompile Include="TileRenderer.ixx" />
-    <ClCompile Include="D3D11Drv.ixx" />
+    <ClCompile Include="GPU.ShaderCompiler.ixx" />
+    <ClCompile Include="DeusEx.TextureCache.ixx" />
+    <ClCompile Include="DeusEx.TextureConverter.ixx" />
+    <ClCompile Include="DeusEx.Renderer.Tile.ixx" />
+    <ClCompile Include="DeusEx.Drv.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">

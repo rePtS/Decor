@@ -1,6 +1,6 @@
 module;
 
-#include <d3d11.h>
+#include <D3D11.h>
 #include <DirectXMath.h>
 #include <sstream>
 #include <string>

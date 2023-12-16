@@ -24,7 +24,9 @@ import Scene.Primitive;
 import Scene.Node;
 import TinyGltf;
 
-using namespace DirectX;
+using DirectX::XMFLOAT4;
+using DirectX::XMMATRIX;
+using DirectX::XMVECTOR;
 
 const std::vector<D3D11_INPUT_ELEMENT_DESC> sVertexLayoutDesc =
 {
@@ -100,9 +102,9 @@ public:
     Scene(const std::wstring sceneFilePath) :
         mSceneFilePath(sceneFilePath)
     {
-        mViewData.eye = XMVectorSet(0.0f, 4.0f, 10.0f, 1.0f);
-        mViewData.at = XMVectorSet(0.0f, -0.2f, 0.0f, 1.0f);
-        mViewData.up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+        mViewData.eye = DirectX::XMVectorSet(0.0f, 4.0f, 10.0f, 1.0f);
+        mViewData.at = DirectX::XMVectorSet(0.0f, -0.2f, 0.0f, 1.0f);
+        mViewData.up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
     }
 
     // TODO: Scene(const std::string &sceneFilePath);
@@ -207,8 +209,8 @@ public:
             return false;
 
         // Matrices
-        mViewMtrx = XMMatrixLookAtLH(mViewData.eye, mViewData.at, mViewData.up);
-        mProjectionMtrx = XMMatrixPerspectiveFovLH(XM_PIDIV4,
+        mViewMtrx = DirectX::XMMatrixLookAtLH(mViewData.eye, mViewData.at, mViewData.up);
+        mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4,
             (FLOAT)wndWidth / wndHeight,
             0.01f, 100.0f);
 
@@ -357,12 +359,12 @@ public:
         const auto& cameraToVector = SceneNode.Viewport->Actor->ViewRotation.Vector();
         const auto& cameraUpVector = SceneNode.Coords.YAxis;
 
-        mViewData.eye = XMVectorSet(cameraPosition.X, cameraPosition.Z, cameraPosition.Y, 1.0f);
-        mViewData.at = XMVectorSet(cameraToVector.X, cameraToVector.Z, cameraToVector.Y, 1.0f);
-        mViewData.up = XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
+        mViewData.eye = DirectX::XMVectorSet(cameraPosition.X, cameraPosition.Z, cameraPosition.Y, 1.0f);
+        mViewData.at = DirectX::XMVectorSet(cameraToVector.X, cameraToVector.Z, cameraToVector.Y, 1.0f);
+        mViewData.up = DirectX::XMVectorSet(cameraUpVector.X, cameraUpVector.Z, cameraUpVector.Y, 1.0f);
 
         // Matrices
-        mViewMtrx = XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
+        mViewMtrx = DirectX::XMMatrixLookToLH(mViewData.eye, mViewData.at, mViewData.up);
         mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
         mProjectionMtrx.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
@@ -606,9 +608,9 @@ private:
             auto lightIdx = lightExtension->second.Get("light").GetNumberAsInt();
             // Set position of the light
             XMStoreFloat4(&mLights[lightIdx].position,
-                XMVector3Transform(XMVectorZero(), sceneNode.mLocalMtrx));
+                XMVector3Transform(DirectX::XMVectorZero(), sceneNode.mLocalMtrx));
             // Set direction of the light
-            XMStoreFloat4(&mLights[lightIdx].direction, XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
+            XMStoreFloat4(&mLights[lightIdx].direction, DirectX::XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
 
             auto lightNameParts = SceneUtils::split(node.name, '_');
             if (lightNameParts.size() > 1)

@@ -13,7 +13,9 @@ import Scene.Utils;
 import Scene.Log;
 import TinyGltf;
 
-using namespace DirectX;
+using DirectX::XMFLOAT4;
+using DirectX::XMMATRIX;
+using DirectX::XMUINT4;
 
 export struct SceneLight
 {
@@ -40,8 +42,8 @@ export class SceneNode
 public:
     SceneNode(bool isRootNode = false) :
         mIsRootNode(isRootNode),
-        mLocalMtrx(XMMatrixIdentity()),
-        mWorldMtrx(XMMatrixIdentity())
+        mLocalMtrx(DirectX::XMMatrixIdentity()),
+        mWorldMtrx(DirectX::XMMatrixIdentity())
     {}
 
     ScenePrimitive* CreateEmptyPrimitive()
@@ -56,7 +58,7 @@ public:
 
     void SetIdentity()
     {
-        mLocalMtrx = XMMatrixIdentity();
+        mLocalMtrx = DirectX::XMMatrixIdentity();
     }
 
     void AddScale(double scale)
@@ -74,7 +76,7 @@ public:
             return;
         }
 
-        const auto mtrx = XMMatrixScaling((float)vec[0], (float)vec[1], (float)vec[2]);
+        const auto mtrx = DirectX::XMMatrixScaling((float)vec[0], (float)vec[1], (float)vec[2]);
 
         mLocalMtrx = mLocalMtrx * mtrx;
     }
@@ -91,7 +93,7 @@ public:
 
         const XMFLOAT4 quaternion((float)vec[0], (float)vec[1], (float)vec[2], (float)vec[3]);
         const auto xmQuaternion = XMLoadFloat4(&quaternion);
-        const auto mtrx = XMMatrixRotationQuaternion(xmQuaternion);
+        const auto mtrx = DirectX::XMMatrixRotationQuaternion(xmQuaternion);
 
         mLocalMtrx = mLocalMtrx * mtrx;
     }
@@ -106,7 +108,7 @@ public:
             return;
         }
 
-        const auto mtrx = XMMatrixTranslation((float)vec[0], (float)vec[1], (float)vec[2]);
+        const auto mtrx = DirectX::XMMatrixTranslation((float)vec[0], (float)vec[1], (float)vec[2]);
 
         mLocalMtrx = mLocalMtrx * mtrx;
     }
@@ -121,7 +123,7 @@ public:
             return;
         }
 
-        const auto mtrx = XMMatrixSet(
+        const auto mtrx = DirectX::XMMatrixSet(
             (float)vec[0], (float)vec[1], (float)vec[2], (float)vec[3],
             (float)vec[4], (float)vec[5], (float)vec[6], (float)vec[7],
             (float)vec[8], (float)vec[9], (float)vec[10], (float)vec[11],
@@ -235,9 +237,9 @@ public:
             const float time = 0.0f;////ctx.GetFrameAnimationTime();
             const float period = 15.f; //seconds
             const float totalAnimPos = time / period;
-            const float angle = totalAnimPos * XM_2PI;
+            const float angle = totalAnimPos * DirectX::XM_2PI;
 
-            const XMMATRIX rotMtrx = XMMatrixRotationY(angle);
+            const XMMATRIX rotMtrx = DirectX::XMMatrixRotationY(angle);
 
             mWorldMtrx = mLocalMtrx * rotMtrx;
         }

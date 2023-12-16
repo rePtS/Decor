@@ -8,7 +8,7 @@ module;
 
 #include <Engine.h>
 
-export module TextureConverter;
+export module DeusEx.TextureConverter;
 
 import Utils;
 
@@ -23,13 +23,13 @@ public:
 
         TextureData(const TextureData&) = default;
         TextureData(TextureData&& Other) //VS2015 doesn't support default move constructors
-            :fMultU(Other.fMultU)
+            : fMultU(Other.fMultU)
             , fMultV(Other.fMultV)
             , pTexture(std::move(Other.pTexture))
             , pShaderResourceView(std::move(Other.pShaderResourceView))
         {
-
         }
+
         TextureData& operator=(const TextureData&) = delete;
 
         float fMultU;
@@ -40,7 +40,7 @@ public:
     };
 
     explicit TextureConverter(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        :m_Device(Device)
+        : m_Device(Device)
         , m_DeviceContext(DeviceContext)
     {
 

@@ -5,7 +5,7 @@ module;
 #include <wrl\client.h>
 #include <cassert>
 
-export module ShaderCompiler;
+export module GPU.ShaderCompiler;
 
 import Utils;
 
@@ -15,7 +15,7 @@ export class ShaderCompiler
 {
 public:
     explicit ShaderCompiler(ID3D11Device& Device, const wchar_t* const pszFileName)
-        :m_Device(Device)
+        : m_Device(Device)
         , m_pszFileName(pszFileName)
     {
     }
@@ -73,6 +73,7 @@ public:
 
         return pInputLayout;
     }
+
 protected:
     //Prototype for the various ID3D11Device::Create[Vertex/Pixel/Etc.]Shader() functions.
     template<class T, class Func>

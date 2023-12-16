@@ -5,52 +5,51 @@ module;
 #include <wrl\client.h>
 #include <cassert>
 
-export module GouraudRenderer;
+export module DeusEx.Renderer.ComplexSurface;
 
-import ShaderCompiler;
-import DynamicGPUBuffer;
+import GPU.ShaderCompiler;
+import GPU.DynamicBuffer;
 
 using Microsoft::WRL::ComPtr;
-using DirectX::XMFLOAT3;
-using DirectX::XMFLOAT2;
 
-export class GouraudRenderer
+export class ComplexSurfaceRenderer
 {
 public:
     struct Vertex
     {
-        XMFLOAT3 Pos;
-        XMFLOAT3 Normal;
-        XMFLOAT3 Color;
-        XMFLOAT2 TexCoords;
+        DirectX::XMFLOAT3 Pos;
+        DirectX::XMFLOAT2 TexCoords;
+        DirectX::XMFLOAT2 TexCoords1;
         unsigned int PolyFlags;
+        unsigned int TexFlags;
     };
 
-    explicit GouraudRenderer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        :m_Device(Device)
+    explicit ComplexSurfaceRenderer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
+        : m_Device(Device)
         , m_DeviceContext(DeviceContext)
         , m_VertexBuffer(Device, DeviceContext, 4096)
         , m_IndexBuffer(Device, DeviceContext, DynamicGPUBufferHelpers::Fan2StripIndices(m_VertexBuffer.GetReserved()))
     {
-        ShaderCompiler Compiler(m_Device, L"Decor\\Gouraud.hlsl");
+        ShaderCompiler Compiler(m_Device, L"Decor\\ComplexSurface.hlsl");
         m_pVertexShader = Compiler.CompileVertexShader();
 
         const D3D11_INPUT_ELEMENT_DESC InputElementDescs[] =
         {
-            {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"Color", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"BlendIndices", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0} //Todo make 8 bits, if necessary at all -> can't, hlsl doesn't support 8 bit data type
+            { "Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TexCoord", 1, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BlendIndices", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "BlendIndices", 1, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
         };
 
         m_pInputLayout = Compiler.CreateInputLayout(InputElementDescs, _countof(InputElementDescs));
 
+        m_pGeometryShader = Compiler.CompileGeometryShader();
         m_pPixelShader = Compiler.CompilePixelShader();
     }
 
-    GouraudRenderer(const GouraudRenderer&) = delete;
-    GouraudRenderer& operator=(const GouraudRenderer&) = delete;
+    ComplexSurfaceRenderer(const ComplexSurfaceRenderer&) = delete;
+    ComplexSurfaceRenderer& operator=(const ComplexSurfaceRenderer&) = delete;
 
     void NewFrame()
     {
@@ -78,7 +77,7 @@ public:
         m_DeviceContext.IASetVertexBuffers(0, 1, m_VertexBuffer.GetAddressOf(), Strides, Offsets);
         m_DeviceContext.IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
         m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
-        m_DeviceContext.GSSetShader(nullptr, nullptr, 0);
+        m_DeviceContext.GSSetShader(m_pGeometryShader.Get(), nullptr, 0);
         m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
     }
 
@@ -92,7 +91,7 @@ public:
     Vertex* GetTriangleFan(const size_t iSize)
     {
         return DynamicGPUBufferHelpers::GetTriangleFan(m_VertexBuffer, m_IndexBuffer, iSize);
-    }
+    };
 
     //Diagnostics
     size_t GetNumIndices() const { return m_IndexBuffer.GetSize(); }
@@ -106,6 +105,7 @@ protected:
     ComPtr<ID3D11InputLayout> m_pInputLayout;
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
+    ComPtr<ID3D11GeometryShader> m_pGeometryShader;
 
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;

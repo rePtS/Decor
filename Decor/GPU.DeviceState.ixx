@@ -8,7 +8,7 @@ module;
 
 #include <Engine.h>
 
-export module DeviceState;
+export module GPU.DeviceState;
 
 import Utils;
 
@@ -23,7 +23,7 @@ public:
     enum class SAMPLER_STATE { LINEAR, POINT, COUNT };
 
     explicit DeviceState(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        :m_Device(Device)
+        : m_Device(Device)
         , m_DeviceContext(DeviceContext)
     {
         CreateRasterizerStates();
@@ -101,10 +101,11 @@ public:
     {
         m_PreparedBlendState = BlendState;
     }
-
-    /**
-    Binds all sampler states to slots 0 - SAMPLER_STATE::COUNT -1; custom samplers should be bound to later slots.
-    */
+    
+    /// <summary>
+    /// Binds all sampler states to slots 0 - SAMPLER_STATE::COUNT -1;
+    /// custom samplers should be bound to later slots.
+    /// </summary>
     void BindSamplerStates() const
     {
         static_assert(sizeof(ComPtr<ID3D11SamplerState>) == sizeof(ID3D11SamplerState*), "Can't use ComPtr array as pointer array.");
@@ -126,7 +127,10 @@ public:
     }
 
 protected:
-    //Prototype for the various ID3D11Device::Create[Rasterizer/DepthStencil/Etc.]State() functions.
+        
+    /// <summary>
+    /// Prototype for the various ID3D11Device::Create[Rasterizer/DepthStencil/Etc.]State() functions.
+    /// </summary>
     template<class DescType, class StateType, const size_t Num, class Func>
     void CreateStates(const std::array<DescType, Num>& Descs, std::array<ComPtr<StateType>, Num>& States, const Func& CreationFunc)
     {

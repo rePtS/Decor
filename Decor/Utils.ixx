@@ -1,6 +1,6 @@
 module;
 
-#include <d3dcommon.h>
+#include <D3DCommon.h>
 #include <wrl\client.h>
 #include <Core.h>
 
@@ -40,7 +40,7 @@ export namespace Utils
     /// Helper utility converts D3D API failures into exceptions.
     /// </summary>
     /// <param name="hr">Handle returned by a D3D API function</param>
-    inline void ThrowIfFailed(HRESULT hr)
+    void ThrowIfFailed(HRESULT hr)
     {
         if (FAILED(hr))
         {
@@ -53,7 +53,7 @@ export namespace Utils
     /// </summary>
     /// <param name="hr">Handle returned by a D3D API function</param>
     /// <param name="pszMsg">Message template</param>
-    inline void ThrowIfFailed(const HRESULT hr, const char* const pszMsg, ...)
+    void ThrowIfFailed(const HRESULT hr, const char* const pszMsg, ...)
     {
         if (FAILED(hr))
         {

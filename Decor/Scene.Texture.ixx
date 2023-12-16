@@ -12,7 +12,7 @@ import Scene.Utils;
 import Scene.Log;
 import TinyGltf;
 
-using namespace DirectX;
+using DirectX::XMFLOAT4;
 
 export class SceneTexture
 {

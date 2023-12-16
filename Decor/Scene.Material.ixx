@@ -11,7 +11,7 @@ import Scene.Texture;
 import Scene.Log;
 import TinyGltf;
 
-using namespace DirectX;
+using DirectX::XMFLOAT4;
 
 export class SceneMaterial
 {

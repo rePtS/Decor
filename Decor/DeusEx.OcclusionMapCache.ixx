@@ -9,7 +9,7 @@ module;
 
 #include <Engine.h>
 
-export module OcclusionMapCache;
+export module DeusEx.OcclusionMapCache;
 
 import Utils;
 
@@ -24,7 +24,7 @@ public:
 
         TextureData(const TextureData&) = default;
         TextureData(TextureData&& Other) //VS2015 doesn't support default move constructors
-            :fMultU(Other.fMultU)
+            : fMultU(Other.fMultU)
             , fMultV(Other.fMultV)
             , pTexture(std::move(Other.pTexture))
             , pShaderResourceView(std::move(Other.pShaderResourceView))
