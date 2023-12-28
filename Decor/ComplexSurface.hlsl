@@ -95,31 +95,30 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 
     return matInfo;
 }
-
-
+/*
 float4 PSMain(const VSOut input) : SV_Target
 {
     if (input.TexFlags & 0x00000004)
     {
-	    if (input.PolyFlags & PF_Masked)
-    	{
+        if (input.PolyFlags & PF_Masked)
+        {
             clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
-	    }
+        }
 
-    	float4 Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+        float4 Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
-    	if (input.TexFlags & 0x00000001)
-    	{
+        if (input.TexFlags & 0x00000001)
+        {
             const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
             Color.rgb *= Diffuse;
-	    }
-    	if (input.TexFlags & 0x00000002)
-    	{
+        }
+        if (input.TexFlags & 0x00000002)
+        {
             const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;
             Color.rgb *= Light;
-    	}
+        }
     
-    	return Color;
+        return Color;
     }
 
     if (input.PolyFlags & PF_Masked)
@@ -131,27 +130,26 @@ float4 PSMain(const VSOut input) : SV_Target
     {
         //const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
         //return float4(Diffuse, 1.0f);
-	    return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
+        return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
     }
 
-    PbrM_ShadingCtx shadingCtx;    
+    PbrM_ShadingCtx shadingCtx;
     if (input.PolyFlags & PF_Portal)	
-	    shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
     else
-	    shadingCtx.normal = normalize(input.Normal);
+        shadingCtx.normal = normalize(input.Normal);
 
     //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
     //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
     //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
     //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
     //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
-    shadingCtx.viewDir = normalize((float3)input.PosWorld);
+    shadingCtx.viewDir = normalize((float3) input.PosWorld);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
     float4 ambientLightLuminance = float4(0.02, 0.02, 0.02, 1);
-    float3 directionalLightVector = normalize((float3)LightDir);
 
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
 
@@ -162,9 +160,9 @@ float4 PSMain(const VSOut input) : SV_Target
     //    shadingCtx,
     //    matInfo);
 
-    uint firstLightsInSlices[MAX_SLICE_DATA_SIZE] = (uint[MAX_SLICE_DATA_SIZE])IndexesOfFirstLightsInSlices;
+    uint firstLightsInSlices[MAX_SLICE_DATA_SIZE] = (uint[MAX_SLICE_DATA_SIZE]) IndexesOfFirstLightsInSlices;
     
-    uint slice = (uint)floor((input.PosWorld.z - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
+    uint slice = (uint) floor((input.PosWorld.z - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
 
     slice = max(0, slice);
     slice = min(SLICE_MAX_INDEX, slice);
@@ -177,25 +175,26 @@ float4 PSMain(const VSOut input) : SV_Target
     uint lightId = 0;
     uint lightType = 0;
     uint lightInfo = 0;
-    for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice+1]; ++i)
+    for (uint i = firstLightsInSlices[slice]; i < firstLightsInSlices[slice + 1]; ++i)
     {
         lightId = LightIndexesFromAllSlices[i >> 2][i & 3];
         float4 intencity = Lights[lightId];
 
-        lightInfo = (uint)intencity.w;
+        lightInfo = (uint) intencity.w;
         if (bool(lightInfo & LIGHT_SPECIAL_MASK) != bool(input.PolyFlags & PF_SpecialLit))
-            continue;               
+            continue;
 
         lightType = lightInfo & LIGHT_TYPE_MASK;
 
         // Point
-        if (lightType == LIGHT_POINT) {
+        if (lightType == LIGHT_POINT)
+        {
             float4 lightPosData = Lights[lightId + 1];
-            float3 posWorld = (float3)input.PosWorld;
+            float3 posWorld = (float3) input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
-            if (length((float3)lightPosData - posWorld) < lightPosData.w)
-            output += PbrM_PointLightContrib(posWorld,
+            if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                output += PbrM_PointLightContrib(posWorld,
                 lightPosData,
                 intencity,
                 shadingCtx,
@@ -203,12 +202,13 @@ float4 PSMain(const VSOut input) : SV_Target
         }
 
         // "Ambient" Point
-        if (lightType == LIGHT_POINT_AMBIENT) {
+        if (lightType == LIGHT_POINT_AMBIENT)
+        {
             float4 lightPosData = Lights[lightId + 1];
-            float3 posWorld = (float3)input.PosWorld;
+            float3 posWorld = (float3) input.PosWorld;
 
             // Skip point lights that are out of range of the point being shaded.
-            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            if (length((float3) lightPosData - posWorld) < lightPosData.w)
             {
                 output += PbrM_AmbPointLightContrib(posWorld,
                     lightPosData,
@@ -219,20 +219,21 @@ float4 PSMain(const VSOut input) : SV_Target
         }
 
         // Spot
-        if (lightType == LIGHT_SPOT) {
+        if (lightType == LIGHT_SPOT)
+        {
             float4 lightPosData = Lights[lightId + 1];
             float4 lightDirData = Lights[lightId + 2];
-            float3 posWorld = (float3)input.PosWorld;
+            float3 posWorld = (float3) input.PosWorld;
 
             // Skip spot lights that are out of range of the point being shaded.
-            if (length((float3)lightPosData - posWorld) < lightPosData.w)
+            if (length((float3) lightPosData - posWorld) < lightPosData.w)
                 output += PbrM_SpotLightContrib(posWorld,
                     lightPosData,
                     lightDirData,
                     intencity,
                     shadingCtx,
                     matInfo);
-        }        
+        }
     }
 
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
@@ -269,7 +270,184 @@ float4 PSMain(const VSOut input) : SV_Target
     //output.rgb = fTimeInSeconds.rgb;
 
     output.a = 1;
-    return output;    
+    return output;
+}
+*/
+
+
+float4 PSMain(const VSOut input) : SV_Target
+{
+    if (input.TexFlags & 0x00000004)
+    {
+        if (input.PolyFlags & PF_Masked)
+        {
+            clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
+        }
+
+        float4 Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (input.TexFlags & 0x00000001)
+        {
+            const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+            Color.rgb *= Diffuse;
+        }
+        if (input.TexFlags & 0x00000002)
+        {
+            const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;
+            Color.rgb *= Light;
+        }
+    
+        return Color;
+    }
+
+    if (input.PolyFlags & PF_Masked)
+    {
+        clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
+    }
+    
+    if (input.PolyFlags & PF_Unlit)
+    {
+        //const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+        //return float4(Diffuse, 1.0f);
+        return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
+    }
+
+    PbrM_ShadingCtx shadingCtx;
+    if (input.PolyFlags & PF_Portal)	
+        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+    else
+        shadingCtx.normal = normalize(input.Normal);
+
+    //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
+    //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
+    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
+    //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
+    shadingCtx.viewDir = normalize((float3) input.PosWorld);
+
+    const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
+
+    float4 output = float4(0, 0, 0, 0);
+    float4 ambientLightLuminance = float4(0.02, 0.02, 0.02, 1);
+
+    float4 luminance = float4(0.7, 0.7, 0.3, 1);
+
+    output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);
+
+    //output += PbrM_DirLightContrib(directionalLightVector,
+    //    luminance,
+    //    shadingCtx,
+    //    matInfo);
+    
+    for (uint i = 0; i < PolyControl.x; ++i)
+    {
+        uint occlusionMapId = StaticLightIds[i].x;
+        
+        //output += TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, occlusionMapId), 0).rrra * 0.01f;
+        
+        float occlusionValue = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, occlusionMapId), 0).r;
+        
+        if (occlusionValue > 0)
+        {
+            uint lightBufPos = StaticLightIds[i].y;
+            float4 intencity = StaticLights[lightBufPos];
+         
+            uint lightInfo = (uint) intencity.w;
+            if (bool(lightInfo & LIGHT_SPECIAL_MASK) != bool(input.PolyFlags & PF_SpecialLit))
+                continue;
+
+            uint lightType = lightInfo & LIGHT_TYPE_MASK;
+            
+            // Point
+            if (lightType == LIGHT_POINT)
+            {
+                float4 lightPosData = StaticLights[lightBufPos + 1];
+                
+                float lightRadius = lightPosData.w;
+                lightPosData.w = 0;
+                lightPosData = mul(lightPosData - Origin, ViewMatrix);
+                lightPosData.w = lightRadius;
+                
+                //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
+                float3 posWorld = (float3) input.PosWorld;
+
+                // Skip point lights that are out of range of the point being shaded.
+                if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                    output += PbrM_PointLightContrib(posWorld,
+                        lightPosData,
+                        intencity,
+                        shadingCtx,
+                        matInfo) * occlusionValue;
+            }
+
+            // "Ambient" Point
+            if (lightType == LIGHT_POINT_AMBIENT)
+            {
+                float4 lightPosData = StaticLights[lightBufPos + 1];
+                
+                float lightRadius = lightPosData.w;
+                lightPosData.w = 0;
+                lightPosData = mul(lightPosData - Origin, ViewMatrix);
+                lightPosData.w = lightRadius;
+                
+                //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
+                float3 posWorld = (float3) input.PosWorld;
+
+                // Skip point lights that are out of range of the point being shaded.
+                if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                {
+                    output += PbrM_AmbPointLightContrib(posWorld,
+                        lightPosData,
+                        intencity,
+                        shadingCtx,
+                        matInfo) * occlusionValue;
+                }
+            }
+
+            // Spot
+            if (lightType == LIGHT_SPOT)
+            {
+                float4 lightPosData = StaticLights[lightBufPos + 1];
+                
+                float lightRadius = lightPosData.w;
+                lightPosData.w = 0;
+                lightPosData = mul(lightPosData - Origin, ViewMatrix);
+                lightPosData.w = lightRadius;
+                
+                float4 lightDirData = StaticLights[lightBufPos + 2];
+                
+                float coneAngle = lightDirData.w;
+                lightDirData.w = 0;
+                lightDirData = mul(lightDirData, ViewMatrix);
+                lightDirData.w = coneAngle;
+                
+                //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
+                //float4 lightDirData = mul(StaticLights[lightBufPos + 2], ViewMatrix);
+                float3 posWorld = (float3) input.PosWorld;
+
+                // Skip spot lights that are out of range of the point being shaded.
+                if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                    output += PbrM_SpotLightContrib(posWorld,
+                        lightPosData,
+                        lightDirData,
+                        intencity,
+                        shadingCtx,
+                        matInfo) * occlusionValue;
+            }
+        }                
+    }
+    
+    //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
+
+    //// Original lightmap    
+    //if (input.TexFlags & 0x00000002)
+    //{        
+    //    const float3 Light = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, 0), 2).rrr;
+    //    output.rgb *= Light;	    
+    //}
+
+    output.a = 1;
+    return output;
 }
 
 [maxvertexcount(3)]

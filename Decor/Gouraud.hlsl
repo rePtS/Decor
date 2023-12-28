@@ -136,7 +136,6 @@ float4 PSMain(const VSOut input) : SV_Target
 
     float4 output = float4(0, 0, 0, 0);
     float4 ambientLightLuminance = float4(0.02, 0.02, 0.02, 1);
-    float3 directionalLightVector = normalize((float3)LightDir);
 
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
 

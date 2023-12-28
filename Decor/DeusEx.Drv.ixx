@@ -191,7 +191,7 @@ export
             m_Backend.NewFrame();
             m_pTileRenderer->NewFrame();
             m_pGouraudRenderer->NewFrame();
-            m_pComplexSurfaceRenderer->NewFrame();
+            m_pComplexSurfaceRenderer->NewFrame();            
 
             if (m_SceneManager.IsSceneRenderingEnabled())
             {
@@ -202,6 +202,8 @@ export
 
         virtual void Unlock(const UBOOL bBlit) override
         {
+            m_pGlobalShaderConstants->NewTick();
+
             Render();
 
             if (bBlit)
@@ -262,7 +264,7 @@ export
             }
 
             // TO-DO
-            const auto Poly = *Facet.Polys;
+            const auto& Poly = *Facet.Polys;
             const int surfId = pFrame->Level->Model->Nodes(Poly.iNode).iSurf;
             if (surfId >= 0)
             {
@@ -272,7 +274,10 @@ export
             }
 
             if (pFrame->Parent == nullptr)
+            {
                 m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
+                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys); // !!! TEST
+            }
 
             m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
             m_pDeviceState->PrepareBlendState(BlendState);

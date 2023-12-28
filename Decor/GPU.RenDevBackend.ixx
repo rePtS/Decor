@@ -488,6 +488,4 @@ protected:
     ComPtr<ID3D11RenderTargetView> m_pCullingRTV;
     ComPtr<ID3D11DepthStencilView> m_pCullingDepthStencilView;
     size_t m_CullingBufferSize;
-
-    int m_CurrentSceneIndex;
 };

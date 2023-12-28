@@ -63,6 +63,13 @@ public:
         m_DeviceContext.GSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
     }
 
+    void UpdateAndBind(unsigned int iSlot)
+    {
+        if (IsDirty())
+            Update();
+
+        Bind(iSlot);
+    }
 
     T m_Data;
 

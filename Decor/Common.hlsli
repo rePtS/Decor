@@ -18,21 +18,32 @@ static const float LIGHT_EDGE_THICKNESS = 0.1f;
 
 static const float PI = 3.14159265f;
 
-cbuffer CBufGlobal : register(b0)
+cbuffer PerFrameBuffer : register(b0)
 {
     float4 fRes;
     matrix ProjectionMatrix;
-    matrix ViewMatrix;
-    float4 LightDir;
+    matrix ViewMatrix;    
     
-    uint4  IndexesOfFirstLightsInSlices[PACKED_MAX_SLICE_DATA_SIZE];
-    uint4  LightIndexesFromAllSlices[PACKED_MAX_LIGHTS_INDEX_SIZE];
-    float4 Lights[MAX_LIGHTS_DATA_SIZE];
+    //uint4  IndexesOfFirstLightsInSlices[PACKED_MAX_SLICE_DATA_SIZE];
+    //uint4  LightIndexesFromAllSlices[PACKED_MAX_LIGHTS_INDEX_SIZE];
+    //float4 Lights[MAX_LIGHTS_DATA_SIZE];
+    float4 Origin;
 };
 
-cbuffer CBufPerFrameReal : register(b1)
+cbuffer PerTickBuffer : register(b1)
 {
     float4 fTimeInSeconds;
+};
+
+cbuffer PerSceneBuffer : register(b2)
+{
+    float4 StaticLights[3072];
+};
+
+cbuffer PerPolyBuffer : register(b3)
+{
+    uint4 PolyControl;
+    uint4 StaticLightIds[1024];
 };
 
 sampler SamLinear : register(s0);
