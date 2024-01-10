@@ -144,21 +144,12 @@ public:
         pVsBlob->Release();
         if (FAILED(hr))
             return false;
-
-        // Culling vertex shader
-        if (!ctx.CreateVertexShader((WCHAR*)L"Decor/Culling.hlsl", "VSMain", "vs_4_0", pVsBlob, mVsCulling))
-            return false;
-
+        
         // Pixel shaders
         if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
             return false;
         if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
             return false;
-
-        // Culling pixel shader
-        if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Culling.hlsl", "PSMain", "ps_4_0", mPsCulling))
-            return false;
-
 
         // Create constant buffers
         D3D11_BUFFER_DESC bd;
