@@ -1,4 +1,4 @@
-module;
+п»їmodule;
 
 #include <D3D11.h>
 #include <unordered_map>
@@ -18,7 +18,7 @@ using Microsoft::WRL::ComPtr;
 export class TextureCache
 {
 public:
-    static const unsigned int sm_iMaxSlots = 2; //Maximum texture slot managed by the cache
+    static const unsigned int sm_iMaxSlots = 2; // Maximum texture slot managed by the cache
 
     explicit TextureCache(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
         :m_DeviceContext(DeviceContext)
@@ -39,7 +39,7 @@ public:
             if (Texture.bRealtimeChanged)
             {
                 m_TextureConverter.Update(Texture, it->second);
-                Texture.bRealtimeChanged = 0; //Clear this flag (from other renderes)
+                Texture.bRealtimeChanged = 0; // Clear this flag (from other renderes)
             }
 
             return it->second;
@@ -62,11 +62,9 @@ public:
 
         return Data;
     }
-
-    /**
-    Instead of checking what's actually bound, for our purposes it's enough to just check if someone else WANTED to bind something else.
-    However this means that preparing a new texture and then not using it to render will result in a false positive for having to flush geometry.
-    */
+    
+    // Instead of checking what's actually bound, for our purposes it's enough to just check if someone else WANTED to bind something else.
+    // However this means that preparing a new texture and then not using it to render will result in a false positive for having to flush geometry.
     bool IsPrepared(const FTextureInfo& Texture, const unsigned int iSlot) const
     {
         return m_iDirtyBeginSlot <= iSlot && m_iDirtyEndSlot >= iSlot && m_PreparedIds[iSlot] == Texture.CacheID;
@@ -74,14 +72,14 @@ public:
 
     void BindTextures()
     {
-        if (m_iDirtyBeginSlot > m_iDirtyEndSlot) //Anything prepared?
+        if (m_iDirtyBeginSlot > m_iDirtyEndSlot) // Anything prepared?
         {
             return;
         }
 
         m_DeviceContext.PSSetShaderResources(m_iDirtyBeginSlot, m_iDirtyEndSlot - m_iDirtyBeginSlot + 1, &m_PreparedSRVs[m_iDirtyBeginSlot]);
 
-        // TODO Загружаем в шейдер текстуру шума (возможно это надо вынести у другое место. Пока так)
+        // TODO Load the noise texture into the shader (perhaps it should be taken out from another place. So far so)
         m_DeviceContext.PSSetShaderResources(sm_iMaxSlots, 1, m_NoiseTextureData.pShaderResourceView.GetAddressOf());
 
         ResetDirtySlots();
@@ -90,7 +88,7 @@ public:
     void Flush()
     {
         ID3D11ShaderResourceView* const nullSRV[1] = { nullptr };
-        m_DeviceContext.PSSetShaderResources(0, sm_iMaxSlots, nullSRV); //To be able to release textures
+        m_DeviceContext.PSSetShaderResources(0, sm_iMaxSlots, nullSRV); // To be able to release textures
         m_Textures.clear();
 
         ResetDirtySlots();
@@ -138,11 +136,13 @@ protected:
     std::array<decltype(FTextureInfo::CacheID), sm_iMaxSlots> m_PreparedIds;
     std::array<ID3D11ShaderResourceView*, sm_iMaxSlots> m_PreparedSRVs;
 
-    //Tracking of which slots need to be bound on BindTextures()
+    // Tracking of which slots need to be bound on BindTextures()
     unsigned int m_iDirtyBeginSlot;
     unsigned int m_iDirtyEndSlot;
 
+    // Noise texture to simulate waves on water
     TextureConverter::TextureData m_NoiseTextureData;
+
     void CreateNoiseTexture(ID3D11Device& Device)
     {
         FastNoiseLite noise;

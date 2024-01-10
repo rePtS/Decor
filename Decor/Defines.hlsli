@@ -9,21 +9,10 @@
 
 #define NEAR_CLIPPING_DISTANCE 1.0f
 #define FAR_CLIPPING_DISTANCE 32760.0f
-
-#define MAX_SLICE_DATA_SIZE 32 // must be multiple of 16
-#define SLICE_NUMBER 30 // shoud be less than MAX_SLICE_DATA_SIZE
-
 #define MAX_LIGHTS_DATA_SIZE 1024
-
 #define MAX_LIGHTS_INDEX_SIZE 1024 // must be multiple of 16
 
-// Типы источников света, которые передаются в шейдер
-/*
-#define LIGHT_SPECIAL 1 // специальный/не специальный источник (специальные источники освещают только поверхности с признаком PF_SpecialLit)
-#define LIGHT_AMBIENT 2 // обычный источник света или амбиентный
-#define LIGHT_POINT 4 // 
-#define LIGHT_SPOT 8 // 
-*/
+// Types of light sources that are transmitted to the shader
 #define LIGHT_POINT 1
 #define LIGHT_SPOT 2
 #define LIGHT_AMBIENT 3

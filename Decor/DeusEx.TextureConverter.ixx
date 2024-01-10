@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <vector>
@@ -22,7 +22,7 @@ public:
         TextureData() {}
 
         TextureData(const TextureData&) = default;
-        TextureData(TextureData&& Other) //VS2015 doesn't support default move constructors
+        TextureData(TextureData&& Other)
             : fMultU(Other.fMultU)
             , fMultV(Other.fMultV)
             , pTexture(std::move(Other.pTexture))
@@ -44,7 +44,7 @@ public:
         , m_DeviceContext(DeviceContext)
     {
 
-        //Create placeholder texture
+        // Create placeholder texture
         m_PlaceholderTexture.fMultU = 1.0f;
         m_PlaceholderTexture.fMultV = 1.0f;
 
@@ -96,7 +96,7 @@ public:
             return m_PlaceholderTexture;
         }
 
-        const bool bDynamic = Texture.bRealtimeChanged; //bRealtime isn't always set
+        const bool bDynamic = Texture.bRealtimeChanged; // bRealtime isn't always set
 
         pConverter->Convert(Texture);
 
@@ -148,7 +148,7 @@ public:
         assert(Source.bRealtimeChanged);
 
         IFormatConverter* const pConverter = m_FormatConverters[Source.Format];
-        assert(pConverter); //Should have a converter as it was converted succesfully before
+        assert(pConverter); // Should have a converter as it was converted succesfully before
 
         pConverter->Convert(Source);
 
@@ -203,8 +203,8 @@ protected:
         void SetSubResourceDataSysMem(const unsigned int iMipLevel, void* const p) { m_SubResourceData[iMipLevel].pSysMem = p; }
 
     private:
-        std::vector<std::vector<PixelFormat>> m_Mips; //Scratch data, not required for all conversions
-        std::vector<D3D11_SUBRESOURCE_DATA> m_SubResourceData; //References to Unreal data or converted scratch data
+        std::vector<std::vector<PixelFormat>> m_Mips; // Scratch data, not required for all conversions
+        std::vector<D3D11_SUBRESOURCE_DATA> m_SubResourceData; // References to Unreal data or converted scratch data
     };
     ConvertedTextureData m_ConvertedTextureData;
     
@@ -219,7 +219,7 @@ protected:
         virtual void Convert(const FTextureInfo& Texture) = 0;
         virtual UINT GetStride(const FMipmapBase& Mip) const = 0;
         virtual DXGI_FORMAT GetDXGIFormat() const = 0;
-        virtual bool WantsBuffer() const = 0; //Whether converter requires scratch space for conversion result
+        virtual bool WantsBuffer() const = 0; // Whether converter requires scratch space for conversion result
     };
 
     class FormatConverterIdentity : public IFormatConverter
@@ -255,7 +255,7 @@ protected:
 
             FColor* const Palette = Texture.Palette;
 
-            //Palette color 0 is the alpha mask color, we always give it alpha 0 and make it look black
+            // Palette color 0 is the alpha mask color, we always give it alpha 0 and make it look black
             Palette[0].R = Palette[0].G = Palette[0].B = Palette[0].A = 0;
 
             m_Buffer.Resize(Texture, *this);
@@ -305,5 +305,5 @@ protected:
         nullptr //TEXF_RGBA8
     };
 
-    TextureData m_PlaceholderTexture; //Placeholder texture for when unable to convert
+    TextureData m_PlaceholderTexture; // Placeholder texture for when unable to convert
 };

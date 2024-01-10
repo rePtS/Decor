@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <DirectXMath.h>
 #include <vector>

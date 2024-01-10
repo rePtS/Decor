@@ -1,4 +1,4 @@
-module;
+п»їmodule;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -48,7 +48,7 @@ struct CbScene
     XMFLOAT4 AmbientLightLuminance;
     XMFLOAT4 LightsData[LIGHTS_DATA_MAX_SIZE];
 
-    // !!! Переделать этот метод
+    // !!! РџРµСЂРµРґРµР»Р°С‚СЊ СЌС‚РѕС‚ РјРµС‚РѕРґ
     size_t AddLight(const SceneLight& light)
     {
         size_t dataIndex = light.index;
@@ -116,9 +116,6 @@ public:
 
     virtual bool Init(IRenderingContext& ctx)
     {
-        if (!ctx.IsValid())
-            return false;
-
         uint32_t wndWidth, wndHeight;
         if (!ctx.GetWindowSize(wndWidth, wndHeight))
             return false;
@@ -248,9 +245,6 @@ public:
 
     virtual void AnimateFrame(IRenderingContext& ctx)
     {
-        if (!ctx.IsValid())
-            return;
-
         // debug: Materials
         for (auto& material : mMaterials)
             material.Animate(ctx);
@@ -288,21 +282,9 @@ public:
         deviceContext.PSSetConstantBuffers(3, 1, &mCbScenePrimitive);
         deviceContext.PSSetSamplers(0, 1, &mSamplerLinear);
 
-        // Смотрим, какие корневые узлы видны в текущем кадре
-        auto culledNodes = ctx.GetCulledRoots();
-        for (size_t i = 0; i < mRootNodes.size(); ++i)
-        {
-            if (culledNodes[i])
-            {
-                // и рисуем только их
-                auto& node = mRootNodes[i];
-                RenderRootNode(ctx, node);
-            }
-        }
-
-        //// Scene geometry
-        //for (auto &node : mRootNodes)
-        //    RenderRootNode(ctx, node);
+        // Scene geometry
+        for (auto &node : mRootNodes)
+            RenderRootNode(ctx, node);
     }
 
     virtual bool GetAmbientColor(float(&rgba)[4])
@@ -312,35 +294,6 @@ public:
         rgba[2] = mAmbientLight.luminance.z;
         rgba[3] = mAmbientLight.luminance.w;
         return true;
-    }
-
-    virtual void CullFrame(IRenderingContext& ctx)
-    {
-        assert(&ctx);
-        auto& deviceContext = ctx.GetDeviceContext();
-
-        // Нужно переключить RenderTraget для отсечения
-        ctx.SetCullingRenderTarget();
-
-        // Setup vertex shader
-        deviceContext.VSSetShader(mVsCulling, nullptr, 0);
-        deviceContext.VSSetConstantBuffers(0, 1, &mCbFrame);
-        deviceContext.VSSetConstantBuffers(1, 1, &mCbSceneNode);
-
-        // Setup geometry shader
-        deviceContext.GSSetShader(nullptr, nullptr, 0);
-
-        // Setup pixel shader data
-        deviceContext.PSSetShader(mPsCulling, nullptr, 0);
-        deviceContext.PSSetConstantBuffers(0, 1, &mCbFrame);
-        deviceContext.PSSetConstantBuffers(1, 1, &mCbSceneNode);
-
-        // Scene geometry
-        for (size_t i = 0; i < mRootNodes.size(); ++i)
-            CullRootNode(ctx, i);
-
-        // Нужно переключить RenderTraget для отрисовки
-        ctx.SetDefaultRenderTarget();
     }
 
     void SetCamera(IRenderingContext& ctx, const FSceneNode& SceneNode)
@@ -368,7 +321,7 @@ public:
         mProjectionMtrx = DirectX::XMMatrixPerspectiveFovLH(fFovVert, fAspect, fZNear, fZFar);
         mProjectionMtrx.r[1].m128_f32[1] *= -1.0f; //Flip Y
 
-        // !!! Может это лучше делать в RenderFrame?
+        // !!! РњРѕР¶РµС‚ СЌС‚Рѕ Р»СѓС‡С€Рµ РґРµР»Р°С‚СЊ РІ RenderFrame?
         // Frame constant buffer can be updated now
         CbFrame cbFrame;
         cbFrame.ViewMtrx = XMMatrixTranspose(mViewMtrx);
@@ -388,8 +341,8 @@ private:
         //AddScaleToRoots(100.0);
         //AddScaleToRoots({ 1.0f, -1.0f, 1.0f });
         //AddTranslationToRoots({ 0., -40., 0. }); // -1000, 800, 0
-        //AddRotationQuaternionToRoots({ 0.000, -1.000, 0.000, 0.000 }); // 180°y    
-        //AddRotationQuaternionToRoots({ 0.000, 0.707, 0.000, 0.707 }); // 90°y
+        //AddRotationQuaternionToRoots({ 0.000, -1.000, 0.000, 0.000 }); // 180В°y    
+        //AddRotationQuaternionToRoots({ 0.000, 0.707, 0.000, 0.707 }); // 90В°y
 
         return PostLoadSanityTest();
     }
@@ -528,9 +481,9 @@ private:
             scene.nodes.size());
 
         // Light sources
-        // Нужна коллекция для всех статических источников света (и точечных, и прожекторов и солнечный свет)
-        // Резервируем место для источников, заполняем их основные характеристики (цвет, интенсивность, радиус, направление и т.п.)
-        // При проходе по иерархии узлов заполняем положение источника света в пространстве
+        // РќСѓР¶РЅР° РєРѕР»Р»РµРєС†РёСЏ РґР»СЏ РІСЃРµС… СЃС‚Р°С‚РёС‡РµСЃРєРёС… РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р° (Рё С‚РѕС‡РµС‡РЅС‹С…, Рё РїСЂРѕР¶РµРєС‚РѕСЂРѕРІ Рё СЃРѕР»РЅРµС‡РЅС‹Р№ СЃРІРµС‚)
+        // Р РµР·РµСЂРІРёСЂСѓРµРј РјРµСЃС‚Рѕ РґР»СЏ РёСЃС‚РѕС‡РЅРёРєРѕРІ, Р·Р°РїРѕР»РЅСЏРµРј РёС… РѕСЃРЅРѕРІРЅС‹Рµ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё (С†РІРµС‚, РёРЅС‚РµРЅСЃРёРІРЅРѕСЃС‚СЊ, СЂР°РґРёСѓСЃ, РЅР°РїСЂР°РІР»РµРЅРёРµ Рё С‚.Рї.)
+        // РџСЂРё РїСЂРѕС…РѕРґРµ РїРѕ РёРµСЂР°СЂС…РёРё СѓР·Р»РѕРІ Р·Р°РїРѕР»РЅСЏРµРј РїРѕР»РѕР¶РµРЅРёРµ РёСЃС‚РѕС‡РЅРёРєР° СЃРІРµС‚Р° РІ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРµ
         mLights.clear();
         mLights.reserve(model.lights.size());
         for (const auto& gltfLight : model.lights)
@@ -541,7 +494,7 @@ private:
             mLights.push_back(std::move(sceneLight));
         }
 
-        // Проставим индексы источников света для общего массива данных об источниках света
+        // РџСЂРѕСЃС‚Р°РІРёРј РёРЅРґРµРєСЃС‹ РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р° РґР»СЏ РѕР±С‰РµРіРѕ РјР°СЃСЃРёРІР° РґР°РЅРЅС‹С… РѕР± РёСЃС‚РѕС‡РЅРёРєР°С… СЃРІРµС‚Р°
         size_t indexInTotalLightDataArray = 0;
         for (auto& sceneLight : mLights)
         {
@@ -567,7 +520,7 @@ private:
             mRootNodes.push_back(std::move(sceneNode));
         }
 
-        // Проставляем каждому узлу списки источников света, которые освещают данный узел
+        // РџСЂРѕСЃС‚Р°РІР»СЏРµРј РєР°Р¶РґРѕРјСѓ СѓР·Р»Сѓ СЃРїРёСЃРєРё РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р°, РєРѕС‚РѕСЂС‹Рµ РѕСЃРІРµС‰Р°СЋС‚ РґР°РЅРЅС‹Р№ СѓР·РµР»
         for (auto& rootNode : mRootNodes)
             rootNode.LinkLights(mLights);
 
@@ -588,12 +541,12 @@ private:
 
         const auto& node = model.nodes[nodeIdx];
 
-        // Если это корневой узел, то проверяем имя узла (оно должно начинаться с "Node")    
+        // Р•СЃР»Рё СЌС‚Рѕ РєРѕСЂРЅРµРІРѕР№ СѓР·РµР», С‚Рѕ РїСЂРѕРІРµСЂСЏРµРј РёРјСЏ СѓР·Р»Р° (РѕРЅРѕ РґРѕР»Р¶РЅРѕ РЅР°С‡РёРЅР°С‚СЊСЃСЏ СЃ "Node")    
         if (sceneNode.mIsRootNode)
         {
             auto nodeNameParts = SceneUtils::split(node.name, '_');
             if (nodeNameParts.size() > 1 && nodeNameParts[0] == "Node")
-                // Сохрянем имя корневого узла (или лучше сохраним список ид источников света, которые освещаются данным узлом???)
+                // РЎРѕС…СЂСЏРЅРµРј РёРјСЏ РєРѕСЂРЅРµРІРѕРіРѕ СѓР·Р»Р° (РёР»Рё Р»СѓС‡С€Рµ СЃРѕС…СЂР°РЅРёРј СЃРїРёСЃРѕРє РёРґ РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р°, РєРѕС‚РѕСЂС‹Рµ РѕСЃРІРµС‰Р°СЋС‚СЃСЏ РґР°РЅРЅС‹Рј СѓР·Р»РѕРј???)
                 sceneNode.mName = nodeNameParts[1];
         }
 
@@ -804,7 +757,7 @@ private:
         auto& deviceContext = ctx.GetDeviceContext();
         assert(&deviceContext);
 
-        // !!! Может здесь нужно добавить явный признак того, что узел является корневым мэшем, а не источников света?
+        // !!! РњРѕР¶РµС‚ Р·РґРµСЃСЊ РЅСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ СЏРІРЅС‹Р№ РїСЂРёР·РЅР°Рє С‚РѕРіРѕ, С‡С‚Рѕ СѓР·РµР» СЏРІР»СЏРµС‚СЃСЏ РєРѕСЂРЅРµРІС‹Рј РјСЌС€РµРј, Р° РЅРµ РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р°?
         if (node.mPrimitives.size() > 0 /*&& (node.mName == "A" || node.mName == "C" || node.mName == "B")*/)
         {
             const auto worldMtrx = node.GetWorldMtrx();
@@ -814,7 +767,7 @@ private:
             cbSceneNode.WorldMtrx = XMMatrixTranspose(worldMtrx);
             cbSceneNode.MeshColor = { 0.f, 1.f, 0.f, 1.f, };
 
-            // !!! Может вынести заполенение LightIds в CbRootSceneNode?
+            // !!! РњРѕР¶РµС‚ РІС‹РЅРµСЃС‚Рё Р·Р°РїРѕР»РµРЅРµРЅРёРµ LightIds РІ CbRootSceneNode?
             for (size_t i = 0; i < node.mLightIds.size(); ++i)
                 cbSceneNode.LightIds[i] = node.mLightIds[i];
             cbSceneNode.Control.x = node.mLightIds.size();
@@ -836,7 +789,7 @@ private:
 
         auto& node = mRootNodes[rootNodeIndex];
 
-        // !!! Может здесь нужно добавить явный признак того, что узел является корневым мэшем, а не источников света?
+        // !!! РњРѕР¶РµС‚ Р·РґРµСЃСЊ РЅСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ СЏРІРЅС‹Р№ РїСЂРёР·РЅР°Рє С‚РѕРіРѕ, С‡С‚Рѕ СѓР·РµР» СЏРІР»СЏРµС‚СЃСЏ РєРѕСЂРЅРµРІС‹Рј РјСЌС€РµРј, Р° РЅРµ РёСЃС‚РѕС‡РЅРёРєРѕРІ СЃРІРµС‚Р°?
         if (node.mPrimitives.size() > 0)
         {
             const auto worldMtrx = node.GetWorldMtrx();

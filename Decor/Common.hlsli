@@ -10,10 +10,6 @@ static const uint PF_Portal = 0x04000000;	// Portal between iZones.
 static const uint PF_SpecialLit = 0x00100000;	// Only speciallit lights apply to this poly.
 static const uint PF_NoSmooth = 0x00000800;	// Don't smooth textures.
 
-static const uint PACKED_MAX_SLICE_DATA_SIZE = MAX_SLICE_DATA_SIZE / 4;
-static const uint PACKED_MAX_LIGHTS_INDEX_SIZE = MAX_LIGHTS_INDEX_SIZE / 4;
-static const uint SLICE_MAX_INDEX = SLICE_NUMBER - 1;
-static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
 static const float LIGHT_EDGE_THICKNESS = 0.1f;
 
 static const float PI = 3.14159265f;
@@ -22,12 +18,9 @@ cbuffer PerFrameBuffer : register(b0)
 {
     float4 fRes;
     matrix ProjectionMatrix;
-    matrix ViewMatrix;    
-    
-    //uint4  IndexesOfFirstLightsInSlices[PACKED_MAX_SLICE_DATA_SIZE];
-    //uint4  LightIndexesFromAllSlices[PACKED_MAX_LIGHTS_INDEX_SIZE];
-    //float4 Lights[MAX_LIGHTS_DATA_SIZE];
+    matrix ViewMatrix;
     float4 Origin;
+    float4 DynamicLights[MAX_LIGHTS_DATA_SIZE];
 };
 
 cbuffer PerTickBuffer : register(b1)
@@ -119,9 +112,6 @@ float4 PbrM_AmbPointLightContrib(float3 surfPos,
 {
     const float3 dirRaw = surfPos - (float3)lightPos;
     const float  len = length(dirRaw);
-    //const float3 lightDir = dirRaw / len;
-
-    //const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
 
     float4 ambLightContrib = PbrM_AmbLightContrib(luminance, shadingCtx, matInfo);
     float attenuation = 1.0f - smoothstep(0, lightPos.w, len);
@@ -248,7 +238,7 @@ float DoSpotCone(float4 lightDir, float3 L)
     float maxCos = 0.0f;
     float minCos = 0.0f;
 
-    // ≈сли угол меньше 64 градусов - расшир€ем конус наружу, иначе - сужаем конус внутрь
+    // If the angle is less than 64 degrees, we expand the cone outward, otherwise we narrow the cone inward
     if (lightDir.w < 1.1f)
     {
 	    maxCos = cos(lightDir.w);

@@ -57,7 +57,7 @@ float4 PSMain_Old(const VSOut Input) : SV_Target
 PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 {    
     //const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
-    //const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // ѕока будем использовать фиксированный baseColor, но потом его нужно будет брать из TexDiffuse    
+    //const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // For now, we will use a fixed BaseColor, but then we will need to take it from TexDiffuse
     float4 baseColor;
     //if (input.TexFlags & 0x00000001)
         baseColor = TexDiffuse.Sample(SamLinear, input.TexCoord) * float4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -65,8 +65,8 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     //    baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f);
 
     //const float4 metalRoughness = MetalRoughnessTexture.Sample(LinearSampler, input.Tex) * MetallicRoughnessFactor;
-    //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // ѕока будем использовать фиксированный metalRoughness
-    float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // ѕока будем использовать фиксированный metalRoughness
+    //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
+    float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
 
     //if ((input.PolyFlags & PF_Masked) || (input.PolyFlags & PF_Translucent))
     //{
@@ -91,7 +91,7 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     matInfo.f0 = lerp(f0Diel, f0Metal, metalness);
     matInfo.alphaSq = max(roughness * roughness, 0.0001f);
     //matInfo.occlusion = lerp(1., OcclusionTexture.Sample(LinearSampler, input.Tex).r, OcclusionTexStrength);
-    matInfo.occlusion = 1.0f; // ѕока будем использовать фиксированный matInfo.occlusion
+    matInfo.occlusion = 1.0f; // For now, we will use a fixed mapInfo.occlusion
 
     return matInfo;
 }

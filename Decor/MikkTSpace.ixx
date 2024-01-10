@@ -1,4 +1,4 @@
-/**
+﻿/**
  *  Copyright (C) 2011 by Morten S. Mikkelsen
  *
  *  This software is provided 'as-is', without any express or implied

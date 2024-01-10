@@ -1,4 +1,4 @@
-module;
+п»їmodule;
 
 #include <D3D11.h>
 #include <string>
@@ -12,6 +12,10 @@ export module DeusEx.SceneManager;
 import Scene;
 import Scene.IRenderingContext;
 
+/// <summary>
+/// A class for managing the rendering of gltf models
+/// in conjunction with the usual graphics of the game
+/// </summary>
 export class SceneManager
 {
 	int m_CurrentSceneIndex;
@@ -19,10 +23,9 @@ export class SceneManager
     IRenderingContext& m_RenderingContext;
 
 public:	
-    SceneManager(IRenderingContext& ctx) :
-        m_RenderingContext(ctx)
-    {
-    }
+    SceneManager(IRenderingContext& ctx)
+        : m_RenderingContext(ctx)
+    { }
 
     SceneManager(const SceneManager&) = delete;
     SceneManager& operator=(const SceneManager&) = delete;
@@ -41,25 +44,27 @@ public:
         if (m_Scene)
         {
             m_Scene->AnimateFrame(m_RenderingContext);
-            m_Scene->CullFrame(m_RenderingContext);
             m_Scene->RenderFrame(m_RenderingContext);
         }
     }
 
+    /// <summary>
+    /// Loads a scene with given name as gltf model
+    /// </summary>
     void LoadLevel(const TCHAR* szLevelName)
     {
-        // Выгрузка текущего уровня
+        // Unloading the current level
         if (m_Scene)
         {
             delete m_Scene;
             m_Scene = nullptr;
         }
 
-        // Получаем относительное имя gltf-файла с геометрией уровня
+        // Getting the relative name of the gltf file with the geometry of the level
         wchar_t levelFileName[256];
         wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
 
-        // Проверяем, есть ли файл на диске
+        // Checking if there is a file on the disk
         std::ifstream levelFile(levelFileName);
         if (levelFile.good())
         {
@@ -67,12 +72,12 @@ public:
             auto scene = new Scene(levelFileName);
             scene->Init(m_RenderingContext);
 
-            // Все загружено, можно продолжать
+            // All is done, can continue
             m_Scene = scene;
         }
         else
         {
-            // Уровень загрузить не удалось, используем обычный рендеринг            
+            // The level could not be loaded, use the usual rendering
         }
     }
 
@@ -96,6 +101,9 @@ public:
         return false;
     }
 
+    /// <summary>
+    /// Sets viewport for gltf scene rendering according viewport information from the game
+    /// </summary>
     void SetViewport(const FSceneNode& SceneNode)
     {
         if (m_Scene)

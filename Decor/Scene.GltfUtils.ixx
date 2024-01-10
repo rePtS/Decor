@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -13,6 +13,9 @@ import Scene.Log;
 import Scene.Utils;
 import TinyGltf;
 
+/// <summary>
+/// Set of helper functions for loading gltf models
+/// </summary>
 export namespace GltfUtils
 {
     bool LoadModel(tinygltf::Model& model, const std::wstring& filePath)

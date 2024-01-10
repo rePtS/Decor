@@ -1,4 +1,4 @@
-module;
+п»їmodule;
 
 #include <memory>
 #include <cassert>
@@ -50,7 +50,7 @@ export
     protected:
         void Render()
         {
-            //Check if something to render
+            // Check if something to render
             if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
             {
                 m_pGlobalShaderConstants->Bind();
@@ -81,7 +81,7 @@ export
             }
         }
 
-        //Convenience function so don't need to pass Viewport->...; template to pass varargs
+        // Convenience function so don't need to pass Viewport->...; template to pass varargs
         template<class... Args>
         void PrintFunc(Args... args)
         {
@@ -102,7 +102,7 @@ export
 
         bool m_bNoTilesDrawnYet;
 
-        //From URenderDevice
+        // From URenderDevice
     public:
         virtual UBOOL Init(UViewport* const pInViewport, const INT iNewX, const INT iNewY, const INT iNewColorBytes, const UBOOL bFullscreen) override
         {
@@ -155,8 +155,8 @@ export
         {
             assert(URenderDevice::Viewport);
 
-            //Without BLIT_HardwarePaint, game doesn't trigger us when resizing
-            //Without BLIT_Direct3D renderer only ever gets one draw call, and SetRes() isn't called on window resize
+            // Without BLIT_HardwarePaint, game doesn't trigger us when resizing
+            // Without BLIT_Direct3D renderer only ever gets one draw call, and SetRes() isn't called on window resize
             if (!URenderDevice::Viewport->ResizeViewport(EViewportBlitFlags::BLIT_HardwarePaint | EViewportBlitFlags::BLIT_Direct3D, iNewX, iNewY, iNewColorBytes))
             {
                 Utils::LogWarningf(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
@@ -214,19 +214,7 @@ export
 
         virtual void DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) override
         {
-            // Вызываем CheckViewChange только если это рендеринг основной сцены
-            //if (pFrame->Parent == nullptr)
-            //    m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
-
-            //PrintFunc(L"TexCacheId: %Iu.", Surface.Texture->CacheID);
-
-            //if (m_Backend.IsSceneRenderingEnabled())
-            //{
-            //    if (Surface.Texture->CacheID != 8978144)
-            //        return;
-            //}
-
-            //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
+            // assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
 
             const DWORD PolyFlags = Surface.PolyFlags;
             const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
@@ -276,7 +264,7 @@ export
             if (pFrame->Parent == nullptr)
             {
                 m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
-                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys); // !!! TEST
+                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys);
             }
 
             m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
@@ -287,38 +275,38 @@ export
                 m_pComplexSurfaceRenderer->Map();
             }
 
-            //Code from OpenGL renderer to calculate texture coordinates
+            // Code from OpenGL renderer to calculate texture coordinates
             const float UDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;
             const float VDot = Facet.MapCoords.YAxis | Facet.MapCoords.Origin;
 
-            //Draw each polygon
+            // Draw each polygon
             for (const FSavedPoly* pPoly = Facet.Polys; pPoly; pPoly = pPoly->Next)
             {
                 assert(pPoly);
                 const FSavedPoly& Poly = *pPoly;
-                if (Poly.NumPts < 3) //Skip invalid polygons
+                if (Poly.NumPts < 3) // Skip invalid polygons
                 {
                     continue;
                 }
 
-                ComplexSurfaceRenderer::Vertex* const pVerts = m_pComplexSurfaceRenderer->GetTriangleFan(Poly.NumPts); //Reserve space and generate indices for fan		
+                ComplexSurfaceRenderer::Vertex* const pVerts = m_pComplexSurfaceRenderer->GetTriangleFan(Poly.NumPts); // Reserve space and generate indices for fan		
                 for (int i = 0; i < Poly.NumPts; i++)
                 {
                     ComplexSurfaceRenderer::Vertex& v = pVerts[i];
 
-                    //Code from OpenGL renderer to calculate texture coordinates
+                    // Code from OpenGL renderer to calculate texture coordinates
                     const float U = Facet.MapCoords.XAxis | Poly.Pts[i]->Point;
                     const float V = Facet.MapCoords.YAxis | Poly.Pts[i]->Point;
                     const float UCoord = U - UDot;
                     const float VCoord = V - VDot;
 
-                    //Diffuse texture coordinates
+                    // Diffuse texture coordinates
                     v.TexCoords.x = (UCoord - Surface.Texture->Pan.X) * pTexDiffuse->fMultU;
                     v.TexCoords.y = (VCoord - Surface.Texture->Pan.Y) * pTexDiffuse->fMultV;
 
                     if (Surface.LightMap)
                     {
-                        //Lightmaps require pan correction of -.5
+                        // Lightmaps require pan correction of -.5
                         v.TexCoords1.x = (UCoord - (Surface.LightMap->Pan.X - 0.5f * Surface.LightMap->UScale)) * pTexLight->fMultU;
                         v.TexCoords1.y = (VCoord - (Surface.LightMap->Pan.Y - 0.5f * Surface.LightMap->VScale)) * pTexLight->fMultV;
                     }
@@ -344,30 +332,6 @@ export
                     v.PolyFlags = PolyFlags;
                     v.TexFlags = TexFlags;
                 }
-
-                /*
-                static int currSurf = 0;
-                if(currSurf != pFrame->Level->Model->Nodes(Poly.iNode).iSurf)
-                {
-                    currSurf = pFrame->Level->Model->Nodes(Poly.iNode).iSurf;
-                    if(currSurf>-1)
-                    {
-                        int lm = pFrame->Level->Model->Surfs(currSurf).iLightMap;
-                        if(lm>-1)
-                        {
-                            int la = pFrame->Level->Model->LightMap(lm).iLightActors;
-                            if(la>-1)
-                            {
-                                AActor* l = pFrame->Level->Model->Lights(la);
-                                if(l)
-                                {
-                                    printf("%f %f %f\n",l->Location.X,l->Location.Y,l->Location.Z);
-                                }
-                            }
-                        }
-                    }
-                }
-                */
             }
         }
 
@@ -375,7 +339,7 @@ export
         {
             //assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn -> doesn't hold for gouraud
 
-            if (NumPts < 3) //Degenerate triangle
+            if (NumPts < 3) // Degenerate triangle
             {
                 return;
             }
@@ -397,7 +361,7 @@ export
             }
 
             GouraudRenderer::Vertex* const pVerts = m_pGouraudRenderer->GetTriangleFan(NumPts);
-            for (int i = 0; i < NumPts; i++) //Set fan verts
+            for (int i = 0; i < NumPts; i++) // Set fan verts
             {
                 GouraudRenderer::Vertex& v = pVerts[i];
 
@@ -428,7 +392,7 @@ export
 
             const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 
-            //Flush state
+            // Flush state
             if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pTextureCache->IsPrepared(Info, 0))
             {
                 Render();
@@ -503,7 +467,7 @@ export
         /// <param name="pResult">is a 128 character string.</param>
         virtual void GetStats(TCHAR* const pResult) override
         {
-            //Buffer is only 128 chars, so we do our own thing
+            // Buffer is only 128 chars, so we do our own thing
             assert(Viewport);
             assert(Viewport->Canvas);
 
@@ -528,7 +492,7 @@ export
         {
             assert(pFrame);
 
-            Render(); // нужно отрисовать все, что еще не отрисовано перед сменой ViewPort'а, иначе объекты будут отрисованы в неправильном месте экрана
+            Render(); // need to draw everything that has not yet been drawn before changing the viewport, otherwise the objects will be drawn in the wrong place on the screen
 
             m_SceneManager.SetViewport(*pFrame);
             m_Backend.SetViewport(pFrame->FX, pFrame->FY, pFrame->XB, pFrame->YB);

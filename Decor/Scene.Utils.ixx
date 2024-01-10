@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <codecvt>
 #include <string>
@@ -96,9 +96,15 @@ export namespace SceneUtils
 
         return result;
     };
-
-    // Splits a given string into the parts by a char delimeter
-    std::vector<std::string> split(const std::string& s, char delim) {
+    
+    /// <summary>
+    /// Splits a given string into the parts by a char delimeter
+    /// </summary>
+    /// <param name="s">input string</param>
+    /// <param name="delim">delimeter character</param>
+    /// <returns>vector of substrings</returns>
+    std::vector<std::string> split(const std::string& s, char delim)
+    {
         std::vector<std::string> result;
         std::stringstream ss(s);
         std::string item;

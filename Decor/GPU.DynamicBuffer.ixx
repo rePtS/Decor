@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <limits>
@@ -17,7 +17,7 @@ class DynamicGPUBuffer
 {
 public:
     explicit DynamicGPUBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, const size_t iReserve)
-        :m_Device(Device)
+        : m_Device(Device)
         , m_DeviceContext(DeviceContext)
     {
         Alloc(iReserve);
@@ -25,10 +25,8 @@ public:
 
     DynamicGPUBuffer(const DynamicGPUBuffer&) = delete;
     DynamicGPUBuffer& operator=(const DynamicGPUBuffer&) = delete;
-    
-    /// <summary>
-    /// It's best to call this at the start of each frame
-    /// </summary>
+        
+    // It's best to call this at the start of each frame
     void Clear()
     {
         m_iSize = 0;
@@ -74,14 +72,14 @@ public:
     void Map()
     {
         MapInternal();
-        m_iMapStart = m_iSize; //Track where fresh data begins so users can draw the new data
+        m_iMapStart = m_iSize; // Track where fresh data begins so users can draw the new data
     }
 
     void Unmap()
     {
         assert(IsMapped());
         m_DeviceContext.Unmap(m_pBuffer.Get(), 0);
-        m_Mapping.pData = nullptr; //For IsMapped()
+        m_Mapping.pData = nullptr; // For IsMapped()
     }
 
     void Reserve(const size_t iReserve)
@@ -116,8 +114,8 @@ protected:
     {
         assert(!IsMapped());
 
-        //MS recommends reusing a buffer with NO_OVERWRITE during a frame, and using DISCARD at the start of a frame.
-        //Makes sense, because using only DISCARD would result in the driver creating a ton of buffers.
+        // MS recommends reusing a buffer with NO_OVERWRITE during a frame, and using DISCARD at the start of a frame.
+        // Makes sense, because using only DISCARD would result in the driver creating a ton of buffers.
         m_DeviceContext.Map(m_pBuffer.Get(), 0, m_iSize == 0 ? D3D11_MAP::D3D11_MAP_WRITE_DISCARD : D3D11_MAP::D3D11_MAP_WRITE_NO_OVERWRITE, 0, &m_Mapping);
     }
 
@@ -137,7 +135,7 @@ protected:
         Box.bottom = 1;
         Box.front = 0;
         Box.back = 1;
-        m_DeviceContext.CopySubresourceRegion(m_pBuffer.Get(), 0, 0, 0, 0, pOldBuffer.Get(), 0, &Box); //Todo: 11.2 D3D11_COPY_DISCARD
+        m_DeviceContext.CopySubresourceRegion(m_pBuffer.Get(), 0, 0, 0, 0, pOldBuffer.Get(), 0, &Box); // Todo: 11.2 D3D11_COPY_DISCARD
     }
 
     void Alloc(const size_t iSize)
@@ -180,7 +178,7 @@ export namespace DynamicGPUBufferHelpers
     template<class VertType, class IndexType>
     VertType* GetTriangleFan(DynamicGPUBuffer<VertType, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER>& VertexBuffer, DynamicGPUBuffer<IndexType, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER>& IndexBuffer, const size_t iSize)
     {
-        //Generate indices
+        // Generate indices
         assert(iSize >= 3);
         const size_t iNumIndices = Fan2StripIndices(iSize);
         IndexType* const pIndices = IndexBuffer.PushBack(iNumIndices);
@@ -191,9 +189,9 @@ export namespace DynamicGPUBufferHelpers
         for (IndexType i = 1; i < iNumIndices - 1; i += 2)
         {
             pIndices[i] = iNumVerts + (i / 2) + 2;
-            pIndices[i + 1] = iNumVerts; //Center point
+            pIndices[i + 1] = iNumVerts; // Center point
         }
-        pIndices[iNumIndices - 1] = std::numeric_limits<IndexType>::max(); //Strip-cut index
+        pIndices[iNumIndices - 1] = std::numeric_limits<IndexType>::max(); // Strip-cut index
 
         return VertexBuffer.PushBack(iSize);
     }

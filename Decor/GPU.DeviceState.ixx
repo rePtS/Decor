@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <limits>
@@ -19,7 +19,7 @@ export class DeviceState
 public:
     enum class RASTERIZER_STATE { DEFAULT, WIREFRAME, COUNT };
     enum class DEPTH_STENCIL_STATE { DEFAULT, NO_WRITE, COUNT };
-    enum class BLEND_STATE { DEFAULT, MODULATE, TRANSLUCENT, TRANSLUCENT_FAKE_MULTIPASS, ALPHABLEND, INVIS, COUNT }; //TODO: for invis, just disable pixel shader
+    enum class BLEND_STATE { DEFAULT, MODULATE, TRANSLUCENT, TRANSLUCENT_FAKE_MULTIPASS, ALPHABLEND, INVIS, COUNT }; // TODO: for invis, just disable pixel shader
     enum class SAMPLER_STATE { LINEAR, POINT, COUNT };
 
     explicit DeviceState(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
@@ -66,7 +66,7 @@ public:
         BLEND_STATE NewBlendState = BLEND_STATE::DEFAULT;
         if (PolyFlags & BlendFlags)
         {
-            //Order is important here, sometimes multiple flags are set
+            // Order is important here, sometimes multiple flags are set
             if (PolyFlags & PF_Translucent)
             {
                 NewBlendState = BLEND_STATE::TRANSLUCENT;

@@ -1,4 +1,4 @@
-module;
+п»їmodule;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -32,7 +32,7 @@ public:
     GlobalShaderConstants(const GlobalShaderConstants&) = delete;
     GlobalShaderConstants& operator=(const GlobalShaderConstants&) = delete;
 
-    //Operator new/delete for SSE aligned data
+    // Operator new/delete for SSE aligned data
     void* operator new(const size_t s) { return _aligned_malloc(s, std::alignment_of<__m128>::value); }
     void operator delete(void* const p) { _aligned_free(p); }
 
@@ -48,7 +48,7 @@ public:
         m_PerComplexPolyBuffer.UpdateAndBind(3);
     }
 
-    void NewTick() // ??? Переимновать в NewFrame?
+    void NewTick()
     {
         m_PerTickBuffer.NewTick();
     }
@@ -71,14 +71,14 @@ public:
     
     void CheckLevelChange(const FSceneNode& SceneNode)
     {
-        m_PerSceneBuffer.SetSceneStaticLights(SceneNode); // !!! TEST
+        m_PerSceneBuffer.SetSceneStaticLights(SceneNode);
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
     }
 
     void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly)
     {
-        const auto& lightCache = m_PerSceneBuffer.GetLightCache(); // !!! TEST
-        m_PerComplexPolyBuffer.SetComplexPoly(SceneNode, Poly, lightCache); // !!! TEST
+        const auto& lightCache = m_PerSceneBuffer.GetLightCache();
+        m_PerComplexPolyBuffer.SetComplexPoly(SceneNode, Poly, lightCache);
     }
 
     float GetRFX2() { return m_PerFrameBuffer.GetRFX2(); }
@@ -86,6 +86,138 @@ public:
 
 protected:
 
+    static XMVECTOR HSVtoRGB(float H, float S, float V)
+    {
+        if (S == 0.0)
+            return DirectX::XMVectorSet(V, V, V, 0.0f);
+
+        float i = floor(H * 6.0);
+        float f = H * 6.0f - i;
+        float p = V * (1.0f - S);
+        float q = V * (1.0f - S * f);
+        float t = V * (1.0f - S * (1.0f - f));
+
+        switch ((int)i % 6)
+        {
+        case 0: return DirectX::XMVectorSet(V, t, p, 0.0f);
+        case 1: return DirectX::XMVectorSet(q, V, p, 0.0f);
+        case 2: return DirectX::XMVectorSet(p, V, t, 0.0f);
+        case 3: return DirectX::XMVectorSet(p, q, V, 0.0f);
+        case 4: return DirectX::XMVectorSet(t, p, V, 0.0f);
+        case 5: return DirectX::XMVectorSet(V, p, q, 0.0f);
+        }
+
+        return DirectX::XMVectorSet(0.5f, 0.5f, 0.5f, 0.0f); // Default color
+    }
+
+    static float NormalizeByte(BYTE byte)
+    {
+        return (float)byte / 255.0f;
+    }
+
+    /// <summary>
+    /// Converts lights intensity to 4-component vector format,
+    /// where w-part of the vector stores light source type
+    /// </summary>
+    /// <param name="light">DeuesEx light actor</param>
+    static XMVECTOR GetLightColor(AActor* light)
+    {
+        auto color = HSVtoRGB(
+            NormalizeByte(light->LightHue),
+            1.0f - NormalizeByte(light->LightSaturation),
+            1.0f);
+
+        auto lightRadius = light->WorldLightRadius();
+        auto lightBrightness = NormalizeByte(light->LightBrightness);
+
+        color = DirectX::XMVectorScale(color,
+            lightRadius * lightRadius * lightBrightness);
+
+        if (light->LightEffect == LE_Spotlight)
+        {
+            uint32_t lightType = LIGHT_SPOT;
+            if (light->bSpecialLit)
+                lightType |= LIGHT_SPECIAL_MASK;
+
+            color = DirectX::XMVectorSetW(color, lightType);
+        }
+        else if (light->LightEffect == LE_Cylinder)
+        {
+            uint32_t lightType = LIGHT_POINT_AMBIENT;
+            if (light->bSpecialLit)
+                lightType |= LIGHT_SPECIAL_MASK;
+
+            color = DirectX::XMVectorScale(color, 0.00005f * lightBrightness);
+            color = DirectX::XMVectorSetW(color, lightType);
+        }
+        else
+        {
+            uint32_t lightType = LIGHT_POINT;
+            if (light->bSpecialLit)
+                lightType |= LIGHT_SPECIAL_MASK;
+
+            color = DirectX::XMVectorSetW(color, lightType);
+        }
+
+        return color;
+    }
+
+    /// <summary>
+    /// Converts lights position data to 4-component vector format,
+    /// where w-part of the vector stores light source radius (for point and spot lights)
+    /// </summary>
+    /// <param name="light">DeuesEx light actor</param>
+    static XMVECTOR GetLightLocation(AActor* light)
+    {
+        return DirectX::XMVectorSet(
+            light->Location.X,
+            light->Location.Y,
+            light->Location.Z,
+            light->WorldLightRadius());
+    }
+
+    /// <summary>
+    /// Converts spot light direction data to 4-component vector format,
+    /// where w-part of the vector stores angle of the light cone
+    /// </summary>
+    /// <param name="light"></param>
+    /// <returns></returns>
+    static XMVECTOR GetLightDirection(AActor* light)
+    {
+        auto lightDirection = light->Rotation.Vector();
+
+        // the angle of the light cone
+        float spotAngle = (float)light->LightCone / 510.0f * PI; // ... / 255.0f * (PI / 2.0f);
+
+        return DirectX::XMVectorSet(
+            lightDirection.X,
+            lightDirection.Y,
+            lightDirection.Z,
+            spotAngle);
+    }
+
+    /// <summary>
+    /// Converts light source data to constant buffer format
+    /// </summary>
+    /// <param name="light"></param>
+    /// <returns></returns>
+    static std::vector<XMVECTOR> GetLightData(AActor* light)
+    {
+        std::vector<XMVECTOR> lightData;
+
+        lightData.push_back(GetLightColor(light));
+        lightData.push_back(GetLightLocation(light));
+
+        if (light->LightEffect == LE_Spotlight)
+            lightData.push_back(GetLightDirection(light));
+
+        return lightData;
+    }
+
+    /// <summary>
+    /// Prepares and stores constant buffer data
+    /// related to the current level only (ex. set of static lights on the current level)
+    /// </summary>
     class PerSceneBuffer
     {
         const static size_t MAX_BUF = 3072;
@@ -95,118 +227,11 @@ protected:
             XMVECTOR StaticLights[MAX_BUF];
         };        
 
-        // Index of the current level (used to determine if a level is loaded/unloaded)
+        // Index of the current level (used to determine if current level has been changed)
         int m_CurrentLevelIndex;
 
         ConstantBuffer<PerScene> m_Buffer;
-        std::unordered_map<AActor*, size_t> m_LightCache;
-
-        XMVECTOR HSVtoRGB(float H, float S, float V)
-        {
-            if (S == 0.0)
-                return DirectX::XMVectorSet(V, V, V, 0.0f);
-
-            float i = floor(H * 6.0);
-            float f = H * 6.0f - i;
-            float p = V * (1.0f - S);
-            float q = V * (1.0f - S * f);
-            float t = V * (1.0f - S * (1.0f - f));
-
-            switch ((int)i % 6)
-            {
-            case 0: return DirectX::XMVectorSet(V, t, p, 0.0f);
-            case 1: return DirectX::XMVectorSet(q, V, p, 0.0f);
-            case 2: return DirectX::XMVectorSet(p, V, t, 0.0f);
-            case 3: return DirectX::XMVectorSet(p, q, V, 0.0f);
-            case 4: return DirectX::XMVectorSet(t, p, V, 0.0f);
-            case 5: return DirectX::XMVectorSet(V, p, q, 0.0f);
-            }
-
-            return DirectX::XMVectorSet(0.5f, 0.5f, 0.5f, 0.0f); // Default color
-        }
-
-        float NormalizeByte(BYTE byte)
-        {
-            return (float)byte / 255.0f;
-        }
-
-        XMVECTOR GetLightColor(AActor* light)
-        {
-            auto color = HSVtoRGB(
-                NormalizeByte(light->LightHue),
-                1.0f - NormalizeByte(light->LightSaturation),
-                1.0f);
-
-            auto lightRadius = light->WorldLightRadius();
-            auto lightBrightness = NormalizeByte(light->LightBrightness);
-
-            color = DirectX::XMVectorScale(color,
-                lightRadius * lightRadius * lightBrightness);
-
-            if (light->LightEffect == LE_Spotlight)
-            {
-                uint32_t lightType = LIGHT_SPOT;
-                if (light->bSpecialLit)
-                    lightType |= LIGHT_SPECIAL_MASK;
-
-                color = DirectX::XMVectorSetW(color, lightType);
-            }
-            else if (light->LightEffect == LE_Cylinder)
-            {
-                uint32_t lightType = LIGHT_POINT_AMBIENT;
-                if (light->bSpecialLit)
-                    lightType |= LIGHT_SPECIAL_MASK;
-
-                color = DirectX::XMVectorScale(color, 0.00005f * lightBrightness);
-                color = DirectX::XMVectorSetW(color, lightType);
-            }
-            else
-            {
-                uint32_t lightType = LIGHT_POINT;
-                if (light->bSpecialLit)
-                    lightType |= LIGHT_SPECIAL_MASK;
-
-                color = DirectX::XMVectorSetW(color, lightType);
-            }
-
-            return color;
-        }
-
-        XMVECTOR GetLightLocation(AActor* light)
-        {
-            return DirectX::XMVectorSet(
-                light->Location.X,
-                light->Location.Y,
-                light->Location.Z,
-                light->WorldLightRadius());
-        }
-
-        XMVECTOR GetLightDirection(AActor* light)
-        {
-            auto lightDirection = light->Rotation.Vector();
-
-            // угол светового конуса
-            float spotAngle = (float)light->LightCone / 510.0f * PI; // ... / 255.0f * (PI / 2.0f);
-
-            return DirectX::XMVectorSet(
-                lightDirection.X,
-                lightDirection.Y,
-                lightDirection.Z,
-                spotAngle);
-        }
-
-        std::vector<XMVECTOR> GetLightData(AActor* light)
-        {
-            std::vector<XMVECTOR> lightData;
-
-            lightData.push_back(GetLightColor(light));
-            lightData.push_back(GetLightLocation(light));
-
-            if (light->LightEffect == LE_Spotlight)
-                lightData.push_back(GetLightDirection(light));
-
-            return lightData;
-        }
+        std::unordered_map<AActor*, size_t> m_LightCache;        
 
     public:
         PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
@@ -216,15 +241,21 @@ protected:
         PerSceneBuffer(const PerSceneBuffer&) = delete;
         PerSceneBuffer& operator=(const PerSceneBuffer&) = delete;               
 
+        /// <summary>
+        /// Set scene's static lights data for GPU constant buffer
+        /// </summary>
+        /// <param name="SceneNode"></param>
         void SetSceneStaticLights(const FSceneNode& SceneNode)
         {
             auto levelIndex = SceneNode.Level->GetOuter()->GetFName().GetIndex();
 
+            // if current level has changed
             if (m_CurrentLevelIndex != levelIndex)
             {
                 size_t bufferPos = 0;
                 m_LightCache.clear();
 
+                // process all static light sources on current level
                 for (int lightNum = 0; lightNum < SceneNode.Level->Model->Lights.Num(); ++lightNum)
                 {
                     auto lightActor = SceneNode.Level->Model->Lights(lightNum);
@@ -232,14 +263,16 @@ protected:
                     {
                         assert(bufferPos < MAX_BUF);
 
+                        // if light source is not already processed
                         if (!m_LightCache.contains(lightActor))
                         {
+                            // then process and add processed data for constant buffer
                             m_LightCache.insert({ lightActor, bufferPos });
                             auto lightData = GetLightData(lightActor);
                             for (size_t i = 0; i < lightData.size(); ++i)
                                 m_Buffer.m_Data.StaticLights[bufferPos + i] = lightData[i];
 
-                            bufferPos += lightData.size(); // перемещаем указатель
+                            bufferPos += lightData.size(); // move the pointer to the free part of the buffer
                         }
                     }
                 }
@@ -261,6 +294,10 @@ protected:
     }
     m_PerSceneBuffer;
 
+    /// <summary>
+    /// Prepares and stores constant buffer data
+    /// related to the current frame only (ex. projection and view matrix)
+    /// </summary>
     class PerFrameBuffer
     {
         struct PerFrame
@@ -268,25 +305,18 @@ protected:
             float fRes[4];
             XMMATRIX ProjectionMatrix;
             XMMATRIX ViewMatrix;
-
-            //uint32_t IndexesOfFirstLightsInSlices[MAX_SLICE_DATA_SIZE];
-            //uint32_t LightIndexesFromAllSlices[MAX_LIGHTS_DATA_SIZE];
-            //XMVECTOR Lights[MAX_LIGHTS_DATA_SIZE];
             XMVECTOR Origin;
+            XMVECTOR DynamicLights[MAX_LIGHTS_DATA_SIZE];
         };
 
         ConstantBuffer<PerFrame> m_Buffer;
 
-        // Index of the current level (used to determine if a level is loaded/unloaded)
+        // Index of the current level (used to determine if a level has been changed)
         int m_CurrentLevelIndex;
 
-        // Light sources on the current level
-        // TO-DO Некоторые из источников света здесь не нужны, некоторые могут создаваться/удаляться со временем - за этим нужно следить
+        // Light sources on the current level (actualy these are "dynamic" light sources as they can move or switch on/off)
         AAugmentation* m_AugLight;
-        std::vector<AActor*> m_Lamps;
-        std::vector<AActor*> m_TriggerLights;
-        std::vector<AActor*> m_PointLights;
-        std::vector<AActor*> m_SpotLights;
+        std::vector<AActor*> m_DynamicLights;
 
         // Vars for projection change check
         float m_fFov = 0.0f;
@@ -302,147 +332,82 @@ protected:
         // Actual view matrix
         FCoords m_Coords;
 
-        std::vector<AActor*> m_TempLights;
-
-        struct LightData
-        {
-            XMVECTOR Color;
-            XMVECTOR Location;
-            XMVECTOR Direction;
-            size_t RealIndex;
-        };
-
-        std::vector<LightData> m_LightsData;
-        std::vector<size_t> m_LightSlices[SLICE_NUMBER];
-
-        XMVECTOR HSVtoRGB(float H, float S, float V)
-        {
-            if (S == 0.0)
-                return DirectX::XMVectorSet(V, V, V, 0.0f);
-
-            float i = floor(H * 6.0);
-            float f = H * 6.0f - i;
-            float p = V * (1.0f - S);
-            float q = V * (1.0f - S * f);
-            float t = V * (1.0f - S * (1.0f - f));
-
-            switch ((int)i % 6)
-            {
-            case 0: return DirectX::XMVectorSet(V, t, p, 0.0f);
-            case 1: return DirectX::XMVectorSet(q, V, p, 0.0f);
-            case 2: return DirectX::XMVectorSet(p, V, t, 0.0f);
-            case 3: return DirectX::XMVectorSet(p, q, V, 0.0f);
-            case 4: return DirectX::XMVectorSet(t, p, V, 0.0f);
-            case 5: return DirectX::XMVectorSet(V, p, q, 0.0f);
-            }
-
-            return DirectX::XMVectorSet(0.5f, 0.5f, 0.5f, 0.0f); // Default color
-        }
-
+        /// <summary>
+        /// Check if light augmentation is on
+        /// </summary>
         bool IsAugLightActive()
         {
             return m_AugLight != nullptr && m_AugLight->bIsActive;
         }
 
-        void ProcessLightSources(const FCoords& c, const std::vector<AActor*>& lights, size_t& lightIndex)
+        /// <summary>
+        /// Checks if a given light actor is visible in the view cone
+        /// </summary>
+        bool IsLightActorVisible(const FCoords& coords, AActor* light)
         {
-            static const size_t SLICE_MAX_INDEX = SLICE_NUMBER - 1;
-            static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
-
-            for (auto& light : lights)
+            // First, let's check if the light source is turned on:
+            //  - it's type should not be LT_None
+            //  - it's LightEffect should not be LE_NonIncidence (actually, this is a point light source, but filling a large volume - we don't need such yet)
+            //  - it's brightness should be greater 0
+            if (light->LightType != LT_None &&
+                light->LightEffect != LE_NonIncidence &&
+                light->LightBrightness > 0)
             {
-                // TODO Не используем источник,
-                if (light->LightType != LT_None // если его тип LT_None (так бывает, если он выключен),
-                    && light->LightEffect != LE_NonIncidence // если тип эффекта LE_NonIncidence (вообще-то это точечный источник света, но заполняющий большой объем - нам пока такие не нужны),        
-                    && light->LightBrightness > 0 // если яркость источника света равна 0,        
-                    //&& !light->bSpecialLit) // если не установлен признак специального освещения (по-хорошему, его тоже нужно обрабатывать - освещать таким светом только те пиксели, которые тоже имеют признак bSpecialLit)
-                    )
+                // position of the light source in View Space
+                auto lightPos = light->Location.TransformPointBy(coords);
+                // the range of the light source
+                auto lightRadius = light->WorldLightRadius();                
+
+                auto nearLightBoundary = lightPos.Z - lightRadius;
+                auto farLightBoundary = lightPos.Z + lightRadius;
+
+                // Check that the light source is located between the near and far plane of visibility
+                if (farLightBoundary > NEAR_CLIPPING_DISTANCE && nearLightBoundary < FAR_CLIPPING_DISTANCE)
                 {
-                    // вычисляем координаты источников во View Space
-                    auto lightPos = light->Location.TransformPointBy(c);
-                    // получаем радиус действия источника
-                    auto lightRadius = light->WorldLightRadius();
-
-                    auto lightRadiusSquared = lightRadius * lightRadius;
-
-                    auto nearLightBoundary = lightPos.Z - lightRadius;
-                    auto farLightBoundary = lightPos.Z + lightRadius;
-
-                    // Проверяем, что источник света находится между ближней и дальней плоскостью видимости
-                    if (farLightBoundary > NEAR_CLIPPING_DISTANCE && nearLightBoundary < FAR_CLIPPING_DISTANCE)
-                    {
-                        // Проверяем, что источник света попадает в конус видимости (либо, что камера находится в пределах действия источника света).
-                        // Используем именно конус, а не усеченную пирамиду (View Frustum) для ускорения проверки
-                        // Проверку делаем по методу Charles Bloom'а:
-                        //      V = sphere.center - cone.apex_location
-                        //      a = V * cone.direction_normal
-                        //      Square(a) > dotProduct(V,V) * Square(cone.cos) -> sphere intersects the cone
-                        // 
-                        // Так как мы работаем с View Space, то вершина конуса является началом координат и направление конуса совпадает с осью Z.
-                        // Соответственно, вектор V становится равен lightPos и переменная a = lightPos.Z
-                        if (lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos || lightPos.SizeSquared() < lightRadiusSquared)
-                        {
-                            size_t firstSlice = 0;
-                            if (nearLightBoundary > NEAR_CLIPPING_DISTANCE)
-                                firstSlice = (size_t)floorf((nearLightBoundary - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
-
-                            size_t lastSlice = SLICE_MAX_INDEX;
-                            if (farLightBoundary < FAR_CLIPPING_DISTANCE)
-                                lastSlice = (size_t)floorf((farLightBoundary - NEAR_CLIPPING_DISTANCE) / SLICE_THICKNESS);
-
-                            // добавляем источник в список источников
-                            LightData lightData;
-                            lightData.Location = DirectX::XMVectorSet(lightPos.X, lightPos.Y, lightPos.Z, lightRadius);
-
-                            float lightBrightness = (float)light->LightBrightness / 255.0f;
-                            auto color = HSVtoRGB((float)light->LightHue / 255.0f, (1.0f - (float)light->LightSaturation / 255.0f), 1.0f);
-                            color = DirectX::XMVectorScale(color, lightRadiusSquared * (float)light->LightBrightness / 255.0f);
-
-                            if (light->LightEffect == LE_Spotlight)
-                            {
-                                uint32_t lightType = LIGHT_SPOT;
-                                if (light->bSpecialLit)
-                                    lightType |= LIGHT_SPECIAL_MASK;
-
-                                color = DirectX::XMVectorSetW(color, lightType);
-
-                                auto lightVector = light->Rotation.Vector().TransformVectorBy(c);
-
-                                // угол светового конуса
-                                //float spotAngle = (float)light->LightCone / 255.0f * (PI / 2.0f);
-                                float spotAngle = (float)light->LightCone / 510.0f * PI;
-                                lightData.Direction = DirectX::XMVectorSet(lightVector.X, lightVector.Y, lightVector.Z, spotAngle);
-                            }
-                            else if (light->LightEffect == LE_Cylinder)
-                            {
-                                uint32_t lightType = LIGHT_POINT_AMBIENT;
-                                if (light->bSpecialLit)
-                                    lightType |= LIGHT_SPECIAL_MASK;
-
-                                color = DirectX::XMVectorScale(color, 0.00005f * lightBrightness);
-                                color = DirectX::XMVectorSetW(color, lightType);
-                            }
-                            else
-                            {
-                                uint32_t lightType = LIGHT_POINT;
-                                if (light->bSpecialLit)
-                                    lightType |= LIGHT_SPECIAL_MASK;
-
-                                color = DirectX::XMVectorSetW(color, lightType);
-                            }
-
-                            lightData.Color = color;
-
-                            m_LightsData.push_back(lightData);
-
-                            // назначаем источник для слоев
-                            for (size_t i = firstSlice; i <= lastSlice; ++i)
-                                m_LightSlices[i].push_back(lightIndex);
-
-                            lightIndex++;
-                        }
-                    };
+                    // Check that the light source falls into the cone of visibility (or that the camera is within the range of the light source).
+                    // We use a View Cone, not a View Frustum to speed up the verification
+                    // We do the check using the Charles Bloom method:
+                    //      V = sphere.center - cone.apex_location
+                    //      a = V * cone.direction_normal
+                    //      Square(a) > dotProduct(V,V) * Square(cone.cos) -> sphere intersects the cone
+                    // 
+                    // Since we are working with View Space, the vertex of the Cone is the origin and the direction of the Cone coincides with the Z axis.
+                    // Accordingly, the vector V becomes equal to lightPos and the variable a = lightPos.Z
+                    return lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos
+                        || lightPos.SizeSquared() < lightRadius * lightRadius;
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Set frame's dynamic lights data for GPU constant buffer
+        /// </summary>        
+        void SetDynamicLights(const FSceneNode& SceneNode)
+        {
+            size_t dynamicLightsBufferPos = 0;
+
+            if (IsAugLightActive())
+            {
+                m_Buffer.m_Data.DynamicLights[0] = { 100000.0f, 100000.0f, 100000.0f, LIGHT_SPOT };
+                m_Buffer.m_Data.DynamicLights[1] = { 0.0f, 0.0f, 0.0f, 4000.0f };
+                m_Buffer.m_Data.DynamicLights[2] = { 0.0f, 0.0f, 1.0f, 0.5f };
+                dynamicLightsBufferPos += 3;
+            }
+
+            for (auto& light : m_DynamicLights)
+            {
+                if (IsLightActorVisible(SceneNode.Coords, light))
+                {
+                    auto lightData = GetLightData(light);
+                    for (size_t i = 0; i < lightData.size(); ++i)
+                        m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
+
+                    dynamicLightsBufferPos += lightData.size(); // move the pointer to the free part of the buffer
+                }
+
+                assert(dynamicLightsBufferPos < MAX_LIGHTS_DATA_SIZE);
             }
         }
 
@@ -455,7 +420,7 @@ protected:
         PerFrameBuffer& operator=(const PerFrameBuffer&) = delete;
 
         float GetRFX2() { return m_RFX2; }
-        float GetRFY2() { return m_RFY2; }
+        float GetRFY2() { return m_RFY2; }        
 
         void CheckLevelChange(const FSceneNode& SceneNode)
         {
@@ -463,14 +428,11 @@ protected:
 
             if (m_CurrentLevelIndex != levelIndex)
             {
-                // Сцена поменялась, выгружаем данные по старой сцене:
+                // The scene has changed, clear old scene data:
                 m_AugLight = nullptr;
-                m_Lamps.clear();
-                m_TriggerLights.clear();
-                m_PointLights.clear();
-                m_SpotLights.clear();
+                m_DynamicLights.clear();
 
-                // Загружаем данные по новой сцене:
+                // Uploading data for a new scene:
                 FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
                 FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
                 FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
@@ -487,25 +449,17 @@ protected:
                     {
                         auto& actorFName = actor->GetClass()->GetFName();
 
-                        // Проверка, что текущий актор является лампой
+                        // Checking that the current actor is a lamp
                         if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3)
-                            m_Lamps.push_back(actor);
+                            m_DynamicLights.push_back(actor);
 
-                        // Проверка, что текущий актор является триггерным источником света
+                        // Checking that the current actor is a trigger light source
                         else if (actorFName == classNameTriggerLight)
-                            m_TriggerLights.push_back(actor);
+                            m_DynamicLights.push_back(actor);
 
-                        // Проверка, что текущий актор является аугментацией-фонариком
+                        // Checking that the current actor is a flashlight augmentation
                         else if (actorFName == classNameAugLight)
                             m_AugLight = (AAugmentation*)actor;
-
-                        // Проверка, что текущий актор является точечным источником света
-                        else if (actorFName == classNameLight || actorFName == classNameBarrelFire)
-                            m_PointLights.push_back(actor);
-
-                        // Проверка, что текущий актор является направленным источником света
-                        else if (actorFName == classNameSpotlight)
-                            m_SpotLights.push_back(actor);
                     }
                 }
 
@@ -521,7 +475,7 @@ protected:
 
             if (SceneNode.Viewport->Actor->FovAngle != m_fFov || SceneNode.X != m_iViewPortX || SceneNode.Y != m_iViewPortY)
             {
-                //Create projection matrix with swapped near/far for better accuracy
+                // Create projection matrix with swapped near/far for better accuracy
                 static const float fZNear = 32760.0f;
                 static const float fZFar = 1.0f;
 
@@ -568,6 +522,9 @@ protected:
                 0.0f, 0.0f, 0.0f, 1.0f
             );
             
+            // TODO: need to figure out how to track viewport changes in a fast way to use following method
+            // SetDynamicLights(SceneNode);
+
             m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
             m_Buffer.m_Data.Origin = { c.Origin.X, c.Origin.Y, c.Origin.Z, 0 };
             m_Buffer.MarkAsDirty();
@@ -575,114 +532,7 @@ protected:
             //        m_Coords = SceneNode.Coords;
             //    }        
         }
-/*
-        void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly)
-        {
-            assert(Poly.NumPts >= 3);
 
-            int currSurf = SceneNode.Level->Model->Nodes(Poly.iNode).iSurf;
-            if (currSurf > -1)
-            {
-                int lm = SceneNode.Level->Model->Surfs(currSurf).iLightMap;
-                if (lm > -1)
-                {
-                    m_TempLights.clear();
-                    int la = SceneNode.Level->Model->LightMap(lm).iLightActors;
-                    if (la > -1)
-                    {
-                        AActor* l = SceneNode.Level->Model->Lights(la);
-                        while (l)
-                        {
-                            m_TempLights.push_back(l);
-                            l = SceneNode.Level->Model->Lights(++la);
-                        }
-                    }
-                }
-            }
-
-            //    if (m_Coords.Origin != SceneNode.Coords.Origin || m_Coords.XAxis != SceneNode.Coords.XAxis || m_Coords.YAxis != SceneNode.Coords.YAxis || m_Coords.ZAxis != SceneNode.Coords.ZAxis)
-            //    {
-            static const size_t SLICE_MAX_INDEX = SLICE_NUMBER - 1;
-            static const float SLICE_THICKNESS = (FAR_CLIPPING_DISTANCE - NEAR_CLIPPING_DISTANCE) / (float)SLICE_NUMBER;
-
-            const auto& c = SceneNode.Coords;
-            auto viewMatrix = DirectX::XMMatrixSet(
-                c.XAxis.X, c.YAxis.X, c.ZAxis.X, c.Origin.X,
-                c.XAxis.Y, c.YAxis.Y, c.ZAxis.Y, c.Origin.Y,
-                c.XAxis.Z, c.YAxis.Z, c.ZAxis.Z, c.Origin.Z,
-                0.0f, 0.0f, 0.0f, 1.0f
-            );
-
-            // Очищаем информацию об источниках света
-            m_LightsData.clear();
-            for (size_t i = 0; i < SLICE_NUMBER; ++i)
-                m_LightSlices[i].clear();
-
-            // обрабатываем источники света:
-            size_t lightIndex = 0;
-
-            //ProcessLightSources(c, m_PointLights, lightIndex);
-            //ProcessLightSources(c, m_SpotLights, lightIndex);
-            //ProcessLightSources(c, m_TriggerLights, lightIndex);
-
-            //// TODO Некоторые лампы являются точечными источниками света, а некоторые - прожекторами
-            //// Нужно учитывать это. Пока все лампы считаем точечными источниками
-            //ProcessLightSources(c, m_Lamps, lightIndex);
-
-            ProcessLightSources(c, m_TempLights, lightIndex);
-
-            // Добавляем фонарик, если нужно
-            if (IsAugLightActive())
-            {
-                LightData lightData;
-
-                lightData.Color = DirectX::XMVectorSet(100000.0f, 100000.0f, 100000.0f, LIGHT_SPOT);
-                lightData.Location = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 4000.0f);
-                lightData.Direction = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.5f);
-                m_LightsData.push_back(lightData);
-
-                m_LightSlices[0].push_back(lightIndex);
-                ++lightIndex;
-            }
-
-            size_t lightDataIndex = 0;
-            for (size_t i = 0; i < m_LightsData.size(); ++i)
-            {
-                m_LightsData[i].RealIndex = lightDataIndex;
-                m_Buffer.m_Data.Lights[lightDataIndex] = m_LightsData[i].Color;
-                m_Buffer.m_Data.Lights[lightDataIndex + 1] = m_LightsData[i].Location;
-
-                auto lightType = (uint32_t)DirectX::XMVectorGetW(m_LightsData[i].Color) & LIGHT_TYPE_MASK;
-                if (lightType == LIGHT_POINT || lightType == LIGHT_POINT_AMBIENT)
-                    lightDataIndex += 2;
-                else if (lightType == LIGHT_SPOT)
-                {
-                    m_Buffer.m_Data.Lights[lightDataIndex + 2] = m_LightsData[i].Direction;
-                    lightDataIndex += 3;
-                }
-            }
-
-            size_t indexCounter = 0;
-            for (size_t i = 0; i < SLICE_NUMBER; ++i)
-            {
-                m_Buffer.m_Data.IndexesOfFirstLightsInSlices[i] = indexCounter;
-
-                for (const auto& index : m_LightSlices[i])
-                {
-                    m_Buffer.m_Data.LightIndexesFromAllSlices[indexCounter] = m_LightsData[index].RealIndex;
-                    indexCounter++;
-                }
-            }
-            m_Buffer.m_Data.IndexesOfFirstLightsInSlices[SLICE_NUMBER] = indexCounter;
-
-            m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
-            m_Buffer.m_Data.Origin = { c.Origin.X, c.Origin.Y, c.Origin.Z, 0};
-            m_Buffer.MarkAsDirty();
-
-            //        m_Coords = SceneNode.Coords;
-            //    }        
-        }
-*/
         void UpdateAndBind(unsigned int iSlot)
         {
             m_Buffer.UpdateAndBind(iSlot);
@@ -690,6 +540,9 @@ protected:
     }
     m_PerFrameBuffer;
     
+    /// <summary>
+    /// Prepares and stores current time in constant buffer
+    /// </summary>
     class PerTickBuffer
     {
         struct PerTick
@@ -732,12 +585,16 @@ protected:
     }
     m_PerTickBuffer;
 
+    /// <summary>
+    /// Prepares and stores constant buffer data
+    /// related to the currently rendered polygon only
+    /// </summary>
     class PerComplexPolyBuffer
     {
         struct PerComplexPoly
         {
             XMVECTORU32 PolyControl;
-            // список ид статических источников света, которые видны для текущего ComplexPoly
+            // list of IDs of static light sources that are visible for the current ComplexPoly
             XMVECTORU32 StaticLightIds[MAX_LIGHTS_INDEX_SIZE];
             XMMATRIX PolyVM;
         };
@@ -747,14 +604,11 @@ protected:
     public:
         PerComplexPolyBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
             : m_Buffer(Device, DeviceContext)
-        {
-        }
+        { }
 
         PerComplexPolyBuffer(const PerComplexPolyBuffer&) = delete;
         PerComplexPolyBuffer& operator=(const PerComplexPolyBuffer&) = delete;
 
-        // метод void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly)
-        // на вход еще нужно подать справочник "ид источника - смещение источника" из PerSceneBuffer
         void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, const std::unordered_map<AActor*, size_t> &lightCache)
         {            
             assert(Poly.NumPts >= 3);                        
@@ -788,8 +642,8 @@ protected:
             }            
         }
         
-        // нужен метод DumpCurrentFrameStaticLightIds для сборса кэша всех статических источников, видимых в текущем кадре.
-        // В этом же методе сохраняем этот дамп в отдельное поле, чтобы потом выдать по требованию через метод GetLastFrameStaticLightIds
+        // TO-DO: the DumpCurrentFrameStaticLightIds method is needed to reset the cache of all static sources visible in the current frame.
+        // In the same method, we save this dump in a separate field, so that we can then get it on demand via the GetLastFrameStaticLightIds method
         // ...
 
         void UpdateAndBind(unsigned int iSlot)

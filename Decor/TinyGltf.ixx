@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION

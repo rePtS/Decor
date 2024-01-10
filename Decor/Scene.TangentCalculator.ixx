@@ -1,10 +1,11 @@
-module;
+﻿module;
 
 #include <DirectXMath.h>
 
 export module Scene.TangentCalculator;
 
 import MikkTSpace;
+
 
 export class ITangentCalculable
 {
@@ -17,6 +18,9 @@ public:
     virtual void SetTangent(const float intangent[], const float sign, const int face, const int vertex) = 0;
 };
 
+/// <summary>
+/// Set of functions for calculating tangent space based on Morten S. Mikkelsen code
+/// </summary>
 namespace TangentCalculator
 {
     ITangentCalculable& GetPrimitive(const SMikkTSpaceContext* context)

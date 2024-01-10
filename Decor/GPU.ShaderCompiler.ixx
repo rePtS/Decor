@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <D3DCompiler.inl>
@@ -42,7 +42,7 @@ public:
     {
         assert(m_pBlob);
 
-        if (!m_pReflection) //Create reflection on first use
+        if (!m_pReflection) // Create reflection on first use
         {
             Utils::ThrowIfFailed(
                 D3DReflect(m_pBlob->GetBufferPointer(), m_pBlob->GetBufferSize(), __uuidof(m_pReflection), &m_pReflection),
@@ -75,7 +75,7 @@ public:
     }
 
 protected:
-    //Prototype for the various ID3D11Device::Create[Vertex/Pixel/Etc.]Shader() functions.
+    // Prototype for the various ID3D11Device::Create[Vertex/Pixel/Etc.]Shader() functions.
     template<class T, class Func>
     ComPtr<T> CompileXShader(const char* const pszEntryPoint, const char* const pszTarget, const Func& CreationFunc)
     {

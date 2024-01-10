@@ -11,7 +11,7 @@ import Utils;
 using Microsoft::WRL::ComPtr;
 
 #pragma warning(push)
-#pragma warning(disable: 4324) //structure was padded due to __declspec(align())
+#pragma warning(disable: 4324) // structure was padded due to __declspec(align())
 export template <class T>
 class ConstantBuffer
 {
@@ -19,7 +19,7 @@ class ConstantBuffer
 
 public:
     explicit ConstantBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        :m_DeviceContext(DeviceContext)
+        : m_DeviceContext(DeviceContext)
     {
         D3D11_BUFFER_DESC BufferDesc;
         BufferDesc.ByteWidth = sizeof(T);
@@ -57,7 +57,7 @@ public:
 
     void Bind(const unsigned int iSlot)
     {
-        //TODO: constant buffer registration pool
+        // TODO: constant buffer registration pool
         m_DeviceContext.VSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
         m_DeviceContext.PSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());
         m_DeviceContext.GSSetConstantBuffers(iSlot, 1, m_pBuffer.GetAddressOf());

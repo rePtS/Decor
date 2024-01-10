@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -110,5 +110,5 @@ protected:
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;
 
-    size_t m_iNumDraws = 0; //Number of draw calls this frame, for stats
+    size_t m_iNumDraws = 0; // Number of draw calls this frame, for stats
 };

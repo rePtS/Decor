@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -41,7 +41,7 @@ public:
             {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"Color", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-            {"BlendIndices", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0} //Todo make 8 bits, if necessary at all -> can't, hlsl doesn't support 8 bit data type
+            {"BlendIndices", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0} // TODO make 8 bits, if necessary at all -> can't, hlsl doesn't support 8 bit data type
         };
 
         m_pInputLayout = Compiler.CreateInputLayout(InputElementDescs, _countof(InputElementDescs));
@@ -94,7 +94,7 @@ public:
         return DynamicGPUBufferHelpers::GetTriangleFan(m_VertexBuffer, m_IndexBuffer, iSize);
     }
 
-    //Diagnostics
+    // Diagnostics
     size_t GetNumIndices() const { return m_IndexBuffer.GetSize(); }
     size_t GetNumDraws() const { return m_iNumDraws; }
     size_t GetMaxIndices() const { return m_IndexBuffer.GetReserved(); }
@@ -110,5 +110,5 @@ protected:
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;
 
-    size_t m_iNumDraws = 0; //Number of draw calls this frame, for stats
+    size_t m_iNumDraws = 0; // Number of draw calls this frame, for stats
 };

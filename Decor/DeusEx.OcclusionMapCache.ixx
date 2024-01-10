@@ -1,4 +1,4 @@
-module;
+пїњmodule;
 
 #include <D3D11.h>
 #include <vector>
@@ -23,7 +23,7 @@ public:
         TextureData() {}
 
         TextureData(const TextureData&) = default;
-        TextureData(TextureData&& Other) //VS2015 doesn't support default move constructors
+        TextureData(TextureData&& Other)
             : fMultU(Other.fMultU)
             , fMultV(Other.fMultV)
             , pTexture(std::move(Other.pTexture))
@@ -50,7 +50,7 @@ public:
         m_PreparedId = 0;
         m_PreparedSRV = nullptr;
 
-        //Create placeholder texture
+        // Create placeholder texture
         m_PlaceholderMap.fMultU = 1.0f;
         m_PlaceholderMap.fMultV = 1.0f;
 
@@ -94,7 +94,6 @@ public:
     OcclusionMapCache(const OcclusionMapCache&) = delete;
     OcclusionMapCache& operator=(const OcclusionMapCache&) = delete;
 
-    // ћожет здесь тоже использовать CacheID (от лайтмапа)?
     const TextureData& FindOrInsert(const UModel& Model, const int mapId)
     {
         auto it = m_OcclusionMaps.find(mapId);
@@ -132,7 +131,7 @@ public:
     void Flush()
     {
         m_PreparedSRV = nullptr;
-        m_DeviceContext.PSSetShaderResources(m_Slot, 1, &m_PreparedSRV); //To be able to release maps
+        m_DeviceContext.PSSetShaderResources(m_Slot, 1, &m_PreparedSRV); // To be able to release maps
         m_OcclusionMaps.clear();
     }
 
@@ -154,7 +153,7 @@ protected:
         if (map.iLightActors < 0)
             return m_PlaceholderMap;
 
-        // ѕодсчитаем количество источников света дл€ данной карты затенени€
+        // Count the number of light sources for this shading map
         size_t numLights = 0;
         auto lightIndex = map.iLightActors;
         while (Model.Lights(lightIndex++) != nullptr)
@@ -168,12 +167,12 @@ protected:
         size_t mapSize = map.UClamp * map.VClamp;
         OutputTexture.DataBuffer.reserve(numLights * mapSize);
 
-        // —сылка на битовую маску карт затенени€
+        // Reference to the bitmask of the shading maps
         auto mapData = reinterpret_cast<const BYTE*>(Model.LightBits.GetData());
 
-        //  оличество байтов, которое занимает один р€д в битовой маске карты затенени€
+        // The number of bytes that occupies one row in the bitmask of the shading map
         size_t bytesPerUClamp = (map.UClamp + 7) / 8;
-        //  оличество байтов, которое занимает карта затенени€ дл€ одного источника света в битовой маске
+        // The number of bytes occupied by the shading map for a single light source in the bitmask
         size_t bytesPerLight = map.VClamp * bytesPerUClamp;
 
         std::vector<uint8_t> bufferCopy(mapSize);
@@ -197,7 +196,7 @@ protected:
                     OutputTexture.DataBuffer.push_back(lightByte & 0x80 ? 255 : 0); if (--uclampCounter == 0) break;
                 }
             }
-            // ѕока не примен€ем антиалайзинг карт затенени€
+            // We are not using antializing maps yet
             /*
                     std::copy(OutputTexture.DataBuffer.begin() + lightIndex * mapSize,
                         OutputTexture.DataBuffer.end(),
@@ -252,8 +251,6 @@ protected:
         );
         Utils::SetResourceNameW(OutputTexture.pShaderResourceView, pszTexName);
 
-        //m_DeviceContext.GenerateMips(OutputTexture.pShaderResourceView.Get());
-
         OutputTexture.fMultU = 1.0f / (map.UClamp * map.UScale);
         OutputTexture.fMultV = 1.0f / (map.VClamp * map.VScale);
 
@@ -262,7 +259,7 @@ protected:
 
     uint8_t Antialize(const std::vector<uint8_t>& buffer, size_t vclamp, size_t uclamp, size_t index) const
     {
-        float cnt = 1, sum = buffer[index]; // центральный тексель
+        float cnt = 1, sum = buffer[index]; // central texel
 
         auto i = index / uclamp;
         auto j = index % uclamp;
@@ -272,32 +269,32 @@ protected:
         if (i > 0)
         {
             auto topIndex = (i - 1) * uclamp + j;
-            sum += buffer[topIndex], ++cnt; // тексель над центральным текселем
+            sum += buffer[topIndex], ++cnt; // texel above the central textile
 
             if (j > 0)
-                sum += buffer[topIndex - 1], ++cnt; // тексель слева сверху от цетрального тексел€
+                sum += buffer[topIndex - 1], ++cnt; // texel on the top left of the central textile
             if (j < jMax)
-                sum += buffer[topIndex + 1], ++cnt; // тексель справа сверху от цетрального тексел€
+                sum += buffer[topIndex + 1], ++cnt; // texel on the top right of the central textile
         }
 
         if (i < iMax)
         {
             auto bottomIndex = (i + 1) * uclamp + j;
-            sum += buffer[bottomIndex], ++cnt; // тексель под центральным текселем
+            sum += buffer[bottomIndex], ++cnt; // texel under the central textile
 
             if (j > 0)
-                sum += buffer[bottomIndex - 1], ++cnt; // тексель слева снизу от цетрального тексел€
+                sum += buffer[bottomIndex - 1], ++cnt; // texel to the left from the bottom of the central textile
             if (j < jMax)
-                sum += buffer[bottomIndex + 1], ++cnt; // тексель справа снизу от цетрального тексел€
+                sum += buffer[bottomIndex + 1], ++cnt; // texel to the right from the bottom of the central textile
         }
 
         if (j > 0)
-            sum += buffer[index - 1], ++cnt; // тексель слева от центрального тексел€
+            sum += buffer[index - 1], ++cnt; // texel to the left of the central textile
         if (j < jMax)
-            sum += buffer[index + 1], ++cnt; // тексель справа от центрального тексел€
+            sum += buffer[index + 1], ++cnt; // texel to the right of the central textile
 
         return static_cast<uint8_t>(sum / cnt);
     }
 
-    TextureData m_PlaceholderMap; //Placeholder occlusion map
+    TextureData m_PlaceholderMap; // Placeholder occlusion map
 };

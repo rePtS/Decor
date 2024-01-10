@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -14,9 +14,13 @@ import TinyGltf;
 
 using DirectX::XMFLOAT4;
 
+/// <summary>
+/// Class for storing and manipulating models textures loaded from gltf-files
+/// </summary>
 export class SceneTexture
 {
 public:
+    // Type of color space used by texture
     enum ValueType
     {
         eLinear,
@@ -115,7 +119,7 @@ public:
         //            return false;
         //    }
 
-            // Neutral constant texture
+        // Neutral constant texture
         if (!CreateNeutral(ctx))
             return false;
 

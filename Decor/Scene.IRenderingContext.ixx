@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <d3d11.h>
 #include <cstdint>
@@ -6,16 +6,14 @@ module;
 
 export module Scene.IRenderingContext;
 
-// Used by a scene to access necessary renderer internals
+/// <summary>
+/// Interface to access necessary renderer internals
+/// </summary>
 export class IRenderingContext
 {
 public:
 
     virtual ~IRenderingContext() {};
-
-    //virtual ID3D11Device*           GetDevice() const = 0;
-
-    //virtual ID3D11DeviceContext*    GetImmediateContext() const = 0;
 
     virtual ID3D11Device& GetDevice() = 0;
     virtual ID3D11DeviceContext& GetDeviceContext() = 0;
@@ -38,16 +36,5 @@ public:
     //virtual bool UsesMSAA() const = 0;
     //virtual uint32_t GetMsaaCount() const = 0;
     //virtual uint32_t GetMsaaQuality() const = 0;
-
     //virtual float GetFrameAnimationTime() const = 0; // In seconds
-
-    virtual bool IsValid() const
-    {
-        //return GetDevice() && GetImmediateContext();
-        return true;
-    };
-
-    virtual void SetDefaultRenderTarget() = 0;
-    virtual void SetCullingRenderTarget() = 0;
-    virtual std::bitset<256> GetCulledRoots() = 0;
 };

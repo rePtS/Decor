@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3DCommon.h>
 #include <wrl\client.h>

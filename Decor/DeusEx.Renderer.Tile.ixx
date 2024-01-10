@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -82,7 +82,7 @@ public:
     void Draw()
     {
         assert(!IsMapped());
-        m_DeviceContext.DrawInstanced(4, m_InstanceBuffer.GetNumNewElements(), 0, m_InstanceBuffer.GetFirstNewElementIndex()); //Just draw 4 non-existent vertices per quad, we're only interested in SV_VertexID.
+        m_DeviceContext.DrawInstanced(4, m_InstanceBuffer.GetNumNewElements(), 0, m_InstanceBuffer.GetFirstNewElementIndex()); // Just draw 4 non-existent vertices per quad, we're only interested in SV_VertexID.
         m_iNumDraws++;
     }
 
@@ -91,7 +91,7 @@ public:
         return m_InstanceBuffer.PushBack();
     }
 
-    //Diagnostics
+    // Diagnostics
     size_t GetNumTiles() const { return m_InstanceBuffer.GetSize(); }
     size_t GetNumDraws() const { return m_iNumDraws; }
     size_t GetMaxTiles() const { return m_InstanceBuffer.GetReserved(); }
@@ -104,7 +104,7 @@ protected:
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
 
-    DynamicGPUBuffer<Tile, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_InstanceBuffer;  //We only create a per-instance-data buffer, we don't use a vertex buffer as vertex positions are irrelevant
+    DynamicGPUBuffer<Tile, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_InstanceBuffer;  // We only create a per-instance-data buffer, we don't use a vertex buffer as vertex positions are irrelevant
 
-    size_t m_iNumDraws = 0; //Number of draw calls this frame, for stats
+    size_t m_iNumDraws = 0; // Number of draw calls this frame, for stats
 };
