@@ -16,7 +16,7 @@ The work is still in progress. The current results are in the screenshots below
 ---
 
 # DECoR
-Deus Ex Complementary Renderer - рендерер для игры Deus Ex с использованием API Direct3D 11 и некоторыми дополнительными возможностями. Основан на [render11](https://github.com/mckentie/render11) от Marijn Kentie.
+Deus Ex Complementary Renderer - рендерер для игры Deus Ex с использованием API Direct3D 11 и некоторыми дополнительными возможностями. Основан на [render11](https://github.com/mkentie/render11) от Marijn Kentie.
 
 ## Ключевые особенности
 
