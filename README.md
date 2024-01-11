@@ -1,7 +1,7 @@
-# DECoR
+п»ї# DECoR
 Deus Ex Complementary Renderer - a Direct3D 11 renderer for the Deus Ex game with some additional options. Based on [render11](https://github.com/mkentie/render11) by Marijn Kentie.
 
-<img src="/Images/paris_everett-2.png"/>
+<img src="/Images/paris_everett-2.jpg"/>
 
 ## Key features
 
@@ -11,29 +11,29 @@ Deus Ex Complementary Renderer - a Direct3D 11 renderer for the Deus Ex game wit
 * The right flashlight (finally!)
 
 ## Notes
-The work is still in progress. The current results are shown in the screenshots below
+The work is still in progress. The current results are in the screenshots below
 
 ---
 
-# Декор
-Deus Ex Complementary Renderer - рендерер для игры Deus Ex с использованием API Direct3D 11 и некоторыми дополнительными возможностями. Основан на [render11](https://github.com/mckentie/render11) от Marijn Kentie.
+# Р”РµРєРѕСЂ
+Deus Ex Complementary Renderer - СЂРµРЅРґРµСЂРµСЂ РґР»СЏ РёРіСЂС‹ Deus Ex СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј API Direct3D 11 Рё РЅРµРєРѕС‚РѕСЂС‹РјРё РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹РјРё РІРѕР·РјРѕР¶РЅРѕСЃС‚СЏРјРё. РћСЃРЅРѕРІР°РЅ РЅР° [render11](https://github.com/mckentie/render11) РѕС‚ Marijn Kentie.
 
-## Ключевые особенности
+## РљР»СЋС‡РµРІС‹Рµ РѕСЃРѕР±РµРЅРЅРѕСЃС‚Рё
 
-* Полное попиксельное освещение. Больше никаких затенений Гуро или световых карт!
-* Использование принципов физического рендеринга (PBR).
-* Возможность дополнять геометрию уровней вашими собственными моделями из файлов gltf.
-* Правильный фонарик (наконец-то!)
+* РџРѕР»РЅРѕРµ РїРѕРїРёРєСЃРµР»СЊРЅРѕРµ РѕСЃРІРµС‰РµРЅРёРµ. Р‘РѕР»СЊС€Рµ РЅРёРєР°РєРёС… Р·Р°С‚РµРЅРµРЅРёР№ Р“СѓСЂРѕ РёР»Рё СЃРІРµС‚РѕРІС‹С… РєР°СЂС‚!
+* РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РїСЂРёРЅС†РёРїРѕРІ С„РёР·РёС‡РµСЃРєРѕРіРѕ СЂРµРЅРґРµСЂРёРЅРіР° (PBR).
+* Р’РѕР·РјРѕР¶РЅРѕСЃС‚СЊ РґРѕРїРѕР»РЅСЏС‚СЊ РіРµРѕРјРµС‚СЂРёСЋ СѓСЂРѕРІРЅРµР№ РІР°С€РёРјРё СЃРѕР±СЃС‚РІРµРЅРЅС‹РјРё РјРѕРґРµР»СЏРјРё РёР· С„Р°Р№Р»РѕРІ gltf.
+* РџСЂР°РІРёР»СЊРЅС‹Р№ С„РѕРЅР°СЂРёРє (РЅР°РєРѕРЅРµС†-С‚Рѕ!)
 
-## Примечания
-Работа все еще в процессе. Текущие результаты на скриншотах ниже:
+## РџСЂРёРјРµС‡Р°РЅРёСЏ
+Р Р°Р±РѕС‚Р° РІСЃРµ РµС‰Рµ РІ РїСЂРѕС†РµСЃСЃРµ. РўРµРєСѓС‰РёРµ СЂРµР·СѓР»СЊС‚Р°С‚С‹ РЅР° СЃРєСЂРёРЅС€РѕС‚Р°С… РЅРёР¶Рµ:
 
-<img src="/Images/paris_everett-1.png"/>
+<img src="/Images/paris_everett-1.jpg"/>
 
-<img src="/Images/paris_everett-3.png"/>
+<img src="/Images/paris_everett-3.jpg"/>
 
-<img src="/Images/paris_everett-4.png"/>
+<img src="/Images/paris_everett-4.jpg"/>
 
-<img src="/Images/paris_everett-5.png"/>
+<img src="/Images/paris_everett-5.jpg"/>
 
-<img src="/Images/warehouse-1.png"/>
+<img src="/Images/warehouse-1.jpg"/>
