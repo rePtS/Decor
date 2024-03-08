@@ -5,17 +5,23 @@
 #include <wrl\client.h>
 #include <cassert>
 #include <fstream>
+#include "PostProcess.h"
 
 export module GPU.RenDevBackend;
 
 import Scene.IRenderingContext;
 import Utils;
+import GPU.RenderTexture;
 
 using Microsoft::WRL::ComPtr;
 
 export class RenDevBackend : public IRenderingContext
 {
 public:
+    /// <summary>
+    /// Use HDR rendering mode
+    /// </summary>
+    const bool UseHdr = true;
 
     explicit RenDevBackend()
     {
@@ -26,6 +32,11 @@ public:
     
     ~RenDevBackend()
     {
+        if (UseHdr)
+        {
+            m_pHDRTexture->ReleaseDevice();
+            m_pToneMapPostProcess.reset();
+        }
     }
 
     bool Init(const HWND hWnd)
@@ -101,9 +112,19 @@ public:
         Utils::ThrowIfFailed(
             m_pAdapter->GetDesc1(&AdapterDesc),
             "Failed to get adapter descriptor."
-        );
+        );        
 
         Utils::LogMessagef(L"Adapter: %s.", AdapterDesc.Description);
+
+        if (UseHdr)
+        {
+            m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
+            m_pHDRTexture->SetDevice(m_pDevice.Get());
+
+            m_pToneMapPostProcess = std::make_unique<DirectX::ToneMapPostProcess>(m_pDevice.Get());
+            m_pToneMapPostProcess->SetOperator(DirectX::ToneMapPostProcess::ACESFilmic);
+            m_pToneMapPostProcess->SetTransferFunction(DirectX::ToneMapPostProcess::Linear);
+        }
 
         return true;
     }
@@ -127,25 +148,53 @@ public:
                 m_SwapChainDesc.Flags
             ),
             "Failed to resize swap chain (%u x %u)", iX, iY
-        );
+        );        
 
         CreateRenderTargetViews();
+
+        if (UseHdr)
+        {
+            m_pHDRTexture->SizeResources(iX, iY);
+            m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
+        }
     }
 
     void NewFrame()
     {
         assert(m_pDeviceContext);
         assert(m_pBackBufferRTV);
-        assert(m_pDepthStencilView);
+        assert(m_pDepthStencilView);                
 
         const float ClearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);
-        m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+
+        if (UseHdr)
+        {
+            // Set the hdr-texture as RenderTargetView            
+            auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
+
+            m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
+            m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+            m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, m_pDepthStencilView.Get());
+        }
+        else
+        {
+            m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);
+            m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+        }
     }
 
     void Present()
     {
         assert(m_pSwapChain);
+        assert(m_pDeviceContext);
+
+        if (UseHdr)
+        {
+            // Set back buffer as RenderTargetView
+            m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+            m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
+        }
+
         m_pSwapChain->Present(0, 0);
     }
 
@@ -348,4 +397,7 @@ protected:
     ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
 
     DXGI_SWAP_CHAIN_DESC m_SwapChainDesc;
+
+    std::unique_ptr<RenderTexture> m_pHDRTexture;
+    std::unique_ptr<DirectX::ToneMapPostProcess> m_pToneMapPostProcess;
 };

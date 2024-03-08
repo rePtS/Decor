@@ -149,7 +149,7 @@ float4 PSMain(const VSOut input) : SV_Target
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
-    float4 ambientLightLuminance = float4(0.02, 0.02, 0.02, 1);
+    float4 ambientLightLuminance = float4(0.05, 0.05, 0.05, 1);
 
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
 

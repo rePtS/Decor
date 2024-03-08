@@ -33,6 +33,7 @@
     <ClCompile Include="DeusEx.Renderer.Tile.ixx" />
     <ClCompile Include="DeusEx.Drv.ixx" />
     <ClCompile Include="DeusEx.SceneManager.ixx" />
+    <ClCompile Include="GPU.RenderTexture.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">
@@ -58,5 +59,6 @@
     <None Include="SceneConstants.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

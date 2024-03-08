@@ -54,6 +54,8 @@ export
             if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
             {
                 m_pGlobalShaderConstants->Bind();
+                if (m_Backend.UseHdr)
+                    m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
                 m_pDeviceState->Bind();
                 m_pTextureCache->BindTextures();
                 m_pOcclusionMapCache->BindMaps();
