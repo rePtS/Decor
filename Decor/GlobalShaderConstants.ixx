@@ -147,7 +147,7 @@ protected:
             if (light->bSpecialLit)
                 lightType |= LIGHT_SPECIAL_MASK;
 
-            color = DirectX::XMVectorScale(color, 0.00005f * lightBrightness);
+            color = DirectX::XMVectorScale(color, 0.00003f * lightBrightness);
             color = DirectX::XMVectorSetW(color, lightType);
         }
         else

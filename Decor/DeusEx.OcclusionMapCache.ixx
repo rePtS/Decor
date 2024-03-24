@@ -136,6 +136,10 @@ public:
     }
 
 protected:
+    const uint8_t MaxLight = 255;
+    const uint8_t LowLight = 50;
+    const uint8_t MinLight = 2;
+
     unsigned int m_Slot;
 
     ID3D11Device& m_Device;
@@ -186,16 +190,21 @@ protected:
                 {
                     auto lightByte = mapData[map.DataOffset + lightIndex * bytesPerLight + v * bytesPerUClamp + byteIndex];
 
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x01 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x02 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x04 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x08 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x10 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x20 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x40 ? 255 : 0); if (--uclampCounter == 0) break;
-                    OutputTexture.DataBuffer.push_back(lightByte & 0x80 ? 255 : 0); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x01 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x02 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x04 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x08 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x10 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x20 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x40 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
+                    OutputTexture.DataBuffer.push_back(lightByte & 0x80 ? MaxLight : MinLight); if (--uclampCounter == 0) break;
                 }
             }
+
+            auto lightOffset = lightIndex * mapSize;
+            for (size_t i = 0; i < mapSize; ++i)
+                OutputTexture.DataBuffer[lightOffset + i] = LitEdges(OutputTexture.DataBuffer, lightOffset, map.VClamp, map.UClamp, i);
+
             // We are not using antializing maps yet
             /*
                     std::copy(OutputTexture.DataBuffer.begin() + lightIndex * mapSize,
@@ -294,6 +303,62 @@ protected:
             sum += buffer[index + 1], ++cnt; // texel to the right of the central textile
 
         return static_cast<uint8_t>(sum / cnt);
+    }
+    
+    /// <summary>
+    /// Lights edges of an occlusion map.
+    /// Adds some light for min-lighted pixels
+    /// </summary>
+    /// <param name="buffer">Occlusion map buffer</param>
+    /// <param name="lightOffset">Offset of current map in the buffer</param>
+    /// <param name="vclamp">width of the occlusion map</param>
+    /// <param name="uclamp">height of the occlusion map</param>
+    /// <param name="index">index of pixel in the occlusion map</param>
+    /// <returns>Corrected occlusion map pixel value</returns>    
+    uint8_t LitEdges(const std::vector<uint8_t>& buffer, size_t lightOffset, size_t vclamp, size_t uclamp, size_t index) const
+    {
+        auto i = index / uclamp;
+        auto j = index % uclamp;
+        auto jMax = uclamp - 1;
+        auto iMax = vclamp - 1;
+
+        auto value = buffer[lightOffset + index];
+        if (value == MinLight)
+        {
+            size_t targetIndex = lightOffset + index; // index of pixel in occlussion map (OM) affecting current OM pixel
+
+            if (i == 0) // top row of pixels
+            {
+                if (j == 0) // top left pixel
+                    targetIndex += uclamp + 1;
+                else if (j == jMax) // top right pixel
+                    targetIndex += uclamp - 1;
+                else // top row without corners
+                    targetIndex += uclamp;
+            }
+            else if (i == iMax) // bottom row of pixels
+            {
+                if (j == 0) // bottom left pixel
+                    targetIndex -= uclamp - 1;
+                else if (j == jMax) // bottom right pixel
+                    targetIndex -= uclamp + 1;
+                else // bottom row without corners
+                    targetIndex -= uclamp;
+            }
+            else
+            {
+                if (j == 0) // left column of pixels
+                    targetIndex += 1;
+                else if (j == jMax) // right column of pixels
+                    targetIndex -= 1;
+                else // usual pixel
+                    return value;
+            }
+
+            return buffer[targetIndex] == MinLight ? MinLight : LowLight;
+        }
+        else
+            return value;
     }
 
     TextureData m_PlaceholderMap; // Placeholder occlusion map
