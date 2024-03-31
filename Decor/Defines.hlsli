@@ -12,13 +12,15 @@
 #define MAX_LIGHTS_DATA_SIZE 1024
 #define MAX_LIGHTS_INDEX_SIZE 1024 // must be multiple of 16
 
-// Types of light sources that are transmitted to the shader
-#define LIGHT_POINT 1
-#define LIGHT_SPOT 2
-#define LIGHT_AMBIENT 3
-#define LIGHT_POINT_AMBIENT 4
-
-#define LIGHT_TYPE_MASK 7
-#define LIGHT_SPECIAL_MASK 8
+// Masks and offsets for light data, stored in w-component
+// of ligit color vector
+#define LIGHT_SPECIAL_MASK 0x1000000
+#define LIGHT_PHASE_MASK 0xFF0000
+#define LIGHT_PHASE_OFFSET 16
+#define LIGHT_PERIOD_MASK 0xFF00
+#define LIGHT_PERIOD_OFFSET 8
+#define LIGHT_TYPE_MASK 0xE0
+#define LIGHT_TYPE_OFFSET 5
+#define LIGHT_EFFECT_MASK 0x1F
 
 #endif // __DEFINES_HLSLI__

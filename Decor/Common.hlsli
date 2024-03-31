@@ -5,10 +5,42 @@ static const uint PF_Modulated = 0x00000040;    // Modulation transparency.
 static const uint PF_Translucent = 0x00000004;	// Poly is transparent.
 static const uint PF_SmallWavy = 0x00002000;	// Small wavy pattern (for water/enviro reflection).
 static const uint PF_Unlit = 0x00400000;	    // Unlit.
-static const uint PF_TwoSided = 0x00000100;	// Poly is visible from both sides.
-static const uint PF_Portal = 0x04000000;	// Portal between iZones.
+static const uint PF_TwoSided = 0x00000100;	    // Poly is visible from both sides.
+static const uint PF_Portal = 0x04000000;	    // Portal between iZones.
 static const uint PF_SpecialLit = 0x00100000;	// Only speciallit lights apply to this poly.
-static const uint PF_NoSmooth = 0x00000800;	// Don't smooth textures.
+static const uint PF_NoSmooth = 0x00000800;	    // Don't smooth textures.
+
+// https://lodev.org/unrealed/lighting/lighting.html#type
+
+static const uint LE_None = 0;          // LE_None: This just a normal light. In contradiction to LT_None, LE_None does not mean that the light is Off.
+static const uint LE_TorchWaver = 1;    // LE_TorchWaver: Makes the light move like a torch.
+static const uint LE_FireWaver = 2;     // LE_FireWaver: This does the same as LE_TorchWaver, but heavyer. The light will move like fire.
+static const uint LE_WateryShimmer = 3; // LE_WateryShimmer: The lighting will move like water. Use it when you create a pool inside a building, to shine on the walls of the building.
+static const uint LE_Searchlight = 4;   // LE_Searchlight: The lightbeam will rotate, like a searchlight. Think about Alcatraz. If LightPeriod is 0, the SearchLight will not rotate.
+static const uint LE_SlowWave = 5;      // LE_SlowWave: Some kind of animated wave-effect.
+static const uint LE_FastWave = 6;      // LE_FastWave: Same as LE_SlowWave, but faster.
+static const uint LE_CloudCast = 7;     // LE_CloudCast: Looks to be just steady. This is probably an old remainder of the pre-release version of Unreal.
+static const uint LE_StaticSpot = 8;    // LE_StaticSpot: The light will beam in one direction.
+static const uint LE_Shock = 9;         // LE_Shock: Another animation for the light.
+static const uint LE_Disco = 10;        // LE_Disco: A nice disco-effect.
+static const uint LE_Warp = 11;         // LE_Warp: Looks to be just steady. This is probably an old remainder of the pre-release version of Unreal.
+static const uint LE_Spotlight = 12;    // LE_SpotLight: The same as LE_StaticSpot.
+static const uint LE_NonIncidence = 13; // LE_NonIncidence: like LE_None, but the light will have almost no fading-away at the edges. This makes it look like the radius is larger.
+static const uint LE_Shell = 14;        // LE_Shell: If you use this correct (close enough to wall), the light will look like a ring on the wall.
+static const uint LE_OmniBumpMap = 15;  // LE_OmniBumpMap: Can be used to create blacklights. This is not what the name suggests, so this is probably an old remainder of the pre-release version of Unreal.
+static const uint LE_Interference = 16; // LE_Interference: Another animation for the light.
+static const uint LE_Cylinder = 17;     // LE_Cylinder: Used if need a really large light. The lightradius is calculated as a cylinder instead of a sphere with soft edges.
+static const uint LE_Rotor = 18;        // LE_Rotor: Rotating light similar to LE_Disco.
+static const uint LE_Unused = 19;       // LE_Unused: Exactly the same as LE_None. This is probably an old remainder of the pre-release version of Unreal.
+
+static const uint LT_None = 0;          // LT_None: Source will not give any light. The light is Off.
+static const uint LT_Steady = 1;        // LT_Steady: This is the default and makes the lightsource giving light.
+static const uint LT_Pulse = 2;         // LT_Pulse: Makes the light pulse. It will become brighter and darker then again brighter and so on. It will not just switch between On, Off, On, Off,... but fade from On to Off to On to Off....
+static const uint LT_Blink = 3;         // LT_Blink: The light will randomly go On and Off. It will be most of the times On.
+static const uint LT_Flicker = 4;       // LT_Flicker: the light will go randomly On and Off. In contradiction to LT_Blink, it will be most of the times Off.
+static const uint LT_Strobe = 5;        // LT_Strobe: The light will switch between On, Off, On, Off,.... In contradiction to LT_Flicker and LT_Blink, this does not happen randomly. In contradiction to LT_Pulse, it will not fade from On to Off to On to Off....
+static const uint LT_BackdropLight = 6; // LT_BackdropLight: The light is just steady. This is probably an old remainder of the pre-release version of Unreal.
+static const uint LT_SubtlePulse = 7;   // LT_SubtlePulse: Like LT_Pulse, but less heavy.
 
 static const float LIGHT_EDGE_THICKNESS = 0.1f;
 

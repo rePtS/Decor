@@ -133,33 +133,21 @@ protected:
         color = DirectX::XMVectorScale(color,
             lightRadius * lightRadius * lightBrightness);
 
-        if (light->LightEffect == LE_Spotlight)
-        {
-            uint32_t lightType = LIGHT_SPOT;
-            if (light->bSpecialLit)
-                lightType |= LIGHT_SPECIAL_MASK;
-
-            color = DirectX::XMVectorSetW(color, lightType);
-        }
-        else if (light->LightEffect == LE_Cylinder)
-        {
-            uint32_t lightType = LIGHT_POINT_AMBIENT;
-            if (light->bSpecialLit)
-                lightType |= LIGHT_SPECIAL_MASK;
-
+        // Fix for the "cylindrical" light source
+        if (light->LightEffect == LE_Cylinder)
             color = DirectX::XMVectorScale(color, 0.00003f * lightBrightness);
-            color = DirectX::XMVectorSetW(color, lightType);
-        }
-        else
-        {
-            uint32_t lightType = LIGHT_POINT;
-            if (light->bSpecialLit)
-                lightType |= LIGHT_SPECIAL_MASK;
 
-            color = DirectX::XMVectorSetW(color, lightType);
-        }
+        uint32_t lightType = light->LightEffect;
+        lightType |= static_cast<uint32_t>(light->LightType) << LIGHT_TYPE_OFFSET;
+        lightType |= static_cast<uint32_t>(light->LightPeriod) << LIGHT_PERIOD_OFFSET;
+        lightType |= static_cast<uint32_t>(light->LightPhase) << LIGHT_PHASE_OFFSET;
+        
+        if (light->bSpecialLit)
+            lightType |= LIGHT_SPECIAL_MASK;
 
-        return color;
+        assert(sizeof(float) == sizeof(uint32_t));
+
+        return DirectX::XMVectorSetW(color, reinterpret_cast<float&>(lightType));
     }
 
     /// <summary>
@@ -390,7 +378,12 @@ protected:
 
             if (IsAugLightActive())
             {
-                m_Buffer.m_Data.DynamicLights[0] = { 100000.0f, 100000.0f, 100000.0f, LIGHT_SPOT };
+                uint32_t augLightType = LE_Spotlight;
+                augLightType |= static_cast<uint32_t>(LT_Steady) << LIGHT_TYPE_OFFSET;
+
+                assert(sizeof(float) == sizeof(uint32_t));
+
+                m_Buffer.m_Data.DynamicLights[0] = { 100000.0f, 100000.0f, 100000.0f, reinterpret_cast<float&>(augLightType) };
                 m_Buffer.m_Data.DynamicLights[1] = { 0.0f, 0.0f, 0.0f, 4000.0f };
                 m_Buffer.m_Data.DynamicLights[2] = { 0.0f, 0.0f, 1.0f, 0.5f };
                 dynamicLightsBufferPos += 3;
