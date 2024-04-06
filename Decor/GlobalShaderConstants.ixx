@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <cassert>
+#include <random>
 
 #include "Defines.hlsli"
 #include <DeusEx.h>
@@ -541,7 +542,8 @@ protected:
         struct PerTick
         {
             float fTimeInSeconds;
-            float padding[3];
+            float fRandom;
+            float padding[2];
         };
 
         long long m_InitialTime;
@@ -551,6 +553,9 @@ protected:
             using namespace std::chrono;
             return float(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - m_InitialTime);
         }
+
+        std::default_random_engine generator;
+        std::uniform_real_distribution<float> distribution{0.0f, 1.0f};
 
         ConstantBuffer<PerTick> m_Buffer;
 
@@ -568,6 +573,7 @@ protected:
         void NewTick()
         {
             m_Buffer.m_Data.fTimeInSeconds = GetTimeSinceStart();
+            m_Buffer.m_Data.fRandom = distribution(generator);
             m_Buffer.MarkAsDirty();
         }
 

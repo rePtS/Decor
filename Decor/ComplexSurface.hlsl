@@ -175,8 +175,36 @@ float4 PSMain(const VSOut input) : SV_Target
          
             uint lightInfo = asuint(intencity.w);
             if (bool(lightInfo & LIGHT_SPECIAL_MASK) != bool(input.PolyFlags & PF_SpecialLit))
+                continue;            
+            
+            float lightPeriod = ((lightInfo & LIGHT_PERIOD_MASK) >> LIGHT_PERIOD_OFFSET);
+            
+            float lightTypeRate = 1.0f;
+            uint lightType = (lightInfo & LIGHT_TYPE_MASK) >> LIGHT_TYPE_OFFSET;
+            switch (lightType)
+            {
+                case LT_Blink:
+                    if (fTimeInSeconds.y < 0.2f)
+                        lightTypeRate = 0.0f;
+                    break;
+                case LT_Flicker:
+                    if (fTimeInSeconds.y > 0.2f)
+                        lightTypeRate = 0.0f;
+                    break;
+                case LT_Pulse:                    
+                    lightTypeRate = (sin(fTimeInSeconds.x / (lightPeriod * 4.0f)) + 1.0f) / 2.0f;
+                    break;
+                case LT_Strobe:
+                    if (sin(fTimeInSeconds.x / (lightPeriod * 4.0f)) < 0.0f)                
+                        lightTypeRate = 0.0f;
+                    break;
+            }
+            
+            if (lightTypeRate == 0.0f)
                 continue;
-
+            
+            occlusionValue *= lightTypeRate; // effect of the light type on occlusion
+            
             uint lightEffect = lightInfo & LIGHT_EFFECT_MASK;
             switch (lightEffect)
             {
