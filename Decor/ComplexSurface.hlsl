@@ -135,13 +135,13 @@ float4 PSMain(const VSOut input) : SV_Target
 
     PbrM_ShadingCtx shadingCtx;
     if (input.PolyFlags & PF_Portal)	
-        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
     else
         shadingCtx.normal = normalize(input.Normal);
 
     //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
     //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
-    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTimeInSeconds.x, 0.0f)).rgb);
+    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
     //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
     //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
     shadingCtx.viewDir = normalize((float3) input.PosWorld);
@@ -184,18 +184,18 @@ float4 PSMain(const VSOut input) : SV_Target
             switch (lightType)
             {
                 case LT_Blink:
-                    if (fTimeInSeconds.y < 0.2f)
+                    if (fTick.y < 0.2f)
                         lightTypeRate = 0.0f;
                     break;
                 case LT_Flicker:
-                    if (fTimeInSeconds.y > 0.2f)
+                    if (fTick.y > 0.2f)
                         lightTypeRate = 0.0f;
                     break;
                 case LT_Pulse:                    
-                    lightTypeRate = (sin(fTimeInSeconds.x / (lightPeriod * 4.0f)) + 1.0f) / 2.0f;
+                    lightTypeRate = (sin(fTick.x / (lightPeriod * 4.0f)) + 1.0f) / 2.0f;
                     break;
                 case LT_Strobe:
-                    if (sin(fTimeInSeconds.x / (lightPeriod * 4.0f)) < 0.0f)                
+                    if (sin(fTick.x / (lightPeriod * 4.0f)) < 0.0f)
                         lightTypeRate = 0.0f;
                     break;
             }

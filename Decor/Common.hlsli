@@ -57,7 +57,7 @@ cbuffer PerFrameBuffer : register(b0)
 
 cbuffer PerTickBuffer : register(b1)
 {
-    float4 fTimeInSeconds;
+    float4 fTick; // x component - time in seconds, y - random value 0..1, z - normal random 0..1
 };
 
 cbuffer PerSceneBuffer : register(b2)

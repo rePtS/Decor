@@ -38,6 +38,9 @@ export
             URenderDevice::SupportsDistanceFog = 0;
             URenderDevice::SupportsLazyTextures = 0;
             URenderDevice::Coronas = 1;
+            URenderDevice::ShinySurfaces = 1;
+            //URenderDevice::HighDetailActors = 1;
+            URenderDevice::VolumetricLighting = 1;
         }
 
         UD3D11RenderDevice(const UD3D11RenderDevice&) = delete;

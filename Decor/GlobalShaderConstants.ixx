@@ -543,7 +543,8 @@ protected:
         {
             float fTimeInSeconds;
             float fRandom;
-            float padding[2];
+            float fNormRandom;
+            float padding;
         };
 
         long long m_InitialTime;
@@ -555,7 +556,8 @@ protected:
         }
 
         std::default_random_engine generator;
-        std::uniform_real_distribution<float> distribution{0.0f, 1.0f};
+        std::uniform_real_distribution<float> distribution{ 0.0f, 1.0f };
+        std::normal_distribution<float> normDistribution{ 0.7f, 0.3f };
 
         ConstantBuffer<PerTick> m_Buffer;
 
@@ -574,6 +576,7 @@ protected:
         {
             m_Buffer.m_Data.fTimeInSeconds = GetTimeSinceStart();
             m_Buffer.m_Data.fRandom = distribution(generator);
+            m_Buffer.m_Data.fNormRandom = normDistribution(generator);
             m_Buffer.MarkAsDirty();
         }
 
