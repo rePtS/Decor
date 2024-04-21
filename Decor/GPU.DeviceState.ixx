@@ -42,7 +42,7 @@ public:
     DEPTH_STENCIL_STATE GetDepthStencilStateForPolyFlags(const DWORD PolyFlags) const
     {
         DEPTH_STENCIL_STATE NewDepthStencilState = DEPTH_STENCIL_STATE::DEFAULT;
-        if (PolyFlags & PF_NoOcclude && !(PolyFlags & PF_Occlude))
+        if (PolyFlags & PF_NoOcclude && !(PolyFlags & PF_NoOcclude))
         {
             NewDepthStencilState = DEPTH_STENCIL_STATE::NO_WRITE;
         }
