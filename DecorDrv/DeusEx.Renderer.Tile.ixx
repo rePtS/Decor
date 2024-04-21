@@ -31,7 +31,7 @@ public:
         , m_DeviceContext(DeviceContext)
         , m_InstanceBuffer(Device, DeviceContext, 4096)
     {
-        ShaderCompiler Compiler(m_Device, L"Decor\\Tile.hlsl");
+        ShaderCompiler Compiler(m_Device, L"DecorDrv\\Tile.hlsl");
         m_pVertexShader = Compiler.CompileVertexShader();
 
         const D3D11_INPUT_ELEMENT_DESC InputElementDescs[] =

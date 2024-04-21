@@ -9,7 +9,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>../3rdparty/FastNoiseLite;../3rdparty/Unreal/DeusEx/inc;../3rdparty/Unreal/Extension/inc;../3rdparty/Unreal/Engine/inc;../3rdparty/Unreal/Core/inc;%(AdditionalIncludeDirectories);../3rdparty/tinygltf;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>PROJECTNAME=L"DECOR";_REALLY_WANT_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROJECTNAME=L"DECORDRV";_REALLY_WANT_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <DisableSpecificWarnings>4291;4373</DisableSpecificWarnings>

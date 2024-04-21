@@ -14,7 +14,7 @@
     <ProjectGuid>{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Decor</RootNamespace>
-    <ProjectName>Decor</ProjectName>
+    <ProjectName>DecorDrv</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -68,9 +68,9 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(OutDir)Decor.dll" "C:\Games\Deus Ex\System" /Y
-xcopy "$(OutDir)Decor.pdb" "C:\Games\Deus Ex\System" /Y
-xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
+      <Command>xcopy "$(OutDir)DecorDrv.dll" "C:\Games\Deus Ex\System" /Y
+xcopy "$(OutDir)DecorDrv.pdb" "C:\Games\Deus Ex\System" /Y
+xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -90,9 +90,9 @@ xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(OutDir)Decor.dll" "C:\Games\Deus Ex\System" /Y
-xcopy "$(OutDir)Decor.pdb" "C:\Games\Deus Ex\System" /Y
-xcopy "$(SolutionDir)Decor\*.hlsl*" "C:\Games\Deus Ex\System\Decor" /Y
+      <Command>xcopy "$(OutDir)DecorDrv.dll" "C:\Games\Deus Ex\System" /Y
+xcopy "$(OutDir)DecorDrv.pdb" "C:\Games\Deus Ex\System" /Y
+xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

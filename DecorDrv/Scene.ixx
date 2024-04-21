@@ -132,7 +132,7 @@ public:
 
         // Vertex shader
         ID3DBlob* pVsBlob = nullptr;
-        if (!ctx.CreateVertexShader((WCHAR*)L"Decor/Scene.hlsl", "VS", "vs_4_0", pVsBlob, mVertexShader))
+        if (!ctx.CreateVertexShader((WCHAR*)L"DecorDrv/Scene.hlsl", "VS", "vs_4_0", pVsBlob, mVertexShader))
             return false;
 
         // Input layout
@@ -146,9 +146,9 @@ public:
             return false;
         
         // Pixel shaders
-        if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
+        if (!ctx.CreatePixelShader((WCHAR*)L"DecorDrv/Scene.hlsl", "PsPbrMetalness", "ps_4_0", mPsPbrMetalness))
             return false;
-        if (!ctx.CreatePixelShader((WCHAR*)L"Decor/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
+        if (!ctx.CreatePixelShader((WCHAR*)L"DecorDrv/Scene.hlsl", "PsConstEmissive", "ps_4_0", mPsConstEmmisive))
             return false;
 
         // Create constant buffers

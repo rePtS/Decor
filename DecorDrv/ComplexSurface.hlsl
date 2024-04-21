@@ -295,7 +295,7 @@ float4 PSMain(const VSOut input) : SV_Target
     //    const float3 Light = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, 0), 2).rrr;
     //    output.rgb *= Light;	    
     //}
-
+    
     output.a = 1;
     return output;
 }

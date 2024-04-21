@@ -21,14 +21,14 @@ import Utils;
 
 export
 {
-    class UD3D11RenderDevice : public URenderDevice
+    class UDecorRenderDevice : public URenderDevice
     {
 #pragma warning(push, 1)
-        DECLARE_CLASS(UD3D11RenderDevice, URenderDevice, CLASS_Config)
+        DECLARE_CLASS(UDecorRenderDevice, URenderDevice, CLASS_Config)
 #pragma warning(pop)
 
     public:
-        explicit UD3D11RenderDevice() :
+        explicit UDecorRenderDevice() :
             m_SceneManager(m_Backend)
         {
             URenderDevice::SpanBased = 0;
@@ -43,8 +43,8 @@ export
             URenderDevice::VolumetricLighting = 1;
         }
 
-        UD3D11RenderDevice(const UD3D11RenderDevice&) = delete;
-        UD3D11RenderDevice& operator=(const UD3D11RenderDevice&) = delete;
+        UDecorRenderDevice(const UDecorRenderDevice&) = delete;
+        UDecorRenderDevice& operator=(const UDecorRenderDevice&) = delete;
 
         void StaticConstructor()
         {
@@ -527,7 +527,7 @@ export
     };
 
     #pragma warning(push, 1)
-    IMPLEMENT_PACKAGE(Decor);
-    IMPLEMENT_CLASS(UD3D11RenderDevice);
+    IMPLEMENT_PACKAGE(DecorDrv);
+    IMPLEMENT_CLASS(UDecorRenderDevice);
     #pragma warning(pop)
 }

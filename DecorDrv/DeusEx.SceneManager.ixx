@@ -62,7 +62,7 @@ public:
 
         // Getting the relative name of the gltf file with the geometry of the level
         wchar_t levelFileName[256];
-        wsprintf(levelFileName, L"Decor/Scenes/%s.gltf", szLevelName);
+        wsprintf(levelFileName, L"DecorDrv/Scenes/%s.gltf", szLevelName);
 
         // Checking if there is a file on the disk
         std::ifstream levelFile(levelFileName);

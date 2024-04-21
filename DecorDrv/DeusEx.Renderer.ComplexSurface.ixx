@@ -30,7 +30,7 @@ public:
         , m_VertexBuffer(Device, DeviceContext, 4096)
         , m_IndexBuffer(Device, DeviceContext, DynamicGPUBufferHelpers::Fan2StripIndices(m_VertexBuffer.GetReserved()))
     {
-        ShaderCompiler Compiler(m_Device, L"Decor\\ComplexSurface.hlsl");
+        ShaderCompiler Compiler(m_Device, L"DecorDrv\\ComplexSurface.hlsl");
         m_pVertexShader = Compiler.CompileVertexShader();
 
         const D3D11_INPUT_ELEMENT_DESC InputElementDescs[] =

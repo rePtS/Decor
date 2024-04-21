@@ -38,7 +38,7 @@ namespace SceneLog
 
     export void Flush()
     {
-        std::wofstream outFile("Decor.log");
+        std::wofstream outFile("DecorDrv.log");
         outFile << wstream.str();
         outFile.close();
         wstream.clear();
