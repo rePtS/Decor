@@ -96,9 +96,8 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     return matInfo;
 }
 
-float4 PSMain(const VSOut input) : SV_Target
+float4 PSMain(const VSOut input) : SV_Target0
 {
-
     float4 Color = float4(input.Color, 1.0f);
 
     if (input.PolyFlags & (PF_Masked | PF_Modulated))
@@ -112,8 +111,14 @@ float4 PSMain(const VSOut input) : SV_Target
     }
 
     const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
+    
+    if (input.PolyFlags & PF_Translucent && !any(Diffuse))
+    {
+        clip(-1.0f);
+    }
+    
     Color.rgb *= Diffuse;
-
+    Color.a = input.Pos.z;
     return Color;
 
 /*

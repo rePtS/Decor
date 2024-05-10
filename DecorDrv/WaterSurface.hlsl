@@ -17,45 +17,17 @@ struct SPoly
 
 struct VSOut
 {
-    float4 Pos : SV_Position;    
+    float4 Pos : SV_Position;
     float2 TexCoord : TexCoord0;
-    float2 TexCoord1 : TexCoord1;    
+    float2 TexCoord1 : TexCoord1;
     uint PolyFlags : BlendIndices0;
     uint TexFlags : BlendIndices1;
     float4 PosWorld : Position1;
     float3 Normal : Normal;
 };
 
-SPoly VSMain(const SPoly Input)
-{    
-    return Input;
-}
-
-float4 PSMain_Old(const VSOut Input) : SV_Target
-{
-    if (Input.PolyFlags & PF_Masked)
-    {
-        clip(TexDiffuse.Sample(SamPoint, Input.TexCoord).a - 0.5f);
-    }
-
-    float4 Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    if (Input.TexFlags & 0x00000001)
-    {
-        const float3 Diffuse = TexDiffuse.Sample(SamLinear, Input.TexCoord).rgb;
-        Color.rgb *= Diffuse;
-    }
-    if (Input.TexFlags & 0x00000002)
-    {
-        const float3 Light = TexLight.Sample(SamLinear, Input.TexCoord1).bgr * 2.0f;
-        Color.rgb *= Light;
-    }
-    
-    return Color;
-}
-
 PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
-{    
+{
     //const float4 baseColor = BaseColorTexture.Sample(LinearSampler, input.Tex) * BaseColorFactor;
     //const float4 baseColor = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.5f, 0.5f, 1.f); // For now, we will use a fixed BaseColor, but then we will need to take it from TexDiffuse
     float4 baseColor;
@@ -68,13 +40,13 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
     float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
 
-    if (input.PolyFlags & PF_Translucent)    
+    if (input.PolyFlags & PF_Translucent)
     {
         metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
     }
 
     const float4 metalness = float4(metalRoughness.bbb, 1);
-    const float  roughness = metalRoughness.g;
+    const float roughness = metalRoughness.g;
 
     const float4 f0Diel = float4(0.04, 0.04, 0.04, 1);
 #if defined USE_SMOOTH_REFRACTION_APPROX || defined USE_ROUGH_REFRACTION_APPROX
@@ -96,7 +68,7 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
     return matInfo;
 }
 
-float4 PSMain(const VSOut input) : SV_Target0
+float4 PSMain(const VSOut input) : SV_Target1
 {
     if (input.TexFlags & 0x00000004)
     {
@@ -126,45 +98,22 @@ float4 PSMain(const VSOut input) : SV_Target0
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
     }
-    
-    if (input.PolyFlags & PF_Unlit)
-    {        
-        //return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
-        return float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z);
-    }
 
-    PbrM_ShadingCtx shadingCtx;
-    if (input.TexFlags & 0x00000008)
-        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
-    else
-        shadingCtx.normal = normalize(input.Normal);
-
-    //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
-    //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
-    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
-    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
-    //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
+    PbrM_ShadingCtx shadingCtx;    
+    shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
     shadingCtx.viewDir = normalize((float3) input.PosWorld);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
     float4 ambientLightLuminance = float4(0.05, 0.05, 0.05, 1);
-
     float4 luminance = float4(0.7, 0.7, 0.3, 1);
 
-    output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);
-
-    //output += PbrM_DirLightContrib(directionalLightVector,
-    //    luminance,
-    //    shadingCtx,
-    //    matInfo);
+    output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);    
     
     for (uint i = 0; i < PolyControl.x; ++i)
     {
         uint occlusionMapId = StaticLightIds[i].x;
-        
-        //output += TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, occlusionMapId), 0).rrra * 0.01f;
         
         float occlusionValue = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, occlusionMapId), 0).r;
         
@@ -175,7 +124,7 @@ float4 PSMain(const VSOut input) : SV_Target0
          
             uint lightInfo = asuint(intencity.w);
             if (bool(lightInfo & LIGHT_SPECIAL_MASK) != bool(input.PolyFlags & PF_SpecialLit))
-                continue;            
+                continue;
             
             float lightPeriod = ((lightInfo & LIGHT_PERIOD_MASK) >> LIGHT_PERIOD_OFFSET);
             
@@ -191,7 +140,7 @@ float4 PSMain(const VSOut input) : SV_Target0
                     if (fTick.y > 0.2f)
                         lightTypeRate = 0.0f;
                     break;
-                case LT_Pulse:                    
+                case LT_Pulse:
                     lightTypeRate = (sin(fTick.x / (lightPeriod * 4.0f)) + 1.0f) / 2.0f;
                     break;
                 case LT_Strobe:
@@ -218,7 +167,7 @@ float4 PSMain(const VSOut input) : SV_Target0
                         lightPosData.w = lightRadius;
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posWorld = (float3)input.PosWorld;
+                        float3 posWorld = (float3) input.PosWorld;
 
                         // Skip point lights that are out of range of the point being shaded.
                         if (length((float3) lightPosData - posWorld) < lightPosData.w)
@@ -284,43 +233,9 @@ float4 PSMain(const VSOut input) : SV_Target0
                     }
                     break;
             }
-        }                
+        }
     }
-    
-    //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
-
-    //// Original lightmap    
-    //if (input.TexFlags & 0x00000002)
-    //{        
-    //    const float3 Light = TexOcclusion.SampleLevel(SamLinear, float3(input.TexCoord1.x, input.TexCoord1.y, 0), 2).rrr;
-    //    output.rgb *= Light;	    
-    //}
 
     output.a = input.Pos.z;
     return output;
-}
-
-[maxvertexcount(3)]
-void GSMain(triangle SPoly In[3], inout TriangleStream<VSOut> outputStream)
-{
-    float3 v0 = In[0].Pos.xyz;
-    float3 v1 = In[1].Pos.xyz;
-    float3 v2 = In[2].Pos.xyz;
-
-    float3 vn = normalize(cross(v1 - v0, v2 - v0));
-
-    for (uint i = 0; i < 3; i += 1)
-    {
-        VSOut output;
-        output.Pos = mul(In[i].Pos, ProjectionMatrix);
-        output.PosWorld = In[i].Pos;
-        output.Normal = vn;
-        output.TexCoord = In[i].TexCoord;
-        output.TexCoord1 = In[i].TexCoord1;
-        output.PolyFlags = In[i].PolyFlags;
-        output.TexFlags = In[i].TexFlags;
-        outputStream.Append(output);
-    }
-
-    outputStream.RestartStrip();
 }

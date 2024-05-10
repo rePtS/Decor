@@ -15,6 +15,7 @@ import DeusEx.OcclusionMapCache;
 import DeusEx.Renderer.Tile;
 import DeusEx.Renderer.Gouraud;
 import DeusEx.Renderer.ComplexSurface;
+import DeusEx.Renderer.Composite;
 import DeusEx.SceneManager;
 import GlobalShaderConstants;
 import Utils;
@@ -57,7 +58,7 @@ export
             if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
             {
                 m_pGlobalShaderConstants->Bind();
-                if (m_Backend.UseHdr)
+                //if (m_Backend.UseHdr)
                     m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
                 m_pDeviceState->Bind();
                 m_pTextureCache->BindTextures();
@@ -102,6 +103,7 @@ export
         std::unique_ptr<TileRenderer> m_pTileRenderer;
         std::unique_ptr<GouraudRenderer> m_pGouraudRenderer;
         std::unique_ptr<ComplexSurfaceRenderer> m_pComplexSurfaceRenderer;
+        std::unique_ptr<CompositeRenderer> m_pCompositeRenderer;
         std::unique_ptr<TextureCache> m_pTextureCache;
         std::unique_ptr<OcclusionMapCache> m_pOcclusionMapCache;
 
@@ -144,6 +146,7 @@ export
                 m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
                 m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
                 m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
+                m_pCompositeRenderer = std::make_unique<CompositeRenderer>(Device, DeviceContext);
             }
             catch (const Utils::ComException& ex)
             {
@@ -193,7 +196,7 @@ export
         {
             m_bNoTilesDrawnYet = true;
 
-            m_Backend.NewFrame();
+            m_Backend.NewFrame(); // В этом методе нужно установить текстуры рендер-бэкенда как цели рендеринга
             m_pTileRenderer->NewFrame();
             m_pGouraudRenderer->NewFrame();
             m_pComplexSurfaceRenderer->NewFrame();            
@@ -210,10 +213,14 @@ export
             m_pGlobalShaderConstants->NewTick();
 
             Render();
+            
+            m_Backend.NewCompositeFrame(); // устанавливаем текстуры рендер-бэкенда как ресурсы для шейдера, а HDRTexture как цель рендеринга
+            m_pCompositeRenderer->Bind(); // привязываем шейдер, вершинный буфер, индексный буфер
+            m_pCompositeRenderer->Draw(); // рисуем однин прямоугольник на весь экран
 
             if (bBlit)
             {
-                m_Backend.Present();
+                m_Backend.Present(); // здесь установим бэк-буфер как цель рендеринга и проведем цвето-коррекцию
             }
         }
 
@@ -229,6 +236,10 @@ export
                 Render();
             }
 
+            // 0x00000001 - needs texturing
+            // 0x00000002 - needs lightmapping
+            // 0x00000004 - use original UE1 rendering
+            // 0x00000008 - poly is a water surface
             unsigned int TexFlags = 0;
 
             if (pFrame->Parent != nullptr)
@@ -279,6 +290,12 @@ export
             {
                 m_pComplexSurfaceRenderer->Map();
             }
+
+            auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal);
+            m_pComplexSurfaceRenderer->SetDrawMode(waterFlag);
+
+            if (waterFlag)
+                TexFlags |= 0x00000008;
 
             // Code from OpenGL renderer to calculate texture coordinates
             const float UDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;

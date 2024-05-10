@@ -100,6 +100,7 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
     </ClCompile>
+    <ClCompile Include="DeusEx.Renderer.Composite.ixx" />
     <ClCompile Include="DeusEx.SceneManager.ixx" />
     <ClCompile Include="GPU.ConstantBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">Default</CompileAs>
@@ -164,11 +165,11 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ComplexSurface.hlsl" />
+    <FxCompile Include="Composite.hlsl" />
     <FxCompile Include="Scene.hlsl" />
-    <FxCompile Include="Tile.hlsl">
-      <FileType>Document</FileType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">4.0</ShaderModel>
-    </FxCompile>
+    <FxCompile Include="Tile.hlsl" />
+    <FxCompile Include="Gouraud.hlsl" />
+    <FxCompile Include="WaterSurface.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">
@@ -177,12 +178,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <None Include="Defines.hlsli" />
     <None Include="packages.config" />
     <None Include="SceneConstants.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Gouraud.hlsl">
-      <FileType>Document</FileType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Deus Ex Debug|Win32'">4.0</ShaderModel>
-    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

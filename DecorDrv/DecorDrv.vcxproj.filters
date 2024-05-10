@@ -34,6 +34,7 @@
     <ClCompile Include="DeusEx.Drv.ixx" />
     <ClCompile Include="DeusEx.SceneManager.ixx" />
     <ClCompile Include="GPU.RenderTexture.ixx" />
+    <ClCompile Include="DeusEx.Renderer.Composite.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">
@@ -46,6 +47,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Scene.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Composite.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="WaterSurface.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

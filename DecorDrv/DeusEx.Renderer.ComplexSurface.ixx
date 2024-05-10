@@ -46,6 +46,9 @@ public:
 
         m_pGeometryShader = Compiler.CompileGeometryShader();
         m_pPixelShader = Compiler.CompilePixelShader();
+
+        ShaderCompiler WaterCompiler(m_Device, L"DecorDrv\\WaterSurface.hlsl");
+        m_pWaterSurfacePixelShader = WaterCompiler.CompilePixelShader();
     }
 
     ComplexSurfaceRenderer(const ComplexSurfaceRenderer&) = delete;
@@ -62,11 +65,17 @@ public:
     void Unmap() { m_VertexBuffer.Unmap(); m_IndexBuffer.Unmap(); }
     bool IsMapped() const { return m_VertexBuffer.IsMapped() || m_IndexBuffer.IsMapped(); }
 
+    void SetDrawMode(bool drawWater)
+    {
+        m_DrawWater = drawWater;
+    }
+
     void Bind()
     {
         assert(m_pInputLayout);
         assert(m_pVertexShader);
         assert(m_pPixelShader);
+        assert(m_pWaterSurfacePixelShader);
 
         m_DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
         m_DeviceContext.IASetInputLayout(m_pInputLayout.Get());
@@ -78,7 +87,11 @@ public:
         m_DeviceContext.IASetIndexBuffer(m_IndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
         m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
         m_DeviceContext.GSSetShader(m_pGeometryShader.Get(), nullptr, 0);
-        m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
+
+        if (m_DrawWater)
+            m_DeviceContext.PSSetShader(m_pWaterSurfacePixelShader.Get(), nullptr, 0);
+        else
+            m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
     }
 
     void Draw()
@@ -105,10 +118,12 @@ protected:
     ComPtr<ID3D11InputLayout> m_pInputLayout;
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
+    ComPtr<ID3D11PixelShader> m_pWaterSurfacePixelShader;
     ComPtr<ID3D11GeometryShader> m_pGeometryShader;
 
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;
 
     size_t m_iNumDraws = 0; // Number of draw calls this frame, for stats
+    bool m_DrawWater = false;
 };

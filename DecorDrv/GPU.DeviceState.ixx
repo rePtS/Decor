@@ -216,7 +216,7 @@ protected:
         BlendModulate.RenderTarget[0].BlendEnable = TRUE;
         BlendModulate.RenderTarget[0].SrcBlend = D3D11_BLEND::D3D11_BLEND_DEST_COLOR;
         BlendModulate.RenderTarget[0].DestBlend = D3D11_BLEND::D3D11_BLEND_SRC_COLOR;
-        BlendDefault.RenderTarget[0].BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+        BlendModulate.RenderTarget[0].BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
 
         D3D11_BLEND_DESC& BlendTranslucent = Descs[static_cast<size_t>(BLEND_STATE::TRANSLUCENT)];
         BlendTranslucent = BlendDefault;
