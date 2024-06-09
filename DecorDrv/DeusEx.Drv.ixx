@@ -291,7 +291,7 @@ export
                 m_pComplexSurfaceRenderer->Map();
             }
 
-            auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal);
+            auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
             m_pComplexSurfaceRenderer->SetDrawMode(waterFlag);
 
             if (waterFlag)

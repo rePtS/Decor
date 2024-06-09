@@ -294,6 +294,7 @@ protected:
             float fRes[4];
             XMMATRIX ProjectionMatrix;
             XMMATRIX ViewMatrix;
+            XMMATRIX ViewMatrixInv;
             XMVECTOR Origin;
             XMVECTOR DynamicLights[MAX_LIGHTS_DATA_SIZE];
         };
@@ -515,11 +516,20 @@ protected:
                 c.XAxis.Z, c.YAxis.Z, c.ZAxis.Z, c.Origin.Z,
                 0.0f, 0.0f, 0.0f, 1.0f
             );
+
+            const auto& uc = SceneNode.Uncoords;
+            auto viewMatrixInv = DirectX::XMMatrixSet(
+                uc.XAxis.X, uc.YAxis.X, uc.ZAxis.X, uc.Origin.X,
+                uc.XAxis.Y, uc.YAxis.Y, uc.ZAxis.Y, uc.Origin.Y,
+                uc.XAxis.Z, uc.YAxis.Z, uc.ZAxis.Z, uc.Origin.Z,
+                0.0f, 0.0f, 0.0f, 1.0f
+            );
             
             // TODO: need to figure out how to track viewport changes in a fast way to use following method
             // SetDynamicLights(SceneNode);
 
             m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
+            m_Buffer.m_Data.ViewMatrixInv = DirectX::XMMatrixTranspose(viewMatrixInv);
             m_Buffer.m_Data.Origin = { c.Origin.X, c.Origin.Y, c.Origin.Z, 0 };
             m_Buffer.MarkAsDirty();
 

@@ -22,7 +22,8 @@ struct VSOut
     float2 TexCoord1 : TexCoord1;
     uint PolyFlags : BlendIndices0;
     uint TexFlags : BlendIndices1;
-    float4 PosWorld : Position1;
+    float4 PosView : Position1;
+    float4 PosWorld : Position2;
     float3 Normal : Normal;
 };
 
@@ -38,12 +39,12 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 
     //const float4 metalRoughness = MetalRoughnessTexture.Sample(LinearSampler, input.Tex) * MetallicRoughnessFactor;
     //const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
-    float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.f, 0.4f, 0.f, 0.f); // For now, we will use a fixed metal Roughness
+    const float4 metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f); // For now, we will use a fixed metal Roughness
 
-    if (input.PolyFlags & PF_Translucent)
-    {
-        metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
-    }
+    //if (input.PolyFlags & PF_Translucent)
+    //{
+    //    metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
+    //}
 
     const float4 metalness = float4(metalRoughness.bbb, 1);
     const float roughness = metalRoughness.g;
@@ -98,16 +99,15 @@ float4 PSMain(const VSOut input) : SV_Target1
     {
         clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
     }
-
-    PbrM_ShadingCtx shadingCtx;    
-    shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
-    shadingCtx.viewDir = normalize((float3) input.PosWorld);
+    
+    PbrM_ShadingCtx shadingCtx;
+    shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.PosWorld.xy / 900.0f + float2(0.0001f * fTick.x, 0.0f)).rgb);
+    shadingCtx.viewDir = normalize((float3) input.PosView);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
     float4 output = float4(0, 0, 0, 0);
     float4 ambientLightLuminance = float4(0.05, 0.05, 0.05, 1);
-    float4 luminance = float4(0.7, 0.7, 0.3, 1);
 
     output += PbrM_AmbLightContrib(ambientLightLuminance, shadingCtx, matInfo);    
     
@@ -167,12 +167,12 @@ float4 PSMain(const VSOut input) : SV_Target1
                         lightPosData.w = lightRadius;
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posWorld = (float3) input.PosWorld;
+                        float3 posView = (float3) input.PosView;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
                         {
-                            output += PbrM_AmbPointLightContrib(posWorld,
+                            output += PbrM_AmbPointLightContrib(posView,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,
@@ -199,11 +199,11 @@ float4 PSMain(const VSOut input) : SV_Target1
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
                         //float4 lightDirData = mul(StaticLights[lightBufPos + 2], ViewMatrix);
-                        float3 posWorld = (float3) input.PosWorld;
+                        float3 posView = (float3) input.PosView;
 
                         // Skip spot lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
-                            output += PbrM_SpotLightContrib(posWorld,
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                            output += PbrM_SpotLightContrib(posView,
                                 lightPosData,
                                 lightDirData,
                                 intencity,
@@ -221,11 +221,11 @@ float4 PSMain(const VSOut input) : SV_Target1
                         lightPosData.w = lightRadius;
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posWorld = (float3) input.PosWorld;
+                        float3 posView = (float3) input.PosView;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
-                            output += PbrM_PointLightContrib(posWorld,
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                            output += PbrM_PointLightContrib(posView,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,

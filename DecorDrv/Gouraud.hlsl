@@ -19,14 +19,14 @@ struct VSOut
     float3 Color : Color0;
     float2 TexCoord : TexCoord0;
     uint PolyFlags : BlendIndices0;
-    float4 PosWorld : Position1;
+    float4 PosView : Position1;
 };
 
 VSOut VSMain(const SPoly Input)
 {
     VSOut Output;
     Output.Pos = mul(Input.Pos, ProjectionMatrix);
-    Output.PosWorld = Input.Pos;	
+    Output.PosView = Input.Pos;	
     Output.Normal = -normalize(Input.Normal);
     Output.Color = Input.Color;
     Output.TexCoord = Input.TexCoord;

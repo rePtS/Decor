@@ -51,6 +51,7 @@ cbuffer PerFrameBuffer : register(b0)
     float4 fRes;
     matrix ProjectionMatrix;
     matrix ViewMatrix;
+    matrix ViewMatrixInv;
     float4 Origin;
     float4 DynamicLights[MAX_LIGHTS_DATA_SIZE];
 };

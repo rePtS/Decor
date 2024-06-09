@@ -22,7 +22,8 @@ struct VSOut
     float2 TexCoord1 : TexCoord1;    
     uint PolyFlags : BlendIndices0;
     uint TexFlags : BlendIndices1;
-    float4 PosWorld : Position1;
+    float4 PosView : Position1;
+    float4 PosWorld : Position2;
     float3 Normal : Normal;
 };
 
@@ -128,23 +129,14 @@ float4 PSMain(const VSOut input) : SV_Target0
     }
     
     if (input.PolyFlags & PF_Unlit)
-    {        
+    {
         //return TexDiffuse.Sample(SamLinear, input.TexCoord).rgba;
         return float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z);
     }
 
     PbrM_ShadingCtx shadingCtx;
-    if (input.TexFlags & 0x00000008)
-        shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
-    else
-        shadingCtx.normal = normalize(input.Normal);
-
-    //shadingCtx.normal = normalize(TexNoise.Sample(SamLinear, input.TexCoord).rgb);
-    //shadingCtx.normal = normalize(input.Normal + 0.5 * normalize(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb));
-    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).rgb);
-    //shadingCtx.normal = normalize(input.Normal + 0.05f * TexNoise.Sample(SamLinear, input.TexCoord).rgb);
-    //shadingCtx.normal = normalize(input.Normal); //ComputeNormal(input); - now used input.Normal for testing    
-    shadingCtx.viewDir = normalize((float3) input.PosWorld);
+    shadingCtx.normal = normalize(input.Normal);
+    shadingCtx.viewDir = normalize((float3) input.PosView);
 
     const PbrM_MatInfo matInfo = PbrM_ComputeMatInfo(input);
 
@@ -218,12 +210,12 @@ float4 PSMain(const VSOut input) : SV_Target0
                         lightPosData.w = lightRadius;
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posWorld = (float3)input.PosWorld;
+                        float3 posView = (float3)input.PosView;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
                         {
-                            output += PbrM_AmbPointLightContrib(posWorld,
+                            output += PbrM_AmbPointLightContrib(posView,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,
@@ -250,11 +242,11 @@ float4 PSMain(const VSOut input) : SV_Target0
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
                         //float4 lightDirData = mul(StaticLights[lightBufPos + 2], ViewMatrix);
-                        float3 posWorld = (float3) input.PosWorld;
+                        float3 posView = (float3) input.PosView;
 
                         // Skip spot lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
-                            output += PbrM_SpotLightContrib(posWorld,
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                            output += PbrM_SpotLightContrib(posView,
                                 lightPosData,
                                 lightDirData,
                                 intencity,
@@ -272,11 +264,11 @@ float4 PSMain(const VSOut input) : SV_Target0
                         lightPosData.w = lightRadius;
                 
                         //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posWorld = (float3) input.PosWorld;
+                        float3 posView = (float3) input.PosView;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posWorld) < lightPosData.w)
-                            output += PbrM_PointLightContrib(posWorld,
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                            output += PbrM_PointLightContrib(posView,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,
@@ -313,7 +305,8 @@ void GSMain(triangle SPoly In[3], inout TriangleStream<VSOut> outputStream)
     {
         VSOut output;
         output.Pos = mul(In[i].Pos, ProjectionMatrix);
-        output.PosWorld = In[i].Pos;
+        output.PosView = In[i].Pos;
+        output.PosWorld = mul(In[i].Pos, ViewMatrixInv) + Origin;
         output.Normal = vn;
         output.TexCoord = In[i].TexCoord;
         output.TexCoord1 = In[i].TexCoord1;

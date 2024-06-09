@@ -39,11 +39,11 @@ float4 PSMain(const VSOut input) : SV_Target
         if (Water.a < reflectedSolid.a)
             reflectedSolid = Solid;
         
-        const float4 _WaterFogColor = float4(0, 0.3f, 0.8f, 1.0f);
+        const float4 _WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f); //float4(0, 0.3f, 0.8f, 1.0f);
         const float _WaterFogDensity = 1.1f;
         float depthDifference = (1.0f / reflectedSolid.a - 1.0f / Water.a) * 0.001f;
 
-        float fogFactor = exp2(-_WaterFogDensity * depthDifference);
+        float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
         return lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water + float4(Tile, 1.0f);
     }
 
