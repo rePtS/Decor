@@ -53,6 +53,7 @@ cbuffer PerFrameBuffer : register(b0)
     matrix ViewMatrix;
     matrix ViewMatrixInv;
     float4 Origin;
+    float4 FlashColor;
     float4 DynamicLights[MAX_LIGHTS_DATA_SIZE];
 };
 
@@ -336,4 +337,24 @@ float GetPixelPower(float3 p)
    //return 0.3f*p.r + 0.59f*p.g + 0.11f*p.b;
    //p = normalize(p);
    return (p.r + p.g + p.b) / 3.0f;   
+}
+
+float4 ApplyViewMatrixAtOrigin(float4 vec)
+{
+    float w = vec.w;
+    vec.w = 0;
+    vec = mul(vec - Origin, ViewMatrix);
+    vec.w = w;
+    
+    return vec;
+}
+
+float4 ApplyViewMatrix(float4 vec)
+{
+    float w = vec.w;
+    vec.w = 0;
+    vec = mul(vec, ViewMatrix);
+    vec.w = w;
+    
+    return vec;
 }

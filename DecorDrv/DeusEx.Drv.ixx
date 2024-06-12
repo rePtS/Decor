@@ -201,6 +201,12 @@ export
             m_pGouraudRenderer->NewFrame();
             m_pComplexSurfaceRenderer->NewFrame();            
 
+            // Set up flash if needed
+            if ((FVector)FlashScale != FVector(.5, .5, .5) || (FVector)FlashFog != FVector(0, 0, 0)) // From other renderers
+                m_pGlobalShaderConstants->SetFlashColor({ FlashFog.X, FlashFog.Y, FlashFog.Z, Min(FlashScale.X * 2.f,1.f) });
+            else
+                m_pGlobalShaderConstants->SetFlashColor({ 0.f, 0.f, 0.f, 0.f });
+
             if (m_SceneManager.IsSceneRenderingEnabled())
             {
                 m_pDeviceState->BindDefault();

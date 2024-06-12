@@ -159,20 +159,13 @@ float4 PSMain(const VSOut input) : SV_Target1
             {
                 case LE_Cylinder:
                     {
-                        float4 lightPosData = StaticLights[lightBufPos + 1];
-                
-                        float lightRadius = lightPosData.w;
-                        lightPosData.w = 0;
-                        lightPosData = mul(lightPosData - Origin, ViewMatrix);
-                        lightPosData.w = lightRadius;
-                
-                        //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posView = (float3) input.PosView;
+                        float4 lightPosData = ApplyViewMatrixAtOrigin(StaticLights[lightBufPos + 1]);
+                        float3 posSurf = input.PosView.xyz;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                        if (length((float3) lightPosData - posSurf) < lightPosData.w)
                         {
-                            output += PbrM_AmbPointLightContrib(posView,
+                            output += PbrM_AmbPointLightContrib(posSurf,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,
@@ -183,27 +176,13 @@ float4 PSMain(const VSOut input) : SV_Target1
                 case LE_Spotlight:
                 case LE_StaticSpot:
                     {
-                        float4 lightPosData = StaticLights[lightBufPos + 1];
-                
-                        float lightRadius = lightPosData.w;
-                        lightPosData.w = 0;
-                        lightPosData = mul(lightPosData - Origin, ViewMatrix);
-                        lightPosData.w = lightRadius;
-                
-                        float4 lightDirData = StaticLights[lightBufPos + 2];
-                
-                        float coneAngle = lightDirData.w;
-                        lightDirData.w = 0;
-                        lightDirData = mul(lightDirData, ViewMatrix);
-                        lightDirData.w = coneAngle;
-                
-                        //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        //float4 lightDirData = mul(StaticLights[lightBufPos + 2], ViewMatrix);
-                        float3 posView = (float3) input.PosView;
+                        float4 lightPosData = ApplyViewMatrixAtOrigin(StaticLights[lightBufPos + 1]);
+                        float4 lightDirData = ApplyViewMatrix(StaticLights[lightBufPos + 2]);
+                        float3 posSurf = input.PosView.xyz;
 
                         // Skip spot lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posView) < lightPosData.w)
-                            output += PbrM_SpotLightContrib(posView,
+                        if (length((float3) lightPosData - posSurf) < lightPosData.w)
+                            output += PbrM_SpotLightContrib(posSurf,
                                 lightPosData,
                                 lightDirData,
                                 intencity,
@@ -213,19 +192,12 @@ float4 PSMain(const VSOut input) : SV_Target1
                     break;
                 default:
                     {
-                        float4 lightPosData = StaticLights[lightBufPos + 1];
-                
-                        float lightRadius = lightPosData.w;
-                        lightPosData.w = 0;
-                        lightPosData = mul(lightPosData - Origin, ViewMatrix);
-                        lightPosData.w = lightRadius;
-                
-                        //float4 lightPosData = mul(StaticLights[lightBufPos + 1] - Origin, ViewMatrix);
-                        float3 posView = (float3) input.PosView;
+                        float4 lightPosData = ApplyViewMatrixAtOrigin(StaticLights[lightBufPos + 1]);                
+                        float3 posSurf = input.PosView.xyz;
 
                         // Skip point lights that are out of range of the point being shaded.
-                        if (length((float3) lightPosData - posView) < lightPosData.w)
-                            output += PbrM_PointLightContrib(posView,
+                        if (length((float3) lightPosData - posSurf) < lightPosData.w)
+                            output += PbrM_PointLightContrib(posSurf,
                                 lightPosData,
                                 intencity,
                                 shadingCtx,

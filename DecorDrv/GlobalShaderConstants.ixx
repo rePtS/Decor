@@ -82,6 +82,11 @@ public:
         m_PerComplexPolyBuffer.SetComplexPoly(SceneNode, Poly, lightCache);
     }
 
+    void SetFlashColor(const DirectX::XMVECTOR& color)
+    {
+        m_PerFrameBuffer.SetFlashColor(color);
+    }
+
     float GetRFX2() { return m_PerFrameBuffer.GetRFX2(); }
     float GetRFY2() { return m_PerFrameBuffer.GetRFY2(); }
 
@@ -296,6 +301,7 @@ protected:
             XMMATRIX ViewMatrix;
             XMMATRIX ViewMatrixInv;
             XMVECTOR Origin;
+            XMVECTOR FlashColor;
             XMVECTOR DynamicLights[MAX_LIGHTS_DATA_SIZE];
         };
 
@@ -535,6 +541,12 @@ protected:
 
             //        m_Coords = SceneNode.Coords;
             //    }        
+        }
+
+        void SetFlashColor(const DirectX::XMVECTOR& color)
+        {
+            m_Buffer.m_Data.FlashColor = color;
+            m_Buffer.MarkAsDirty();
         }
 
         void UpdateAndBind(unsigned int iSlot)

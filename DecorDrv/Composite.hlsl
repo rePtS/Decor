@@ -44,8 +44,8 @@ float4 PSMain(const VSOut input) : SV_Target
         float depthDifference = (1.0f / reflectedSolid.a - 1.0f / Water.a) * 0.001f;
 
         float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
-        return lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water + float4(Tile, 1.0f);
+        return lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water + FlashColor + float4(Tile, 1.0f);
     }
 
-    return Solid + float4(Tile, 1.0f);
+    return Solid + FlashColor + float4(Tile, 1.0f);
 }
