@@ -201,11 +201,10 @@ export
             m_pGouraudRenderer->NewFrame();
             m_pComplexSurfaceRenderer->NewFrame();            
 
-            // Set up flash if needed
+            DirectX::XMVECTOR flashColor = { 0.f, 0.f, 0.f, 0.f };
             if ((FVector)FlashScale != FVector(.5, .5, .5) || (FVector)FlashFog != FVector(0, 0, 0)) // From other renderers
-                m_pGlobalShaderConstants->SetFlashColor({ FlashFog.X, FlashFog.Y, FlashFog.Z, Min(FlashScale.X * 2.f,1.f) });
-            else
-                m_pGlobalShaderConstants->SetFlashColor({ 0.f, 0.f, 0.f, 0.f });
+                flashColor = { FlashFog.X, FlashFog.Y, FlashFog.Z, Min(FlashScale.X * 2.f,1.f) };
+            m_pGlobalShaderConstants->NewFrame(flashColor);
 
             if (m_SceneManager.IsSceneRenderingEnabled())
             {
@@ -283,10 +282,16 @@ export
                     m_pOcclusionMapCache->FindOrInsertAndPrepare(*pFrame->Level->Model, mapId);
             }
 
+            auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
+            m_pComplexSurfaceRenderer->SetDrawMode(waterFlag);
+
+            if (waterFlag)
+                TexFlags |= 0x00000008;
+
             if (pFrame->Parent == nullptr)
             {
                 m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
-                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys);
+                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys, waterFlag);
             }
 
             m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
@@ -295,13 +300,7 @@ export
             if (!m_pComplexSurfaceRenderer->IsMapped())
             {
                 m_pComplexSurfaceRenderer->Map();
-            }
-
-            auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
-            m_pComplexSurfaceRenderer->SetDrawMode(waterFlag);
-
-            if (waterFlag)
-                TexFlags |= 0x00000008;
+            }            
 
             // Code from OpenGL renderer to calculate texture coordinates
             const float UDot = Facet.MapCoords.XAxis | Facet.MapCoords.Origin;

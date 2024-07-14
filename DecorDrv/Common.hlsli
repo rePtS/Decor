@@ -48,13 +48,15 @@ static const float PI = 3.14159265f;
 
 cbuffer PerFrameBuffer : register(b0)
 {
-    float4 fRes;
+    float4 fRes;    
     matrix ProjectionMatrix;
     matrix ViewMatrix;
     matrix ViewMatrixInv;
     float4 Origin;
     float4 FlashColor;
     float4 DynamicLights[MAX_LIGHTS_DATA_SIZE];
+    uint FrameControl;
+    float ScreenWaterLevel;
 };
 
 cbuffer PerTickBuffer : register(b1)
@@ -69,8 +71,8 @@ cbuffer PerSceneBuffer : register(b2)
 
 cbuffer PerPolyBuffer : register(b3)
 {
-    uint4 PolyControl;
-    uint4 StaticLightIds[1024];
+    uint4 PolyControl;    
+    uint4 StaticLightIds[1024];    
 };
 
 sampler SamLinear : register(s0);

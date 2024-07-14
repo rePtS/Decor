@@ -76,22 +76,26 @@ public:
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
     }
 
-    void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly)
-    {
+    void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, bool isWaterSurface)
+    {        
         const auto& lightCache = m_PerSceneBuffer.GetLightCache();
         m_PerComplexPolyBuffer.SetComplexPoly(SceneNode, Poly, lightCache);
+
+        if (isWaterSurface)
+            m_PerFrameBuffer.CheckScreenWaterIntersection(SceneNode, Poly);
     }
 
-    void SetFlashColor(const DirectX::XMVECTOR& color)
+    void NewFrame(const DirectX::XMVECTOR& color)
     {
         m_PerFrameBuffer.SetFlashColor(color);
+        m_PerFrameBuffer.CheckWaterZone();
     }
 
     float GetRFX2() { return m_PerFrameBuffer.GetRFX2(); }
-    float GetRFY2() { return m_PerFrameBuffer.GetRFY2(); }
+    float GetRFY2() { return m_PerFrameBuffer.GetRFY2(); }        
 
 protected:
-
+        
     static XMVECTOR HSVtoRGB(float H, float S, float V)
     {
         if (S == 0.0)
@@ -296,13 +300,15 @@ protected:
     {
         struct PerFrame
         {
-            float fRes[4];
+            float fRes[4];            
             XMMATRIX ProjectionMatrix;
             XMMATRIX ViewMatrix;
             XMMATRIX ViewMatrixInv;
             XMVECTOR Origin;
             XMVECTOR FlashColor;
             XMVECTOR DynamicLights[MAX_LIGHTS_DATA_SIZE];
+            uint32_t FrameControl;
+            float ScreenWaterLevel; // Уровень, на который камера погружена в воду (0 - не погружена, 1 - погружена полностью)
         };
 
         ConstantBuffer<PerFrame> m_Buffer;
@@ -313,6 +319,8 @@ protected:
         // Light sources on the current level (actualy these are "dynamic" light sources as they can move or switch on/off)
         AAugmentation* m_AugLight;
         std::vector<AActor*> m_DynamicLights;
+
+        ADeusExPlayer* m_Player = nullptr;
 
         // Vars for projection change check
         float m_fFov = 0.0f;
@@ -327,6 +335,17 @@ protected:
 
         // Actual view matrix
         FCoords m_Coords;
+
+        //
+        const XMVECTOR ScreenUpDir = { 0.0f, 1.0f, 0.0f, 0.0f };
+        XMVECTOR _waterPlane = { 0.0f, 0.0f, 0.0f, 0.0f };
+        XMMATRIX _viewMatrix;
+        XMMATRIX _viewMatrixInv;
+
+        /// <summary>
+        /// Screen height in view space
+        /// </summary>
+        float _screenHalfHeight;
 
         /// <summary>
         /// Check if light augmentation is on
@@ -412,6 +431,63 @@ protected:
             }
         }
 
+        bool XM_CALLCONV Intersects(
+            const XMVECTOR orig, const XMVECTOR dir,
+            const XMVECTOR v0, const XMVECTOR v1, const XMVECTOR v2,
+            float& t)
+        {
+            static const float kEpsilon = 1.0e-10f; //0.000000001f;
+
+            // Compute the plane's normal
+            auto v0v1 = DirectX::XMVectorSubtract(v1, v0);
+            auto v0v2 = DirectX::XMVectorSubtract(v2, v0);
+            // No need to normalize
+            auto N = DirectX::XMVector3Cross(v0v1, v0v2); // N
+            float area2 = DirectX::XMVectorGetX(DirectX::XMVector3Length(N));
+
+            // Step 1: Finding P
+
+            // Check if the ray and plane are parallel
+            float NdotRayDirection = DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, dir));
+            if (fabs(NdotRayDirection) < kEpsilon) // Almost 0
+                return false; // They are parallel, so they don't intersect!
+
+            // Compute d parameter using equation 2
+            float d = -DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, v0));
+
+            // Compute t (equation 3)
+            t = -(DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, orig)) + d) / NdotRayDirection;
+
+            // Check if the triangle is behind the ray
+            if (t < 0) return false; // The triangle is behind
+
+            // Compute the intersection point using equation 1
+            auto P = DirectX::XMVectorAdd(orig, DirectX::XMVectorScale(dir, t)); //Vec3f P = orig + t * dir;
+
+            // Step 2: Inside-Outside Test
+            XMVECTOR C; // Vector perpendicular to triangle's plane
+
+            // Edge 0
+            auto edge0 = DirectX::XMVectorSubtract(v1, v0);
+            auto vp0 = DirectX::XMVectorSubtract(P, v0);
+            C = DirectX::XMVector3Cross(edge0, vp0);
+            if (DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, C)) < 0) return false; // P is on the right side
+
+            // Edge 1
+            auto edge1 = DirectX::XMVectorSubtract(v2, v1);
+            auto vp1 = DirectX::XMVectorSubtract(P, v1);
+            C = DirectX::XMVector3Cross(edge1, vp1);
+            if (DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, C)) < 0) return false; // P is on the right side
+
+            // Edge 2
+            auto edge2 = DirectX::XMVectorSubtract(v0, v2);
+            auto vp2 = DirectX::XMVectorSubtract(P, v2);
+            C = DirectX::XMVector3Cross(edge2, vp2);
+            if (DirectX::XMVectorGetX(DirectX::XMVector3Dot(N, C)) < 0) return false; // P is on the right side
+
+            return true; // This ray hits the triangle
+        }
+
     public:
         PerFrameBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
             : m_Buffer(Device, DeviceContext)
@@ -442,6 +518,7 @@ protected:
                 FName classNameLight(L"Light", EFindName::FNAME_Find);
                 FName classNameSpotlight(L"Spotlight", EFindName::FNAME_Find);
                 FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
+                FName classNameJCDentonMale(L"JCDentonMale", EFindName::FNAME_Find);
 
                 for (size_t i = 0; i < SceneNode.Level->Actors.Num(); ++i)
                 {
@@ -461,6 +538,12 @@ protected:
                         // Checking that the current actor is a flashlight augmentation
                         else if (actorFName == classNameAugLight)
                             m_AugLight = (AAugmentation*)actor;
+
+                        else if (actorFName == classNameJCDentonMale)
+                        {
+                            m_Player = (ADeusExPlayer*)actor;
+                            int a = 0;
+                        }
                     }
                 }
 
@@ -505,6 +588,8 @@ protected:
 
                 auto frustumConeCosine = fZNear / farTopLeftClippingPoint.Size();
                 m_SquaredViewConeCos = frustumConeCosine * frustumConeCosine;
+
+                _screenHalfHeight = halfFovTan * aspect;                
             }
         }
 
@@ -516,7 +601,7 @@ protected:
             //    {
 
             const auto& c = SceneNode.Coords;
-            auto viewMatrix = DirectX::XMMatrixSet(
+            _viewMatrix = DirectX::XMMatrixSet(
                 c.XAxis.X, c.YAxis.X, c.ZAxis.X, c.Origin.X,
                 c.XAxis.Y, c.YAxis.Y, c.ZAxis.Y, c.Origin.Y,
                 c.XAxis.Z, c.YAxis.Z, c.ZAxis.Z, c.Origin.Z,
@@ -524,18 +609,46 @@ protected:
             );
 
             const auto& uc = SceneNode.Uncoords;
-            auto viewMatrixInv = DirectX::XMMatrixSet(
+            _viewMatrixInv = DirectX::XMMatrixSet(
                 uc.XAxis.X, uc.YAxis.X, uc.ZAxis.X, uc.Origin.X,
                 uc.XAxis.Y, uc.YAxis.Y, uc.ZAxis.Y, uc.Origin.Y,
                 uc.XAxis.Z, uc.YAxis.Z, uc.ZAxis.Z, uc.Origin.Z,
                 0.0f, 0.0f, 0.0f, 1.0f
-            );
-            
+            );                        
+
+            // Если находимся в воде, то проверяем пересечение вертикальной линии камеры с плоскостью воды
+            if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
+            {
+                if (DirectX::XMVectorGetZ(_waterPlane) != 0.0f)
+                {
+                    ///////////////auto viewWaterPlane = DirectX::XMPlaneTransform(_waterPlane, DirectX::XMMatrixTranspose(_viewMatrix));
+                    XMVECTOR p1 = { 0.0f, -_screenHalfHeight, 1.0f, 0.0f }; // screen bottom center point
+                    XMVECTOR p2 = { 0.0f, +_screenHalfHeight, 1.0f, 0.0f }; // screen up center point
+
+                    // Переводим p1 и p2 в мировое пространство и работаем с ними                    
+                    p1 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p1, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
+                    p2 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p2, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });                    
+
+                    if (DirectX::XMVectorGetZ(p2) <= -DirectX::XMVectorGetW(_waterPlane))
+                        m_Buffer.m_Data.ScreenWaterLevel = -1.0f;
+                    else
+                    {
+                        auto intersectionPoint = DirectX::XMPlaneIntersectLine(_waterPlane, p1, p2);
+
+                        // Находим уровень, на котором водная поверхность пересекает экран
+                        // (расстояние от нижней средней точки до точки пересечения делим на высоту экрана)
+                        auto intersectionDist = DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVectorSubtract(intersectionPoint, p1)));
+                        // передаем полученное значение в шейдер
+                        m_Buffer.m_Data.ScreenWaterLevel = intersectionDist / (_screenHalfHeight * 2.0f);
+                    }                                        
+                }
+            }
+
             // TODO: need to figure out how to track viewport changes in a fast way to use following method
             // SetDynamicLights(SceneNode);
 
-            m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(viewMatrix);
-            m_Buffer.m_Data.ViewMatrixInv = DirectX::XMMatrixTranspose(viewMatrixInv);
+            m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(_viewMatrix);
+            m_Buffer.m_Data.ViewMatrixInv = DirectX::XMMatrixTranspose(_viewMatrixInv);
             m_Buffer.m_Data.Origin = { c.Origin.X, c.Origin.Y, c.Origin.Z, 0 };
             m_Buffer.MarkAsDirty();
 
@@ -543,9 +656,48 @@ protected:
             //    }        
         }
 
-        void SetFlashColor(const DirectX::XMVECTOR& color)
+        void CheckScreenWaterIntersection(const FSceneNode& SceneNode, const FSavedPoly& Poly)
         {
+            if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
+            {
+                for (int i = 2; i < Poly.NumPts; i++)
+                {
+                    XMVECTOR v0 = { Poly.Pts[0]->Point.X, Poly.Pts[0]->Point.Y, Poly.Pts[0]->Point.Z, 0.0f };
+                    XMVECTOR v1 = { Poly.Pts[i - 1]->Point.X, Poly.Pts[i - 1]->Point.Y, Poly.Pts[i - 1]->Point.Z, 0.0f };
+                    XMVECTOR v2 = { Poly.Pts[i]->Point.X, Poly.Pts[i]->Point.Y, Poly.Pts[i]->Point.Z, 0.0f };
+
+                    XMVECTOR origin = { 0.0f, -_screenHalfHeight, 1.0f, 0.0f }; // screen bottom center point
+
+                    float dist;
+                    if (Intersects(origin, ScreenUpDir, v0, v1, v2, dist))
+                    {
+                        // вычисляем точку пересечения, приводим ее в мировые координаты и сохраняеем ее высоту (z-компонента)
+                        const auto& co = SceneNode.Coords.Origin;
+                        auto intersectionPoint = DirectX::XMVectorAdd(
+                            DirectX::XMVector3Transform(
+                                DirectX::XMVectorAdd(origin, DirectX::XMVectorScale(ScreenUpDir, dist)),
+                                _viewMatrixInv
+                            ), { co.X, co.Y, co.Z, 0.0f });
+                        _waterPlane = { 0.0f, 0.0f, 1.0f, -DirectX::XMVectorGetZ(intersectionPoint) };
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        void SetFlashColor(const DirectX::XMVECTOR& color)
+        {            
             m_Buffer.m_Data.FlashColor = color;
+            m_Buffer.MarkAsDirty();
+        }
+
+        void CheckWaterZone()
+        {
+            if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
+                m_Buffer.m_Data.FrameControl |= 1;
+            else
+                m_Buffer.m_Data.FrameControl &= 0xFFFFFFFE;
             m_Buffer.MarkAsDirty();
         }
 
@@ -617,25 +769,23 @@ protected:
     {
         struct PerComplexPoly
         {
-            XMVECTORU32 PolyControl;
-            // list of IDs of static light sources that are visible for the current ComplexPoly
-            XMVECTORU32 StaticLightIds[MAX_LIGHTS_INDEX_SIZE];
-            XMMATRIX PolyVM;
+            XMVECTORU32 PolyControl;            
+            XMVECTORU32 StaticLightIds[MAX_LIGHTS_INDEX_SIZE]; // list of IDs of static light sources that are visible for the current ComplexPoly
         };
 
         ConstantBuffer<PerComplexPoly> m_Buffer;
-
+        
     public:
         PerComplexPolyBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
             : m_Buffer(Device, DeviceContext)
-        { }
+        {}
 
         PerComplexPolyBuffer(const PerComplexPolyBuffer&) = delete;
         PerComplexPolyBuffer& operator=(const PerComplexPolyBuffer&) = delete;
 
         void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, const std::unordered_map<AActor*, size_t> &lightCache)
-        {            
-            assert(Poly.NumPts >= 3);                        
+        {
+            assert(Poly.NumPts >= 3);
 
             int currSurf = SceneNode.Level->Model->Nodes(Poly.iNode).iSurf;
             if (currSurf > -1)
