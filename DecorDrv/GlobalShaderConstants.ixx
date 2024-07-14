@@ -627,9 +627,9 @@ protected:
 
                     // Переводим p1 и p2 в мировое пространство и работаем с ними                    
                     p1 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p1, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
-                    p2 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p2, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });                    
+                    p2 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p2, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
 
-                    if (DirectX::XMVectorGetZ(p2) <= -DirectX::XMVectorGetW(_waterPlane))
+                    if (DirectX::XMVectorGetZ(p1) <= -DirectX::XMVectorGetW(_waterPlane))
                         m_Buffer.m_Data.ScreenWaterLevel = -1.0f;
                     else
                     {
