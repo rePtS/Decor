@@ -25,18 +25,21 @@ VSOut VSMain(const SPoly Input)
     return Output;
 }
 
-static const float4 _WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f); //float4(0, 0.3f, 0.8f, 1.0f);
+static const float4 _WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f);
 static const float _WaterFogDensity = 1.1f;
+
+bool IsUnderwater(float screenY)
+{
+    return (FrameControl & 1) && (screenY > ScreenWaterLevel);
+}
 
 float4 AddUnderWaterFog(float4 color, float distance, float screenY)
 {
-    if ((FrameControl & 1) && (screenY > ScreenWaterLevel))
+    if (IsUnderwater(screenY))
     {
-        //return float4(0, 1, 0, 0);
-        
         float depth = (1.0f / distance) * 0.001f;
         float fogFactor = exp2(-_WaterFogDensity * depth * 5.0f);
-        return lerp(_WaterFogColor * 2.0f, color, fogFactor);
+        return lerp(_WaterFogColor * 2.0f, color, fogFactor) + float4(0, 0, 0.04f, 0);
     }
     else
         return color;
@@ -52,14 +55,21 @@ float4 PSMain(const VSOut input) : SV_Target
     {
         float2 noiseUV = TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).xy;
         float4 reflectedSolid = TexSolid.Sample(SamPoint, input.TexCoord + 0.005f * noiseUV).rgba;
-        
+                
         if (Water.a < reflectedSolid.a)
             reflectedSolid = Solid;
-        
+
         float depthDifference = (1.0f / reflectedSolid.a - 1.0f / Water.a) * 0.001f;
 
-        float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
-        return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+        if (!IsUnderwater(input.TexCoord.y))
+        {
+            float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
+            return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+        }
+        else
+        {
+            return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+        }
     }
     
     return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
