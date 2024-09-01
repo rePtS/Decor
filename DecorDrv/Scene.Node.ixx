@@ -139,7 +139,7 @@ public:
         const std::wstring& logPrefix)
     {
         // debug
-        if (SceneLog::sLoggingLevel >= SceneLog::eDebug)
+        if (SceneLog::sLoggingLevel >= SceneLog::ELoggingLevel::eDebug)
         {
             std::wstring transforms;
             if (!node.rotation.empty())

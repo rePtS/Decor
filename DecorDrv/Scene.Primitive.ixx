@@ -342,7 +342,7 @@ private:
         const auto attrIt = attributes.find(attrName);
         if (attrIt == attributes.end())
         {
-            SceneLog::Write(requiredData ? SceneLog::eError : SceneLog::eDebug,
+            SceneLog::Write(requiredData,
                 L"%sNo %s attribute present in primitive %d!",
                 logPrefix.c_str(),
                 SceneUtils::StringToWstring(attrName).c_str(),

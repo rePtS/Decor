@@ -7,29 +7,29 @@ export module Scene.Log;
 
 namespace SceneLog
 {
-    enum ELoggingLevel
+    export enum class ELoggingLevel
     {
-        eError,
-        eWarning,
-        eDebug,
-        eInfo
+        eError = 0,
+        eWarning = 1,
+        eDebug = 2,
+        eInfo = 3
     };
 
     static std::wstringstream wstream;
 
-    export ELoggingLevel sLoggingLevel = SceneLog::eInfo;
+    export ELoggingLevel sLoggingLevel = ELoggingLevel::eInfo;
 
     const wchar_t* LogLevelToString(ELoggingLevel level)
     {
         switch (level)
         {
-        case eDebug:
+        case ELoggingLevel::eDebug:
             return L"Debug";
-        case eInfo:
+        case ELoggingLevel::eInfo:
             return L"Info";
-        case eWarning:
+        case ELoggingLevel::eWarning:
             return L"Warning";
-        case eError:
+        case ELoggingLevel::eError:
             return L"Error";
         default:
             return L"Uknown";
@@ -57,6 +57,12 @@ namespace SceneLog
         swprintf_s(tmpBuff2, L"[% 7s] %s\n", LogLevelToString(msgLevel), tmpBuff1);
 
         wstream << tmpBuff2;
+    }
+
+    export template <typename... Args>
+    void Write(bool isRequiredData, const wchar_t* msg, Args... args)
+    {
+        Write(isRequiredData ? ELoggingLevel::eError : ELoggingLevel::eDebug, msg, args...);
     }
 
     export template <typename... Args>
