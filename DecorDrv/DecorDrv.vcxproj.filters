@@ -67,5 +67,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="settings.json" />
   </ItemGroup>
 </Project>

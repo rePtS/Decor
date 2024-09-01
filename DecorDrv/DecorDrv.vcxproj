@@ -178,6 +178,7 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <None Include="Defines.hlsli" />
     <None Include="packages.config" />
     <None Include="SceneConstants.hlsli" />
+    <None Include="settings.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -246,8 +246,12 @@ export
             // 0x00000004 - use original UE1 rendering
             // 0x00000008 - poly is a water surface
             unsigned int TexFlags = 0;
+            
+            int maxINode = m_pGlobalShaderConstants->GetMaxINode();
 
-            if (pFrame->Parent != nullptr)
+            // Рисуем по-старому, если это второстепенное изображение (например, отражение),
+            // либо если это MovableObject (у него значение iNode больше определенного)
+            if (pFrame->Parent != nullptr || Facet.Polys->iNode > maxINode)
                 TexFlags |= 0x00000004;
 
             const TextureConverter::TextureData* pTexDiffuse = nullptr;

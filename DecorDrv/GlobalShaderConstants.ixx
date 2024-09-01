@@ -4,13 +4,16 @@
 #include <DirectXMath.h>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <chrono>
 #include <cassert>
 #include <random>
+#include <fstream>
 
 #include "Defines.hlsli"
 #include <DeusEx.h>
 #include <UnRender.h>
+#include <simple_json.hpp>
 
 export module GlobalShaderConstants;
 
@@ -22,12 +25,18 @@ using DirectX::XMMATRIX;
 
 export class GlobalShaderConstants
 {
+    bool _settingsInitialized = false;
+    json::JSON _settings;
+
+    int _currentLevelIndex;
+    std::string _currentLevelName;
+
 public:
     explicit GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        : m_PerSceneBuffer(Device, DeviceContext)
-        , m_PerFrameBuffer(Device, DeviceContext)
-        , m_PerTickBuffer(Device, DeviceContext)
-        , m_PerComplexPolyBuffer(Device, DeviceContext)
+        : m_PerSceneBuffer(Device, DeviceContext, 2)
+        , m_PerFrameBuffer(Device, DeviceContext, 0)
+        , m_PerTickBuffer(Device, DeviceContext, 1)
+        , m_PerComplexPolyBuffer(Device, DeviceContext, 3)
     { }
 
     GlobalShaderConstants(const GlobalShaderConstants&) = delete;
@@ -43,10 +52,10 @@ public:
 
     void Bind()
     {
-        m_PerFrameBuffer.UpdateAndBind(0);
-        m_PerTickBuffer.UpdateAndBind(1);
-        m_PerSceneBuffer.UpdateAndBind(2);
-        m_PerComplexPolyBuffer.UpdateAndBind(3);
+        m_PerFrameBuffer.UpdateAndBind();
+        m_PerTickBuffer.UpdateAndBind();
+        m_PerSceneBuffer.UpdateAndBind();
+        m_PerComplexPolyBuffer.UpdateAndBind();
     }
 
     void NewTick()
@@ -72,8 +81,47 @@ public:
     
     void CheckLevelChange(const FSceneNode& SceneNode)
     {
+        auto levelIndex = SceneNode.Level->GetOuter()->GetFName().GetIndex();
+
+        // if current level has changed
+        if (_currentLevelIndex != levelIndex)
+        {
+            _currentLevelIndex = levelIndex;
+            _currentLevelName = GetString(
+                SceneNode.Level->GetOuter()->GetPathName());
+
+            if (!_settingsInitialized)
+            {
+                std::ifstream f("DecorDrv\\settings.json");
+                if (f.good())
+                {
+                    std::stringstream buffer;
+                    buffer << f.rdbuf();
+                    _settings = json::JSON::Load(buffer.str());
+                }
+                _settingsInitialized = true;
+            }
+        }                
+
         m_PerSceneBuffer.SetSceneStaticLights(SceneNode);
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
+    }
+
+    std::string GetString(const TCHAR* tStr)
+    {
+        char charBuf[64];
+        wcstombs(charBuf, tStr, 64);
+        return std::string(charBuf);
+    }
+
+    int GetMaxINode()
+    {
+        if (_settings.IsNull())
+            return 1000000;
+        else if (_settings.hasKey(_currentLevelName))
+            return _settings[_currentLevelName]["max_inode"].ToInt();
+        else
+            return 1000000;
     }
 
     void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, bool isWaterSurface)
@@ -223,17 +271,19 @@ protected:
         struct PerScene
         {
             XMVECTOR StaticLights[MAX_BUF];
-        };        
+        };
 
         // Index of the current level (used to determine if current level has been changed)
         int m_CurrentLevelIndex;
 
         ConstantBuffer<PerScene> m_Buffer;
-        std::unordered_map<AActor*, size_t> m_LightCache;        
+        std::unordered_map<AActor*, size_t> m_LightCache;
+
+        unsigned int _slot;
 
     public:
-        PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-            : m_Buffer(Device, DeviceContext)
+        PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
+            : m_Buffer(Device, DeviceContext), _slot(slot)
         { }
 
         PerSceneBuffer(const PerSceneBuffer&) = delete;
@@ -285,9 +335,9 @@ protected:
             return m_LightCache;
         }
 
-        void UpdateAndBind(unsigned int iSlot)
+        void UpdateAndBind()
         {
-            m_Buffer.UpdateAndBind(iSlot);
+            m_Buffer.UpdateAndBind(_slot);
         }
     }
     m_PerSceneBuffer;
@@ -312,6 +362,8 @@ protected:
         };
 
         ConstantBuffer<PerFrame> m_Buffer;
+
+        unsigned int _slot;
 
         // Index of the current level (used to determine if a level has been changed)
         int m_CurrentLevelIndex;
@@ -489,8 +541,8 @@ protected:
         }
 
     public:
-        PerFrameBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-            : m_Buffer(Device, DeviceContext)
+        PerFrameBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
+            : m_Buffer(Device, DeviceContext), _slot(slot)
         { }
 
         PerFrameBuffer(const PerFrameBuffer&) = delete;
@@ -701,9 +753,9 @@ protected:
             m_Buffer.MarkAsDirty();
         }
 
-        void UpdateAndBind(unsigned int iSlot)
+        void UpdateAndBind()
         {
-            m_Buffer.UpdateAndBind(iSlot);
+            m_Buffer.UpdateAndBind(_slot);
         }
     }
     m_PerFrameBuffer;
@@ -735,9 +787,11 @@ protected:
 
         ConstantBuffer<PerTick> m_Buffer;
 
+        unsigned int _slot;
+
     public:
-        PerTickBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-            : m_Buffer(Device, DeviceContext)
+        PerTickBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
+            : m_Buffer(Device, DeviceContext), _slot(slot)
         {
             using namespace std::chrono;
             m_InitialTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -754,12 +808,16 @@ protected:
             m_Buffer.MarkAsDirty();
         }
 
-        void UpdateAndBind(unsigned int iSlot)
+        void UpdateAndBind()
         {
-            m_Buffer.UpdateAndBind(iSlot);
+            m_Buffer.UpdateAndBind(_slot);
         }
     }
     m_PerTickBuffer;
+
+
+    // !!! PerFrameBuffer лучше переименовать в PerViewBuffer, а в PerFrameBuffer хранить только данные
+    // относящиеся к кадру (список статических и динамических ИС, видимых в текущем кадре)
 
     /// <summary>
     /// Prepares and stores constant buffer data
@@ -774,14 +832,25 @@ protected:
         };
 
         ConstantBuffer<PerComplexPoly> m_Buffer;
+
+        unsigned int _slot;
+
+        std::unordered_set<size_t> _prevDump;
+        std::unordered_set<size_t> _currentDump;
         
     public:
-        PerComplexPolyBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-            : m_Buffer(Device, DeviceContext)
+        PerComplexPolyBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
+            : m_Buffer(Device, DeviceContext), _slot(slot)
         {}
 
         PerComplexPolyBuffer(const PerComplexPolyBuffer&) = delete;
         PerComplexPolyBuffer& operator=(const PerComplexPolyBuffer&) = delete;
+
+        // prevDump - дамп статических ИС видимых на предыдущем кадре
+        // currentDump - дамп статических ИС видимых на текущем кадре
+        // В методе SetComplexPoly проверяем есть ли наблюдаемый ИС в currentDump, и если нет - то добавляем
+        // В методе DumpCurrentFrameStaticLightIds меняем местами prevDump и currentDump
+        // В методе GetLastFrameStaticLightIds возвращаем prevDump
 
         void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, const std::unordered_map<AActor*, size_t> &lightCache)
         {
@@ -803,6 +872,10 @@ protected:
                         AActor* l = SceneNode.Level->Model->Lights(la);
                         while (l)
                         {
+                            //auto lightId = lightCache.at(l);
+                            //if (!_currentDump.contains(lightId))
+                            //    _currentDump.insert(lightId);
+
                             m_Buffer.m_Data.StaticLightIds[lightCounter] = { lightCounter, lightCache.at(l), 0, 0 };
                             l = SceneNode.Level->Model->Lights(++la);
                             ++lightCounter;
@@ -820,9 +893,15 @@ protected:
         // In the same method, we save this dump in a separate field, so that we can then get it on demand via the GetLastFrameStaticLightIds method
         // ...
 
-        void UpdateAndBind(unsigned int iSlot)
+        void UpdateAndBind()
         {
-            m_Buffer.UpdateAndBind(iSlot);
+            m_Buffer.UpdateAndBind(_slot);
+        }
+
+        void SwapStaticLightDumps()
+        {
+            _prevDump.clear();
+            _prevDump.swap(_currentDump);
         }
     }
     m_PerComplexPolyBuffer;
