@@ -1,15 +1,14 @@
 {
   "06_HongKong_WanChai_Street": {
-    "max_inode": 10200,
-    "lights": [
-      {
-        "name": "light_1",
-        "correction": 0.5
-      },
-      {
-        "name": "light_2",
-        "correction": 0.7
-      }
-    ]
+    "MaxINode": 10200
+  },
+  "DX" : {
+    "MaxINode": 10200,
+    "Light0": 0.00007,
+    "Light1": 0.00007,
+    "Light2": 0.00007,
+    "Light3": 0.00007,
+    "Light4": 0.00007,
+    "Light5": 0.00005
   }
 }

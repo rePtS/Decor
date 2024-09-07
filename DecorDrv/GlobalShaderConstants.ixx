@@ -103,11 +103,11 @@ public:
             }
         }                
 
-        m_PerSceneBuffer.SetSceneStaticLights(SceneNode);
+        m_PerSceneBuffer.SetSceneStaticLights(SceneNode, _settings[_currentLevelName]);
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
     }
 
-    std::string GetString(const TCHAR* tStr)
+    static std::string GetString(const TCHAR* tStr)
     {
         char charBuf[64];
         wcstombs(charBuf, tStr, 64);
@@ -116,12 +116,9 @@ public:
 
     int GetMaxINode()
     {
-        if (_settings.IsNull())
-            return 1000000;
-        else if (_settings.hasKey(_currentLevelName))
-            return _settings[_currentLevelName]["max_inode"].ToInt();
-        else
-            return 1000000;
+        auto& jsonMaxINode = _settings[_currentLevelName]["MaxINode"];
+
+        return jsonMaxINode.IsNull() ? INT_MAX : jsonMaxINode.ToInt();
     }
 
     void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, bool isWaterSurface)
@@ -178,7 +175,7 @@ protected:
     /// where w-part of the vector stores light source type
     /// </summary>
     /// <param name="light">DeuesEx light actor</param>
-    static XMVECTOR GetLightColor(AActor* light)
+    static XMVECTOR GetLightColor(AActor* light, float correction = 1.0f)
     {
         auto color = HSVtoRGB(
             NormalizeByte(light->LightHue),
@@ -189,7 +186,7 @@ protected:
         auto lightBrightness = NormalizeByte(light->LightBrightness);
 
         color = DirectX::XMVectorScale(color,
-            lightRadius * lightRadius * lightBrightness);
+            lightRadius * lightRadius * lightBrightness * correction);
 
         // Fix for the "cylindrical" light source
         if (light->LightEffect == LE_Cylinder)
@@ -247,11 +244,11 @@ protected:
     /// </summary>
     /// <param name="light"></param>
     /// <returns></returns>
-    static std::vector<XMVECTOR> GetLightData(AActor* light)
+    static std::vector<XMVECTOR> GetLightData(AActor* light, float correction = 1.0f)
     {
         std::vector<XMVECTOR> lightData;
 
-        lightData.push_back(GetLightColor(light));
+        lightData.push_back(GetLightColor(light, correction));
         lightData.push_back(GetLightLocation(light));
 
         if (light->LightEffect == LE_Spotlight)
@@ -293,7 +290,7 @@ protected:
         /// Set scene's static lights data for GPU constant buffer
         /// </summary>
         /// <param name="SceneNode"></param>
-        void SetSceneStaticLights(const FSceneNode& SceneNode)
+        void SetSceneStaticLights(const FSceneNode& SceneNode, const json::JSON& settings)
         {
             auto levelIndex = SceneNode.Level->GetOuter()->GetFName().GetIndex();
 
@@ -314,9 +311,14 @@ protected:
                         // if light source is not already processed
                         if (!m_LightCache.contains(lightActor))
                         {
+                            float correction = 1.0f;
+                            auto lightName = GetString(lightActor->GetName());
+                            if (settings.hasKey(lightName))
+                                correction = settings.at(lightName).ToFloat();
+
                             // then process and add processed data for constant buffer
                             m_LightCache.insert({ lightActor, bufferPos });
-                            auto lightData = GetLightData(lightActor);
+                            auto lightData = GetLightData(lightActor, correction);
                             for (size_t i = 0; i < lightData.size(); ++i)
                                 m_Buffer.m_Data.StaticLights[bufferPos + i] = lightData[i];
 
