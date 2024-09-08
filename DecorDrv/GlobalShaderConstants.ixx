@@ -359,7 +359,7 @@ protected:
             XMVECTOR Origin;
             XMVECTOR FlashColor;
             XMVECTOR DynamicLights[MAX_LIGHTS_DATA_SIZE];
-            uint32_t FrameControl;
+            uint32_t FrameControl; // bit 0 - флаг того, что текущий кадр возможно пересекает водная поверхность
             float ScreenWaterLevel; // Уровень, на который камера погружена в воду (0 - не погружена, 1 - погружена полностью)
         };
 
@@ -470,19 +470,23 @@ protected:
                 dynamicLightsBufferPos += 3;
             }
 
-            for (auto& light : m_DynamicLights)
-            {
-                if (IsLightActorVisible(SceneNode.Coords, light))
-                {
-                    auto lightData = GetLightData(light);
-                    for (size_t i = 0; i < lightData.size(); ++i)
-                        m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
+            // Пока не используем другие источники
+            //for (auto& light : m_DynamicLights)
+            //{
+            //    if (IsLightActorVisible(SceneNode.Coords, light))
+            //    {
+            //        auto lightData = GetLightData(light);
+            //        for (size_t i = 0; i < lightData.size(); ++i)
+            //            m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
 
-                    dynamicLightsBufferPos += lightData.size(); // move the pointer to the free part of the buffer
-                }
+            //        dynamicLightsBufferPos += lightData.size(); // move the pointer to the free part of the buffer
+            //    }
 
-                assert(dynamicLightsBufferPos < MAX_LIGHTS_DATA_SIZE);
-            }
+            //    assert(dynamicLightsBufferPos < MAX_LIGHTS_DATA_SIZE);
+            //}
+
+            uint32_t augLightType = LE_None;
+            m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos] = { 0,0,0, reinterpret_cast<float&>(augLightType) };
         }
 
         bool XM_CALLCONV Intersects(
@@ -699,7 +703,7 @@ protected:
             }
 
             // TODO: need to figure out how to track viewport changes in a fast way to use following method
-            // SetDynamicLights(SceneNode);
+            SetDynamicLights(SceneNode);
 
             m_Buffer.m_Data.ViewMatrix = DirectX::XMMatrixTranspose(_viewMatrix);
             m_Buffer.m_Data.ViewMatrixInv = DirectX::XMMatrixTranspose(_viewMatrixInv);

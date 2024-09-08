@@ -279,6 +279,56 @@ float4 PSMain(const VSOut input) : SV_Target0
         }                
     }
     
+    // ќбрабатываем динамические источники света
+    int lightBufPos = 0;
+    while (lightBufPos < MAX_LIGHTS_DATA_SIZE)
+    {
+        float4 intencity = DynamicLights[lightBufPos];
+        
+        uint lightInfo = asuint(intencity.w);
+        
+        uint lightEffect = lightInfo & LIGHT_EFFECT_MASK;
+        if (lightEffect == LE_None)
+            break;
+        
+        switch (lightEffect)
+        {
+            case LE_Spotlight:
+            case LE_StaticSpot:
+                {
+                    float4 lightPosData = DynamicLights[lightBufPos + 1];
+                    float4 lightDirData = DynamicLights[lightBufPos + 2];
+                    float3 posView = (float3)input.PosView;
+                    lightBufPos += 3;
+                
+                    // Skip spot lights that are out of range of the point being shaded.
+                    if (length((float3) lightPosData - posView) < lightPosData.w)
+                        output += PbrM_SpotLightContrib(posView,
+                                lightPosData,
+                                lightDirData,
+                                intencity,
+                                shadingCtx,
+                                matInfo);
+                }
+                break;
+            default:
+                {
+                    float4 lightPosData = DynamicLights[lightBufPos + 1];
+                    float3 posView = (float3)input.PosView;
+                    lightBufPos += 2;
+
+                    // Skip point lights that are out of range of the point being shaded.
+                    if (length((float3) lightPosData - posView) < lightPosData.w)
+                        output += PbrM_PointLightContrib(posView,
+                                lightPosData,
+                                intencity,
+                                shadingCtx,
+                                matInfo);
+                }
+                break;
+        }
+    }
+    
     //output += EmissionTexture.Sample(LinearSampler, input.Tex) * EmissionFactor;
 
     //// Original lightmap    
