@@ -261,7 +261,7 @@ export
                 {
                     Render();
                 }
-                pTexDiffuse = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.Texture, 0);
+                pTexDiffuse = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.Texture, 0, PolyFlags);
                 TexFlags |= 0x00000001;
             }
 
@@ -272,7 +272,7 @@ export
                 {
                     Render();
                 }
-                pTexLight = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.LightMap, 1);
+                pTexLight = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.LightMap, 1, PolyFlags);
                 TexFlags |= 0x00000002;
             }
 
@@ -384,7 +384,7 @@ export
 
             m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
             m_pDeviceState->PrepareBlendState(BlendState);
-            const TextureConverter::TextureData& texDiffuse = m_pTextureCache->FindOrInsertAndPrepare(Info, 0);
+            const TextureConverter::TextureData& texDiffuse = m_pTextureCache->FindOrInsertAndPrepare(Info, 0, PolyFlags);
 
             if (!m_pGouraudRenderer->IsMapped())
             {
@@ -430,7 +430,7 @@ export
             }
 
             m_pDeviceState->PrepareBlendState(BlendState);
-            const auto& Texture = m_pTextureCache->FindOrInsertAndPrepare(Info, 0);
+            const auto& Texture = m_pTextureCache->FindOrInsertAndPrepare(Info, 0, PolyFlags);
 
             if (!m_pTileRenderer->IsMapped())
             {

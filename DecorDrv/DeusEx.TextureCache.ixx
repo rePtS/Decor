@@ -31,29 +31,29 @@ public:
     TextureCache(const TextureCache&) = delete;
     TextureCache& operator=(const TextureCache&) = delete;
 
-    const TextureConverter::TextureData& FindOrInsert(FTextureInfo& Texture)
+    const TextureConverter::TextureData& FindOrInsert(FTextureInfo& Texture, const DWORD PolyFlags)
     {
         auto it = m_Textures.find(Texture.CacheID);
         if (it != m_Textures.end())
         {
             if (Texture.bRealtimeChanged)
             {
-                m_TextureConverter.Update(Texture, it->second);
+                m_TextureConverter.Update(Texture, it->second, PolyFlags);
                 Texture.bRealtimeChanged = 0; // Clear this flag (from other renderes)
             }
 
             return it->second;
         }
 
-        TextureConverter::TextureData NewData = m_TextureConverter.Convert(Texture);
+        TextureConverter::TextureData NewData = m_TextureConverter.Convert(Texture, PolyFlags);
         const TextureConverter::TextureData& Data = m_Textures.emplace(Texture.CacheID, std::move(NewData)).first->second;
 
         return Data;
     }
 
-    const TextureConverter::TextureData& FindOrInsertAndPrepare(FTextureInfo& Texture, const unsigned int iSlot)
+    const TextureConverter::TextureData& FindOrInsertAndPrepare(FTextureInfo& Texture, const unsigned int iSlot, const DWORD PolyFlags)
     {
-        const TextureConverter::TextureData& Data = FindOrInsert(Texture);
+        const TextureConverter::TextureData& Data = FindOrInsert(Texture, PolyFlags);
 
         m_iDirtyBeginSlot = std::min(m_iDirtyBeginSlot, iSlot);
         m_iDirtyEndSlot = std::max(m_iDirtyEndSlot, iSlot);

@@ -88,7 +88,7 @@ public:
     TextureConverter(const TextureConverter&) = delete;
     TextureConverter& operator=(const TextureConverter&) = delete;
 
-    TextureData Convert(const FTextureInfo& Texture) const
+    TextureData Convert(const FTextureInfo& Texture, const DWORD PolyFlags) const
     {
         IFormatConverter* const pConverter = m_FormatConverters[Texture.Format];
         if (pConverter == nullptr)
@@ -98,7 +98,7 @@ public:
 
         const bool bDynamic = Texture.bRealtimeChanged; // bRealtime isn't always set
 
-        pConverter->Convert(Texture);
+        pConverter->Convert(Texture, PolyFlags);
 
         TextureData OutputTexture;
 
@@ -143,14 +143,14 @@ public:
         return OutputTexture;
     }
 
-    void Update(const FTextureInfo& Source, TextureData& Dest) const
+    void Update(const FTextureInfo& Source, TextureData& Dest, const DWORD PolyFlags) const
     {
         assert(Source.bRealtimeChanged);
 
         IFormatConverter* const pConverter = m_FormatConverters[Source.Format];
         assert(pConverter); // Should have a converter as it was converted succesfully before
 
-        pConverter->Convert(Source);
+        pConverter->Convert(Source, PolyFlags);
 
         for (int i = 0; i < Source.NumMips; i++)
         {
@@ -216,7 +216,7 @@ protected:
     public:
         IFormatConverter& operator=(const IFormatConverter&) = delete;
         virtual ~IFormatConverter() {};
-        virtual void Convert(const FTextureInfo& Texture) = 0;
+        virtual void Convert(const FTextureInfo& Texture, const DWORD PolyFlags) = 0;
         virtual UINT GetStride(const FMipmapBase& Mip) const = 0;
         virtual DXGI_FORMAT GetDXGIFormat() const = 0;
         virtual bool WantsBuffer() const = 0; // Whether converter requires scratch space for conversion result
@@ -226,7 +226,7 @@ protected:
     {
     public:
         explicit FormatConverterIdentity(ConvertedTextureData& Buffer) : m_Buffer(Buffer) {};
-        virtual void Convert(const FTextureInfo& Texture) override
+        virtual void Convert(const FTextureInfo& Texture, const DWORD PolyFlags) override
         {
             m_Buffer.Resize(Texture, *this);
             for (INT i = 0; i < Texture.NumMips; i++)
@@ -248,15 +248,18 @@ protected:
     {
     public:
         explicit FormatConverterP8(ConvertedTextureData& Buffer) : m_Buffer(Buffer) {};
-        virtual void Convert(const FTextureInfo& Texture) override
+        virtual void Convert(const FTextureInfo& Texture, const DWORD PolyFlags) override
         {
             assert(Texture.Format == ETextureFormat::TEXF_P8);
             assert(Texture.Palette);
 
             FColor* const Palette = Texture.Palette;
-
-            // Palette color 0 is the alpha mask color, we always give it alpha 0 and make it look black
-            Palette[0].R = Palette[0].G = Palette[0].B = Palette[0].A = 0;
+            
+            // Palette color 0 is the alpha mask color; make that index black w. alpha 0 (black looks best for the border that gets left after masking)
+            if (PolyFlags & PF_Masked)
+            {
+                Palette[0].R = Palette[0].G = Palette[0].B = Palette[0].A = 0;
+            }
 
             m_Buffer.Resize(Texture, *this);
             for (INT i = 0; i < Texture.NumMips; i++)
@@ -271,6 +274,8 @@ protected:
                 for (const auto* pSource = pSourceBegin; pSource != pSourceEnd; pSource++, pDest++)
                 {
                     *pDest = reinterpret_cast<uint32_t&>(Palette[*pSource]);
+                    //if (*pDest == 0x00000000)
+                    //    *pDest = 0xffff00ff;
                 }
             }
         }
