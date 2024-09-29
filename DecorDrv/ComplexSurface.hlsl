@@ -288,7 +288,7 @@ float4 PSMain(const VSOut input) : SV_Target0
         uint lightInfo = asuint(intencity.w);
         
         uint lightEffect = lightInfo & LIGHT_EFFECT_MASK;
-        if (lightEffect == LE_None)
+        if (lightEffect == LE_Unused)
             break;
         
         switch (lightEffect)
@@ -296,9 +296,11 @@ float4 PSMain(const VSOut input) : SV_Target0
             case LE_Spotlight:
             case LE_StaticSpot:
                 {
+                    // Пока считаем, что прожектор в динамических источниках света может использоваться
+                    // только для фонарика ГГ и работаем с ним в простарнстве камеры
                     float4 lightPosData = DynamicLights[lightBufPos + 1];
                     float4 lightDirData = DynamicLights[lightBufPos + 2];
-                    float3 posView = (float3)input.PosView;
+                    float3 posView = (float3) input.PosView;
                     lightBufPos += 3;
                 
                     // Skip spot lights that are out of range of the point being shaded.
@@ -313,8 +315,16 @@ float4 PSMain(const VSOut input) : SV_Target0
                 break;
             default:
                 {
+                    // С остальными источниками света работаем так же как со статическими источниками
+                    // (т.е. в глобальном пространстве)
                     float4 lightPosData = DynamicLights[lightBufPos + 1];
-                    float3 posView = (float3)input.PosView;
+                
+                    float lightRadius = lightPosData.w;
+                    lightPosData.w = 0;
+                    lightPosData = mul(lightPosData - Origin, ViewMatrix);
+                    lightPosData.w = lightRadius;
+                
+                    float3 posView = (float3) input.PosView;
                     lightBufPos += 2;
 
                     // Skip point lights that are out of range of the point being shaded.
@@ -323,7 +333,7 @@ float4 PSMain(const VSOut input) : SV_Target0
                                 lightPosData,
                                 intencity,
                                 shadingCtx,
-                                matInfo);
+                                matInfo);                                    
                 }
                 break;
         }

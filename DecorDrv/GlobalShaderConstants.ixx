@@ -384,8 +384,8 @@ protected:
         float m_RFX2 = 0.0f;
         float m_RFY2 = 0.0f;
 
-        // Cosine value (powered by 2) of the view cone's angle
-        float m_SquaredViewConeCos = 0.0f;
+        // Cosine value of the view cone's angle
+        float _viewConeAngle = 0.0f;
 
         // Actual view matrix
         FCoords m_Coords;
@@ -433,20 +433,22 @@ protected:
                 // Check that the light source is located between the near and far plane of visibility
                 if (farLightBoundary > NEAR_CLIPPING_DISTANCE && nearLightBoundary < FAR_CLIPPING_DISTANCE)
                 {
-                    // Check that the light source falls into the cone of visibility (or that the camera is within the range of the light source).
-                    // We use a View Cone, not a View Frustum to speed up the verification
-                    // We do the check using the Charles Bloom method:
-                    //      V = sphere.center - cone.apex_location
-                    //      a = V * cone.direction_normal
-                    //      Square(a) > dotProduct(V,V) * Square(cone.cos) -> sphere intersects the cone
-                    // 
-                    // Since we are working with View Space, the vertex of the Cone is the origin and the direction of the Cone coincides with the Z axis.
-                    // Accordingly, the vector V becomes equal to lightPos and the variable a = lightPos.Z
-                    return lightPos.Z * lightPos.Z > (lightPos | lightPos) * m_SquaredViewConeCos
-                        || lightPos.SizeSquared() < lightRadius * lightRadius;
+                    auto lightDist = lightPos.Size();
+                    if (lightDist < lightRadius)
+                        return true;
+                    else
+                    {
+                        // угловая ширина источника освещения
+                        auto lightAngularWidth = atan(lightRadius / lightDist);
+                        // угол между направлением камеры и лучом к центру источника освещения (угол расположения ИО)
+                        auto lightPosAngle = atan(sqrt(lightPos.X * lightPos.X + lightPos.Y * lightPos.Y) / lightPos.Z);
+
+                        // Если разница между углом расположения ИО и углом FOV камеры меньше угловой ширины ИО, то ИО считаем видимым
+                        return (lightPosAngle - _viewConeAngle < lightAngularWidth);
+                    }
                 }
             }
-
+            
             return false;
         }
 
@@ -469,23 +471,23 @@ protected:
                 m_Buffer.m_Data.DynamicLights[2] = { 0.0f, 0.0f, 1.0f, 0.5f };
                 dynamicLightsBufferPos += 3;
             }
+            
+            // Остальные динамические источники освещения
+            for (auto& light : m_DynamicLights)
+            {
+                if (IsLightActorVisible(SceneNode.Coords, light))
+                {
+                    auto lightData = GetLightData(light);
+                    for (size_t i = 0; i < lightData.size(); ++i)
+                        m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
 
-            // Пока не используем другие источники
-            //for (auto& light : m_DynamicLights)
-            //{
-            //    if (IsLightActorVisible(SceneNode.Coords, light))
-            //    {
-            //        auto lightData = GetLightData(light);
-            //        for (size_t i = 0; i < lightData.size(); ++i)
-            //            m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
+                    dynamicLightsBufferPos += lightData.size(); // move the pointer to the free part of the buffer
+                }
 
-            //        dynamicLightsBufferPos += lightData.size(); // move the pointer to the free part of the buffer
-            //    }
+                assert(dynamicLightsBufferPos < MAX_LIGHTS_DATA_SIZE);
+            }
 
-            //    assert(dynamicLightsBufferPos < MAX_LIGHTS_DATA_SIZE);
-            //}
-
-            uint32_t augLightType = LE_None;
+            uint32_t augLightType = LE_Unused;
             m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos] = { 0,0,0, reinterpret_cast<float&>(augLightType) };
         }
 
@@ -645,7 +647,7 @@ protected:
                 FVector farTopLeftClippingPoint(halfFarWidth, halfFarWidth * aspect, fZNear);
 
                 auto frustumConeCosine = fZNear / farTopLeftClippingPoint.Size();
-                m_SquaredViewConeCos = frustumConeCosine * frustumConeCosine;
+                _viewConeAngle = acos(frustumConeCosine);
 
                 _screenHalfHeight = halfFovTan * aspect;                
             }
