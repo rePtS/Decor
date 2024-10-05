@@ -373,6 +373,7 @@ protected:
         // Light sources on the current level (actualy these are "dynamic" light sources as they can move or switch on/off)
         AAugmentation* m_AugLight;
         std::vector<AActor*> m_DynamicLights;
+        size_t m_LightActorsNum = 0;
 
         ADeusExPlayer* m_Player = nullptr;
 
@@ -457,6 +458,16 @@ protected:
         /// </summary>        
         void SetDynamicLights(const FSceneNode& SceneNode)
         {
+            // Проверяем кол-во акторов на сцене. Если оно изменилось,
+            // то пересоздаем динамические источники света,
+            // т.к. часть появившихся новых (либо удаленных старых) акторов могла быть источниками света
+            auto num = SceneNode.Level->Actors.Num();
+            if (num != m_LightActorsNum)
+            {
+                m_LightActorsNum = num;
+                CollectDynamicLights(SceneNode);
+            }
+
             size_t dynamicLightsBufferPos = 0;
 
             if (IsAugLightActive())
@@ -568,17 +579,11 @@ protected:
                 // The scene has changed, clear old scene data:
                 m_AugLight = nullptr;
                 m_DynamicLights.clear();
+                m_LightActorsNum = 0;
 
-                // Uploading data for a new scene:
-                FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
-                FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
-                FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
-                FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
-                FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
-                FName classNameLight(L"Light", EFindName::FNAME_Find);
-                FName classNameSpotlight(L"Spotlight", EFindName::FNAME_Find);
-                FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
-                FName classNameJCDentonMale(L"JCDentonMale", EFindName::FNAME_Find);
+                // Uploading data for a new scene:                
+                static FName classNameAugLight(L"AugLight", EFindName::FNAME_Find);
+                static FName classNameJCDentonMale(L"JCDentonMale", EFindName::FNAME_Find);
 
                 for (size_t i = 0; i < SceneNode.Level->Actors.Num(); ++i)
                 {
@@ -587,27 +592,48 @@ protected:
                     {
                         auto& actorFName = actor->GetClass()->GetFName();
 
-                        // Checking that the current actor is a lamp
-                        if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3)
-                            m_DynamicLights.push_back(actor);
-
-                        // Checking that the current actor is a trigger light source
-                        else if (actorFName == classNameTriggerLight)
-                            m_DynamicLights.push_back(actor);
-
                         // Checking that the current actor is a flashlight augmentation
-                        else if (actorFName == classNameAugLight)
+                        if (actorFName == classNameAugLight)
                             m_AugLight = (AAugmentation*)actor;
 
                         else if (actorFName == classNameJCDentonMale)
-                        {
                             m_Player = (ADeusExPlayer*)actor;
-                            int a = 0;
-                        }
                     }
                 }
-
+                
                 m_CurrentLevelIndex = levelIndex;
+            }
+        }
+
+        void CollectDynamicLights(const FSceneNode& SceneNode)
+        {
+            // The scene has changed, clear old scene data:
+            m_DynamicLights.clear();
+
+            // Uploading data for a new scene:
+            static FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
+            static FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
+            static FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
+            static FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
+            static FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
+
+            m_LightActorsNum = SceneNode.Level->Actors.Num();
+
+            for (size_t i = 0; i < m_LightActorsNum; ++i)
+            {
+                auto actor = SceneNode.Level->Actors(i);
+                if (actor != nullptr)
+                {
+                    auto& actorFName = actor->GetClass()->GetFName();
+
+                    // Checking that the current actor is a lamp
+                    if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3 || actorFName == classNameBarrelFire)
+                        m_DynamicLights.push_back(actor);
+
+                    // Checking that the current actor is a trigger light source
+                    else if (actorFName == classNameTriggerLight)
+                        m_DynamicLights.push_back(actor);
+                }
             }
         }
 
