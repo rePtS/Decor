@@ -616,6 +616,9 @@ protected:
             static FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
             static FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
             static FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
+            static FName classNameSecurityCamera(L"SecurityCamera", EFindName::FNAME_Find);
+            static FName classNameFlare(L"Flare", EFindName::FNAME_Find);
+            static FName classNameBarrelAmbrosia(L"BarrelAmbrosia", EFindName::FNAME_Find);
 
             m_LightActorsNum = SceneNode.Level->Actors.Num();
 
@@ -627,7 +630,8 @@ protected:
                     auto& actorFName = actor->GetClass()->GetFName();
 
                     // Checking that the current actor is a lamp
-                    if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3 || actorFName == classNameBarrelFire)
+                    if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3 || actorFName == classNameBarrelFire
+                        || actorFName == classNameSecurityCamera || actorFName == classNameFlare || actorFName == classNameBarrelAmbrosia)
                         m_DynamicLights.push_back(actor);
 
                     // Checking that the current actor is a trigger light source
