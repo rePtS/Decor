@@ -107,7 +107,7 @@ float4 PSMain(const VSOut input) : SV_Target0
 
     if (input.PolyFlags & PF_Modulated)
     {
-        return TexDiffuse.Sample(SamPoint, input.TexCoord);
+        return TexDiffuse.Sample(SamLinear, input.TexCoord);
     }
 
     const float3 Diffuse = TexDiffuse.Sample(SamLinear, input.TexCoord).rgb;
