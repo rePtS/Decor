@@ -417,10 +417,10 @@ protected:
         {
             // First, let's check if the light source is turned on:
             //  - it's type should not be LT_None
-            //  - it's LightEffect should not be LE_NonIncidence (actually, this is a point light source, but filling a large volume - we don't need such yet)
+            //  - it's LightEffect may be LE_NonIncidence (otherwise we wont see some dynamic lights)
             //  - it's brightness should be greater 0
             if (light->LightType != LT_None &&
-                light->LightEffect != LE_NonIncidence &&
+                //light->LightEffect != LE_NonIncidence &&
                 light->LightBrightness > 0)
             {
                 // position of the light source in View Space
@@ -619,6 +619,7 @@ protected:
             static FName classNameSecurityCamera(L"SecurityCamera", EFindName::FNAME_Find);
             static FName classNameFlare(L"Flare", EFindName::FNAME_Find);
             static FName classNameBarrelAmbrosia(L"BarrelAmbrosia", EFindName::FNAME_Find);
+            static FName classNameMuzzleFlash(L"MuzzleFlash", EFindName::FNAME_Find);
 
             m_LightActorsNum = SceneNode.Level->Actors.Num();
 
@@ -628,10 +629,11 @@ protected:
                 if (actor != nullptr)
                 {
                     auto& actorFName = actor->GetClass()->GetFName();
-
+                    
                     // Checking that the current actor is a lamp
                     if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3 || actorFName == classNameBarrelFire
-                        || actorFName == classNameSecurityCamera || actorFName == classNameFlare || actorFName == classNameBarrelAmbrosia)
+                        || actorFName == classNameSecurityCamera || actorFName == classNameFlare || actorFName == classNameBarrelAmbrosia
+                        || actorFName == classNameMuzzleFlash)
                         m_DynamicLights.push_back(actor);
 
                     // Checking that the current actor is a trigger light source
