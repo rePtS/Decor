@@ -1,4 +1,11 @@
 {
+  "00_training": {
+    "WaterLevels": [-64.0]
+  },
+  "01_NYC_UNATCOHQ" : {
+    "MaxINode": 5175,
+    "WaterLevels": [100.0, 200.0]
+   },
   "06_HongKong_WanChai_Street": {
     "MaxINode": 10200
   },

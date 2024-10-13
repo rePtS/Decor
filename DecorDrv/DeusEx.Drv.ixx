@@ -295,7 +295,7 @@ export
             if (pFrame->Parent == nullptr)
             {
                 m_pGlobalShaderConstants->CheckViewChange(*pFrame, *Facet.Polys);
-                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys, waterFlag);
+                m_pGlobalShaderConstants->SetComplexPoly(*pFrame, *Facet.Polys);
             }
 
             m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
