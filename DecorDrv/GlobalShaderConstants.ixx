@@ -648,9 +648,8 @@ protected:
                 0.0f, 0.0f, 0.0f, 1.0f
             );
 
-            // Если находимся в воде, то проверяем пересечение вертикальной линии камеры с плоскостью воды
-            if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
-                CheckScreenWaterIntersection(c, settings);
+            // Проверяем пересечение вертикальной линии камеры с плоскостью воды            
+            CheckScreenWaterIntersection(c, settings);
 
             SetDynamicLights(SceneNode);
 
@@ -669,46 +668,56 @@ protected:
         /// </summary>
         void CheckScreenWaterIntersection(const FCoords &c, const json::JSON& settings)
         {
-            if (settings.hasKey("WaterLevels"))
+            if (m_Player == nullptr)
+                return;
+            
+            if (m_Player->HeadRegion.Zone->bWaterZone)
             {
-                const auto &waterLevels = settings.at("WaterLevels");
-
-                auto waterLevelNum = waterLevels.length();
-                if (waterLevelNum > 0)
+                m_Buffer.m_Data.ScreenWaterLevel = 0.0f; // камера полностью погружена в воду
+            }
+            else if (m_Player->Region.Zone->bWaterZone)
+            {
+                if (settings.hasKey("WaterLevels"))
                 {
-                    auto playerZ = m_Player->Location.Z;
+                    const auto& waterLevels = settings.at("WaterLevels");
 
-                    // Перебираем все доступные водные поверхности и берем ближайщую из них                        
-                    float nearestWaterLevel = waterLevels.at(0).ToFloat();
-                    for (size_t i = 1; i < waterLevelNum; ++i)
+                    auto waterLevelNum = waterLevels.length();
+                    if (waterLevelNum > 0)
                     {
-                        auto waterLevel = waterLevels.at(i).ToFloat();
-                        if (abs(playerZ - waterLevel) < abs(playerZ - nearestWaterLevel))
-                            nearestWaterLevel = waterLevel;
-                    }
+                        auto playerZ = m_Player->Location.Z;
 
-                    DirectX::XMVECTOR waterPlane = {0.0f, 0.0f, 1.0f, -nearestWaterLevel};
+                        // Перебираем все доступные водные поверхности и берем ближайщую из них                        
+                        float nearestWaterLevel = waterLevels.at(0).ToFloat();
+                        for (size_t i = 1; i < waterLevelNum; ++i)
+                        {
+                            auto waterLevel = waterLevels.at(i).ToFloat();
+                            if (abs(playerZ - waterLevel) < abs(playerZ - nearestWaterLevel))
+                                nearestWaterLevel = waterLevel;
+                        }
 
-                    // Проверяем пересечение с найденной поверхностью:
+                        DirectX::XMVECTOR waterPlane = { 0.0f, 0.0f, 1.0f, -nearestWaterLevel };
 
-                    XMVECTOR p1 = { 0.0f, -_screenHalfHeight, 1.0f, 0.0f }; // screen bottom center point
-                    XMVECTOR p2 = { 0.0f, +_screenHalfHeight, 1.0f, 0.0f }; // screen up center point
+                        // Проверяем пересечение с найденной поверхностью:
 
-                    // Переводим p1 и p2 в мировое пространство и работаем с ними                    
-                    p1 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p1, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
-                    p2 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p2, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
+                        XMVECTOR p1 = { 0.0f, -_screenHalfHeight, 1.0f, 0.0f }; // screen bottom center point
+                        XMVECTOR p2 = { 0.0f, +_screenHalfHeight, 1.0f, 0.0f }; // screen up center point
 
-                    if (DirectX::XMVectorGetZ(p1) <= -DirectX::XMVectorGetW(waterPlane))
-                        m_Buffer.m_Data.ScreenWaterLevel = -1.0f;
-                    else
-                    {
-                        auto intersectionPoint = DirectX::XMPlaneIntersectLine(waterPlane, p1, p2);
+                        // Переводим p1 и p2 в мировое пространство и работаем с ними                    
+                        p1 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p1, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
+                        p2 = DirectX::XMVectorAdd(DirectX::XMVector3Transform(p2, _viewMatrixInv), { c.Origin.X, c.Origin.Y, c.Origin.Z, 0.0f });
 
-                        // Находим уровень, на котором водная поверхность пересекает экран
-                        // (расстояние от нижней средней точки до точки пересечения делим на высоту экрана)
-                        auto intersectionDist = DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVectorSubtract(intersectionPoint, p1)));
-                        // передаем полученное значение в шейдер
-                        m_Buffer.m_Data.ScreenWaterLevel = intersectionDist / (_screenHalfHeight * 2.0f);
+                        if (DirectX::XMVectorGetZ(p1) <= -DirectX::XMVectorGetW(waterPlane))
+                            m_Buffer.m_Data.ScreenWaterLevel = -1.0f;
+                        else
+                        {
+                            auto intersectionPoint = DirectX::XMPlaneIntersectLine(waterPlane, p1, p2);
+
+                            // Находим уровень, на котором водная поверхность пересекает экран
+                            // (расстояние от нижней средней точки до точки пересечения делим на высоту экрана)
+                            auto intersectionDist = DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVectorSubtract(intersectionPoint, p1)));
+                            // передаем полученное значение в шейдер
+                            m_Buffer.m_Data.ScreenWaterLevel = intersectionDist / (_screenHalfHeight * 2.0f);
+                        }
                     }
                 }
             }

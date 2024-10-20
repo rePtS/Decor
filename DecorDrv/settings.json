@@ -9,6 +9,9 @@
   "06_HongKong_WanChai_Street": {
     "MaxINode": 10200
   },
+  "14_OceanLab_Lab": {
+    "WaterLevels": [-2240.0, -1832.0, -1732.0]
+  },
   "DX" : {
     "MaxINode": 10200,
     "Light0": 0.00007,
