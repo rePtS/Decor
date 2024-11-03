@@ -518,6 +518,7 @@ protected:
             {
                 // The scene has changed, clear old scene data:
                 m_AugLight = nullptr;
+                m_Player = nullptr;
                 m_DynamicLights.clear();
                 m_LightActorsNum = 0;
 
@@ -731,11 +732,17 @@ protected:
 
         void CheckWaterZone()
         {
-            if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
-                m_Buffer.m_Data.FrameControl |= 1;
-            else
-                m_Buffer.m_Data.FrameControl &= 0xFFFFFFFE;
-            m_Buffer.MarkAsDirty();
+            __try // TO-DO: get rid of exception checking
+            {
+                if (m_Player != nullptr && m_Player->Region.Zone->bWaterZone)
+                    m_Buffer.m_Data.FrameControl |= 1;
+                else
+                    m_Buffer.m_Data.FrameControl &= 0xFFFFFFFE;
+                m_Buffer.MarkAsDirty();
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER)
+            {
+            }
         }
 
         void UpdateAndBind()
