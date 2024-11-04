@@ -79,8 +79,9 @@ public:
         m_PerFrameBuffer.CheckViewChange(SceneNode, Poly, _settings[_currentLevelName]);
     }
     
-    void CheckLevelChange(const FSceneNode& SceneNode)
+    bool CheckLevelChange(const FSceneNode& SceneNode)
     {
+        auto levelChanged = false;
         auto levelIndex = SceneNode.Level->GetOuter()->GetFName().GetIndex();
 
         // if current level has changed
@@ -101,10 +102,14 @@ public:
                 }
                 _settingsInitialized = true;
             }
+
+            levelChanged = true;
         }                
 
         m_PerSceneBuffer.SetSceneStaticLights(SceneNode, _settings[_currentLevelName]);
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
+
+        return levelChanged;
     }
 
     static std::string GetString(const TCHAR* tStr)

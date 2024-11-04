@@ -528,7 +528,8 @@ export
             m_SceneManager.SetViewport(*pFrame);
             m_Backend.SetViewport(pFrame->FX, pFrame->FY, pFrame->XB, pFrame->YB);
 
-            m_pGlobalShaderConstants->CheckLevelChange(*pFrame);
+            if (m_pGlobalShaderConstants->CheckLevelChange(*pFrame))
+                m_pTextureCache->Flush(); // При смене уровня сбрасываем кэш текстур, иначе артефакты (на разных уровнях одинаковые текстуры используют разный Id?)
             m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
 
             auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
