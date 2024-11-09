@@ -13,31 +13,33 @@
 #include "Defines.hlsli"
 #include <DeusEx.h>
 #include <UnRender.h>
-#include <simple_json.hpp>
 
 export module GlobalShaderConstants;
 
 import GPU.ConstantBuffer;
+import <simple_json.hpp>;
 
 using DirectX::XMVECTOR;
 using DirectX::XMVECTORU32;
 using DirectX::XMMATRIX;
+using json::JSON;
 
 export class GlobalShaderConstants
 {
-    bool _settingsInitialized = false;
-    json::JSON _settings;
+    JSON& _settings;
 
     int _currentLevelIndex;
     std::string _currentLevelName;
 
 public:
-    explicit GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
-        : m_PerSceneBuffer(Device, DeviceContext, 2)
-        , m_PerFrameBuffer(Device, DeviceContext, 0)
+    explicit GlobalShaderConstants(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, JSON& settings)
+        : m_PerSceneBuffer(Device, DeviceContext, 2, settings)
+        , m_PerFrameBuffer(Device, DeviceContext, 0, settings)
         , m_PerTickBuffer(Device, DeviceContext, 1)
         , m_PerComplexPolyBuffer(Device, DeviceContext, 3)
-    { }
+        , _settings(settings)
+    {
+    }
 
     GlobalShaderConstants(const GlobalShaderConstants&) = delete;
     GlobalShaderConstants& operator=(const GlobalShaderConstants&) = delete;
@@ -76,7 +78,7 @@ public:
     {
         assert(Poly.NumPts >= 3);
 
-        m_PerFrameBuffer.CheckViewChange(SceneNode, Poly, _settings[_currentLevelName]);
+        m_PerFrameBuffer.CheckViewChange(SceneNode, Poly, _currentLevelName);
     }
     
     bool CheckLevelChange(const FSceneNode& SceneNode)
@@ -90,23 +92,11 @@ public:
             _currentLevelIndex = levelIndex;
             _currentLevelName = GetString(
                 SceneNode.Level->GetOuter()->GetPathName());
-
-            if (!_settingsInitialized)
-            {
-                std::ifstream f("DecorDrv\\settings.json");
-                if (f.good())
-                {
-                    std::stringstream buffer;
-                    buffer << f.rdbuf();
-                    _settings = json::JSON::Load(buffer.str());
-                }
-                _settingsInitialized = true;
-            }
-
+            
             levelChanged = true;
-        }                
+        }
 
-        m_PerSceneBuffer.SetSceneStaticLights(SceneNode, _settings[_currentLevelName]);
+        m_PerSceneBuffer.SetSceneStaticLights(SceneNode, _currentLevelName);
         m_PerFrameBuffer.CheckLevelChange(SceneNode);
 
         return levelChanged;
@@ -277,12 +267,13 @@ protected:
 
         ConstantBuffer<PerScene> m_Buffer;
         std::unordered_map<AActor*, size_t> m_LightCache;
+        JSON& _settings;
 
         unsigned int _slot;
 
     public:
-        PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
-            : m_Buffer(Device, DeviceContext), _slot(slot)
+        PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot, JSON& settings)
+            : m_Buffer(Device, DeviceContext), _slot(slot), _settings(settings)
         { }
 
         PerSceneBuffer(const PerSceneBuffer&) = delete;
@@ -292,9 +283,11 @@ protected:
         /// Set scene's static lights data for GPU constant buffer
         /// </summary>
         /// <param name="SceneNode"></param>
-        void SetSceneStaticLights(const FSceneNode& SceneNode, const json::JSON& settings)
+        void SetSceneStaticLights(const FSceneNode& SceneNode, const std::string& levelName)
         {
             auto levelIndex = SceneNode.Level->GetOuter()->GetFName().GetIndex();
+
+            auto& settings = _settings[levelName];
 
             // if current level has changed
             if (m_CurrentLevelIndex != levelIndex)
@@ -365,7 +358,7 @@ protected:
             float ScreenWaterLevel; // Уровень, на который камера погружена в воду (0 - не погружена, 1 - погружена полностью)
         };
 
-        ConstantBuffer<PerFrame> m_Buffer;
+        ConstantBuffer<PerFrame> m_Buffer;        
 
         unsigned int _slot;
 
@@ -403,6 +396,9 @@ protected:
         /// Screen height in view space
         /// </summary>
         float _screenHalfHeight;
+
+        JSON& _settings;
+        std::unordered_set<NAME_INDEX> _dynamicLightNameIds;
 
         /// <summary>
         /// Check if light augmentation is on
@@ -505,9 +501,25 @@ protected:
         }
 
     public:
-        PerFrameBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
-            : m_Buffer(Device, DeviceContext), _slot(slot)
-        { }
+        PerFrameBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot, JSON& settings)
+            : m_Buffer(Device, DeviceContext), _slot(slot), _settings(settings)
+        {
+            const auto& fnames = _settings.at("DynamicLightFNames");
+            if (fnames.JSONType() == JSON::Class::Array)
+            {
+                for (size_t i = 0; i < fnames.length(); ++i)
+                {
+                    bool isOk;
+                    const auto fnamestr = fnames.at(i).ToString(isOk);
+                    if (isOk)
+                    {
+                        std::wstring wsTmp(fnamestr.begin(), fnamestr.end());
+                        FName fname(wsTmp.c_str(), EFindName::FNAME_Find);
+                        _dynamicLightNameIds.insert(fname.GetIndex());
+                    }
+                }
+            }
+        }
 
         PerFrameBuffer(const PerFrameBuffer&) = delete;
         PerFrameBuffer& operator=(const PerFrameBuffer&) = delete;
@@ -556,17 +568,6 @@ protected:
             // The scene has changed, clear old scene data:
             m_DynamicLights.clear();
 
-            // Uploading data for a new scene:
-            static FName classNameLamp1(L"Lamp1", EFindName::FNAME_Find);
-            static FName classNameLamp2(L"Lamp2", EFindName::FNAME_Find);
-            static FName classNameLamp3(L"Lamp3", EFindName::FNAME_Find);
-            static FName classNameTriggerLight(L"TriggerLight", EFindName::FNAME_Find);
-            static FName classNameBarrelFire(L"BarrelFire", EFindName::FNAME_Find);
-            static FName classNameSecurityCamera(L"SecurityCamera", EFindName::FNAME_Find);
-            static FName classNameFlare(L"Flare", EFindName::FNAME_Find);
-            static FName classNameBarrelAmbrosia(L"BarrelAmbrosia", EFindName::FNAME_Find);
-            static FName classNameMuzzleFlash(L"MuzzleFlash", EFindName::FNAME_Find);
-
             m_LightActorsNum = SceneNode.Level->Actors.Num();
 
             for (size_t i = 0; i < m_LightActorsNum; ++i)
@@ -574,16 +575,8 @@ protected:
                 auto actor = SceneNode.Level->Actors(i);
                 if (actor != nullptr)
                 {
-                    auto& actorFName = actor->GetClass()->GetFName();
-                    
-                    // Checking that the current actor is a lamp
-                    if (actorFName == classNameLamp1 || actorFName == classNameLamp2 || actorFName == classNameLamp3 || actorFName == classNameBarrelFire
-                        || actorFName == classNameSecurityCamera || actorFName == classNameFlare || actorFName == classNameBarrelAmbrosia
-                        || actorFName == classNameMuzzleFlash)
-                        m_DynamicLights.push_back(actor);
-
-                    // Checking that the current actor is a trigger light source
-                    else if (actorFName == classNameTriggerLight)
+                    auto actorFNameIdx = actor->GetClass()->GetFName().GetIndex();
+                    if (_dynamicLightNameIds.contains(actorFNameIdx))
                         m_DynamicLights.push_back(actor);
                 }
             }
@@ -631,7 +624,7 @@ protected:
             }
         }
 
-        void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly, const json::JSON& settings)
+        void CheckViewChange(const FSceneNode& SceneNode, const FSavedPoly& Poly, const std::string& levelName)
         {
             assert(Poly.NumPts >= 3);
 
@@ -655,7 +648,7 @@ protected:
             );
 
             // Проверяем пересечение вертикальной линии камеры с плоскостью воды            
-            CheckScreenWaterIntersection(c, settings);
+            CheckScreenWaterIntersection(c, levelName);
 
             SetDynamicLights(SceneNode);
 
@@ -672,7 +665,7 @@ protected:
         /// Проверяет, что экран пересекает водную поверхность на уровне.
         /// Если пересечение есть, то передает в константный буфер уровень пересечения.
         /// </summary>
-        void CheckScreenWaterIntersection(const FCoords &c, const json::JSON& settings)
+        void CheckScreenWaterIntersection(const FCoords &c, const std::string& levelName)
         {
             if (m_Player == nullptr)
                 return;
@@ -683,6 +676,8 @@ protected:
             }
             else if (m_Player->Region.Zone->bWaterZone)
             {
+                auto& settings = _settings[levelName];
+
                 if (settings.hasKey("WaterLevels"))
                 {
                     const auto& waterLevels = settings.at("WaterLevels");
@@ -831,9 +826,6 @@ protected:
         ConstantBuffer<PerComplexPoly> m_Buffer;
 
         unsigned int _slot;
-
-        std::unordered_set<size_t> _prevDump;
-        std::unordered_set<size_t> _currentDump;
         
     public:
         PerComplexPolyBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot)
@@ -893,12 +885,6 @@ protected:
         void UpdateAndBind()
         {
             m_Buffer.UpdateAndBind(_slot);
-        }
-
-        void SwapStaticLightDumps()
-        {
-            _prevDump.clear();
-            _prevDump.swap(_currentDump);
         }
     }
     m_PerComplexPolyBuffer;

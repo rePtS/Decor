@@ -1,6 +1,8 @@
 {
+  "DynamicLightFNames" : ["Lamp1", "Lamp2", "Lamp3", "TriggerLight", "BarrelFire", "SecurityCamera", "Flare", "BarrelAmbrosia", "MuzzleFlash"],
   "00_training": {
-    "WaterLevels": [-64.0]
+    "WaterLevels": [-64.0],
+    "StaticLightsForMovingObjects": ["Light0", "Light1"]
   },
   "01_NYC_UNATCOHQ" : {
     "MaxINode": 5175,
