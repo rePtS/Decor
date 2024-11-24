@@ -169,15 +169,16 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <FxCompile Include="Scene.hlsl" />
     <FxCompile Include="Tile.hlsl" />
     <FxCompile Include="Gouraud.hlsl" />
+    <FxCompile Include="TransparentGouraud.hlsl" />
+    <FxCompile Include="TransparentSurface.hlsl" />
     <FxCompile Include="WaterSurface.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Common.hlsli">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="Common.hlsli"/>    
     <None Include="Defines.hlsli" />
     <None Include="packages.config" />
     <None Include="SceneConstants.hlsli" />
+    <None Include="CommonSurface.hlsli"/>
     <None Include="settings.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

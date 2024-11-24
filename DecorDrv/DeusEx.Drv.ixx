@@ -399,6 +399,9 @@ public:
             Render();
         }
 
+        //auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
+        m_pGouraudRenderer->SetDrawMode(PolyFlags & PF_Translucent);
+
         m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
         m_pDeviceState->PrepareBlendState(BlendState);
         const TextureConverter::TextureData& texDiffuse = m_pTextureCache->FindOrInsertAndPrepare(Info, 0, PolyFlags);
