@@ -304,10 +304,16 @@ public:
         }
 
         auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
-        m_pComplexSurfaceRenderer->SetDrawMode(waterFlag);
 
         if (waterFlag)
-            TexFlags |= 0x00000008;
+            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Water);
+        else if (PolyFlags & PF_Translucent)
+            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Transparent);
+        else
+            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Solid);
+
+        if (waterFlag)
+            TexFlags |= 0x00000008;        
 
         if (pFrame->Parent == nullptr)
         {

@@ -178,6 +178,7 @@ public:
         m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
         m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
         m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM);
+        m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
 
         m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
         m_pHDRTexture->SetDevice(m_pDevice.Get());

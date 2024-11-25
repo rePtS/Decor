@@ -4,6 +4,7 @@ Texture2D TexNoise : register(t2);
 Texture2D TexSolid : register(t4);
 Texture2D TexWater : register(t5);
 Texture2D TexTile : register(t6);
+Texture2D TexGlass : register(t7);
 
 struct SPoly
 {
@@ -49,7 +50,8 @@ float4 PSMain(const VSOut input) : SV_Target
 {
     const float4 Solid = TexSolid.Sample(SamPoint, input.TexCoord).rgba;
     const float4 Water = TexWater.Sample(SamPoint, input.TexCoord).rgba;
-    const float3 Tile = TexTile.Sample(SamPoint, input.TexCoord).rgb;
+    const float4 Tile = TexTile.Sample(SamPoint, input.TexCoord).rgba;
+    const float4 Glass = TexGlass.Sample(SamPoint, input.TexCoord).rgba;
     
     if (Water.a > Solid.a)
     {
@@ -64,13 +66,16 @@ float4 PSMain(const VSOut input) : SV_Target
         if (!IsUnderwater(input.TexCoord.y))
         {
             float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
-            return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+            return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + Glass + Tile;
         }
         else
         {
-            return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+            return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + Tile;
         }
     }
     
-    return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + float4(Tile, 1.0f);
+    if (Glass.a > Solid.a)
+        return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + Glass + Tile;
+    else
+        return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + Tile;
 }
