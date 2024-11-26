@@ -58,6 +58,12 @@ float4 PSMain(const VSOut input) : SV_Target0
     }
     
     Color.rgb *= Diffuse;
-    Color.a = input.Pos.z;
+    
+    // Hack for correct rendering of weapons near transparent objects
+    if (input.PosView.z < 60)
+        Color.a = 1;
+    else
+        Color.a = input.Pos.z;        
+    
     return Color;
 }

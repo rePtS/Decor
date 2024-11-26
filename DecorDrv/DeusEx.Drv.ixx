@@ -307,7 +307,7 @@ public:
 
         if (waterFlag)
             m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Water);
-        else if (PolyFlags & PF_Translucent)
+        else if ((PolyFlags & PF_Translucent) && !(PolyFlags & PF_AutoUPan)) // исключаем PF_AutoUPan - обычное такой флаг у неба, которое тоже прозрачное, но имеет проблемы с отрисовкой
             m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Transparent);
         else
             m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Solid);
