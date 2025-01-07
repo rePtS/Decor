@@ -43,7 +43,7 @@ PbrM_MatInfo PbrM_ComputeMatInfo(VSOut input)
 
     if (input.PolyFlags & PF_Translucent)
     {
-        metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.5f, 0.0f, 0.9f, 0.f);
+        metalRoughness = float4(1.0f, 1.0f, 1.0f, 1.0f) * float4(0.1f, 0.1f, 0.1f, 0.f);
     }
 
     const float4 metalness = float4(metalRoughness.bbb, 1);
