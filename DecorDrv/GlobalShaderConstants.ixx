@@ -861,6 +861,7 @@ protected:
                         AActor* l = SceneNode.Level->Model->Lights(la);
                         while (l)
                         {
+                            std::wstring name(l->GetFullName()); // TO-DO Убрать, когда будет не нужно!
                             //auto lightId = lightCache.at(l);
                             //if (!_currentDump.contains(lightId))
                             //    _currentDump.insert(lightId);

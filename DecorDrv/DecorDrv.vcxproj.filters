@@ -61,9 +61,6 @@
     <FxCompile Include="TransparentSurface.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="CommonSurface.hlsli">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">
@@ -77,5 +74,8 @@
     </None>
     <None Include="packages.config" />
     <None Include="settings.json" />
+    <None Include="CommonSurface.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
