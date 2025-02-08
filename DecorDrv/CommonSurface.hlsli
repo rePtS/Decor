@@ -208,6 +208,35 @@ float4 GetAdvancedPixel(const VSOut input,
                                 matInfo) * occlusionValue;
                     }
                     break;
+                case LE_Searchlight:
+                    {
+                        float4 lightPosData = StaticLights[lightBufPos + 1];
+                
+                        float lightRadius = lightPosData.w;
+                        lightPosData.w = 0;
+                        lightPosData = mul(lightPosData - Origin, ViewMatrix);
+                        lightPosData.w = lightRadius;
+                
+                        float time = fTick.x / 80.0f + lightPeriod;
+                        float4 lightDirData = float4(cos(time), sin(time), 0.0f, 0.5f);
+                
+                        float coneAngle = lightDirData.w;
+                        lightDirData.w = 0;
+                        lightDirData = mul(lightDirData, ViewMatrix);
+                        lightDirData.w = coneAngle;
+                
+                        float3 posView = (float3) input.PosView;
+
+                        // Skip spot lights that are out of range of the point being shaded.
+                        if (length((float3) lightPosData - posView) < lightPosData.w)
+                            output += PbrM_SpotLightContrib(posView,
+                                lightPosData,
+                                lightDirData,
+                                intencity,
+                                shadingCtx,
+                                matInfo) * occlusionValue;
+                    }
+                    break;
                 default:
                     {
                         float4 lightPosData = StaticLights[lightBufPos + 1];
