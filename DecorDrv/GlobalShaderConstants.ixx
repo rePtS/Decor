@@ -481,12 +481,20 @@ protected:
                 dynamicLightsBufferPos += 3;
             }
             
+            auto currentLevelName = GetString(SceneNode.Level->GetOuter()->GetPathName());
+            auto& settings = _settings[currentLevelName];
+
             // Остальные динамические источники освещения
             for (auto& light : m_DynamicLights)
             {
                 if (IsLightActorVisible(SceneNode.Coords, light))
-                {
-                    auto lightData = GetLightData(light);
+                {                    
+                    float correction = 1.0f;
+                    auto lightName = GetString(light->GetName());
+                    if (settings.hasKey(lightName))
+                        correction = settings.at(lightName).ToFloat();
+
+                    auto lightData = GetLightData(light, correction);
                     for (size_t i = 0; i < lightData.size(); ++i)
                         m_Buffer.m_Data.DynamicLights[dynamicLightsBufferPos + i] = lightData[i];
 
