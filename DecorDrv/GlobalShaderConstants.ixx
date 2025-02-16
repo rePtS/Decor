@@ -271,6 +271,8 @@ protected:
 
         unsigned int _slot;
 
+        const std::string GlobalStaticLightName = "GlobalStaticLight";
+
     public:
         PerSceneBuffer(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext, unsigned int slot, JSON& settings)
             : m_Buffer(Device, DeviceContext), _slot(slot), _settings(settings)
@@ -308,8 +310,10 @@ protected:
                         {
                             float correction = 1.0f;
                             auto lightName = GetString(lightActor->GetName());
+                            if (settings.hasKey(GlobalStaticLightName))
+                                correction *= settings.at(GlobalStaticLightName).ToFloat();
                             if (settings.hasKey(lightName))
-                                correction = settings.at(lightName).ToFloat();
+                                correction *= settings.at(lightName).ToFloat();
 
                             // then process and add processed data for constant buffer
                             m_LightCache.insert({ lightActor, bufferPos });
@@ -451,6 +455,8 @@ protected:
             return false;
         }
 
+        const std::string GlobalDynamicLightName = "GlobalDynamicLight";
+
         /// <summary>
         /// Set frame's dynamic lights data for GPU constant buffer
         /// </summary>        
@@ -491,8 +497,10 @@ protected:
                 {                    
                     float correction = 1.0f;
                     auto lightName = GetString(light->GetName());
+                    if (settings.hasKey(GlobalDynamicLightName))
+                        correction *= settings.at(GlobalDynamicLightName).ToFloat();
                     if (settings.hasKey(lightName))
-                        correction = settings.at(lightName).ToFloat();
+                        correction *= settings.at(lightName).ToFloat();
 
                     auto lightData = GetLightData(light, correction);
                     for (size_t i = 0; i < lightData.size(); ++i)

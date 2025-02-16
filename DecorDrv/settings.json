@@ -1190,9 +1190,40 @@
 
     "Light193": 0.015
   },
-  "09_NYC_ShipFan" : {},
-  "10_Paris_Catacombs" : {},
-  "10_Paris_Catacombs_tunnels" : {},
+  "09_NYC_ShipFan" : {
+    "MaxINode": 1540,
+    "Light38": 0.1,
+    "Light39": 0.1,
+    "Light40": 0.1,
+    "Light32": 0.1,
+    "Light31": 0.1,
+    "Light33": 0.1,
+    "Light34": 0.1,
+    "Light35": 0.1,
+    "Light36": 0.1,
+    "Light37": 0.1,
+
+    "Light23": 0.1,
+    "Light24": 0.1,
+    "Light26": 0.1,
+    "Light27": 0.1,
+    "Light28": 0.1,
+    "Light29": 0.1,
+    "Light30": 0.1,
+    "Light17": 0.1,
+    "Light16": 0.1
+  },
+  "10_Paris_Catacombs" : {
+    "MaxINode": 11860,
+    "Light1": 0.1,
+    "Light2": 0.1
+  },
+  "10_Paris_Catacombs_tunnels" : {
+    "MaxINode": 6800,
+    "WaterLevels": [-328.0],
+    "GlobalStaticLight": 0.2,
+    "GlobalDynamicLight": 0.1
+  },
   "10_Paris_Chateau" : {},
   "10_Paris_Club" : {},
   "10_Paris_Metro" : {},
