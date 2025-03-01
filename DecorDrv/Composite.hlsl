@@ -63,15 +63,15 @@ float4 PSMain(const VSOut input) : SV_Target
 
         float depthDifference = (1.0f / reflectedSolid.a - 1.0f / Water.a) * 0.001f;
 
-        if (!IsUnderwater(input.TexCoord.y))
-        {
+        //if (!IsUnderwater(input.TexCoord.y))
+        //{
             float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
             return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + Glass + Tile;
-        }
-        else
-        {
-            return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + Tile;
-        }
+        //}
+        //else
+        //{
+        //    return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + Tile;
+        //}
     }
     
     if (Glass.a > Solid.a)

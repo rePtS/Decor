@@ -90,7 +90,7 @@ public:
         if (_currentLevelIndex != levelIndex)
         {
             _currentLevelIndex = levelIndex;
-            _currentLevelName = GetString(
+            _currentLevelName = GetUppercaseString(
                 SceneNode.Level->GetOuter()->GetPathName());
             
             levelChanged = true;
@@ -104,8 +104,21 @@ public:
 
     static std::string GetString(const TCHAR* tStr)
     {
-        char charBuf[64];
-        wcstombs(charBuf, tStr, 64);
+        const static size_t BUF_SIZE = 64;
+
+        char charBuf[BUF_SIZE];
+        wcstombs(charBuf, tStr, BUF_SIZE);
+        return std::string(charBuf);
+    }
+
+    static std::string GetUppercaseString(const TCHAR* tStr)
+    {
+        const static size_t BUF_SIZE = 64;
+
+        char charBuf[BUF_SIZE];
+        wcstombs(charBuf, tStr, BUF_SIZE);
+        for (int i = 0; i < BUF_SIZE; i++)
+            charBuf[i] = toupper(charBuf[i]);
         return std::string(charBuf);
     }
 
@@ -487,7 +500,7 @@ protected:
                 dynamicLightsBufferPos += 3;
             }
             
-            auto currentLevelName = GetString(SceneNode.Level->GetOuter()->GetPathName());
+            auto currentLevelName = GetUppercaseString(SceneNode.Level->GetOuter()->GetPathName());
             auto& settings = _settings[currentLevelName];
 
             // Остальные динамические источники освещения
