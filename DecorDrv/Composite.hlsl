@@ -28,6 +28,7 @@ VSOut VSMain(const SPoly Input)
 
 static const float4 _WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f);
 static const float _WaterFogDensity = 1.1f;
+static const float _MinGlassSolidDepthDiff = 0.05f; // Min delta between glass and solid surface (if the distance is less, then the surface is glass anyway)
 
 bool IsUnderwater(float screenY)
 {
@@ -56,25 +57,20 @@ float4 PSMain(const VSOut input) : SV_Target
     if (Water.a > Solid.a)
     {
         float2 noiseUV = TexNoise.Sample(SamLinear, input.TexCoord + float2(0.0001f * fTick.x, 0.0f)).xy;
-        float4 reflectedSolid = TexSolid.Sample(SamPoint, input.TexCoord + 0.005f * noiseUV).rgba;
-                
-        if (Water.a < reflectedSolid.a)
-            reflectedSolid = Solid;
+        float4 refractedSolid = TexSolid.Sample(SamPoint, input.TexCoord + 0.005f * noiseUV).rgba;
+        
+        if (Water.a < refractedSolid.a)
+            refractedSolid = Solid;
 
-        float depthDifference = (1.0f / reflectedSolid.a - 1.0f / Water.a) * 0.001f;
-
-        //if (!IsUnderwater(input.TexCoord.y))
-        //{
-            float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
-            return AddUnderWaterFog(lerp(_WaterFogColor, reflectedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + Glass + Tile;
-        //}
-        //else
-        //{
-        //    return AddUnderWaterFog(reflectedSolid + Water, Water.a, input.TexCoord.y) + FlashColor + Tile;
-        //}
+        float depthDifference = (1.0f / refractedSolid.a - 1.0f / Water.a) * 0.001f;
+        
+        float fogFactor = exp2(-_WaterFogDensity * depthDifference * 20.0f);
+        return AddUnderWaterFog(lerp(_WaterFogColor, refractedSolid, fogFactor) + Water, Water.a, input.TexCoord.y) + FlashColor + Glass + Tile;        
     }
     
-    if (Glass.a > Solid.a)
+    float glassSolidDepthDiff = abs((Glass.a - Solid.a) / Solid.a);
+    
+    if (Glass.a > Solid.a || glassSolidDepthDiff < _MinGlassSolidDepthDiff)
         return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + Glass + Tile;
     else
         return AddUnderWaterFog(Solid, Solid.a, input.TexCoord.y) + FlashColor + Tile;

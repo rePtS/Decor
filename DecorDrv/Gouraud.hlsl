@@ -46,8 +46,7 @@ float4 PSMain(const VSOut input) : SV_Target0
     if (input.PolyFlags & PF_Modulated)
     {
         Color = TexDiffuse.Sample(SamLinear, input.TexCoord);
-        Color.a = 0; // fix for shadows - makes them invisible on top of transparent objects
-        // Color.a = input.Pos.z;
+        Color.a = input.Pos.z;
         return Color;
     }
     
@@ -64,7 +63,7 @@ float4 PSMain(const VSOut input) : SV_Target0
     if (input.PosView.z < 60)
         Color.a = 1;
     else
-        Color.a = input.Pos.z;        
+        Color.a = input.Pos.z;
     
     return Color;
 }
