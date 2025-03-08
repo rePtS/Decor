@@ -28,6 +28,7 @@ void GSMain(triangle SPoly In[3], inout TriangleStream<VSOut> outputStream)
         output.Normal = vn;
         output.TexCoord = In[i].TexCoord;
         output.TexCoord1 = In[i].TexCoord1;
+        output.TexCoord2 = In[i].TexCoord2;
         output.PolyFlags = In[i].PolyFlags;
         output.TexFlags = In[i].TexFlags;
         outputStream.Append(output);

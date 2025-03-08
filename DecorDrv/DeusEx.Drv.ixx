@@ -159,7 +159,7 @@ public:
             m_pGlobalShaderConstants = std::make_unique<GlobalShaderConstants>(Device, DeviceContext, m_Settings);
             m_pDeviceState = std::make_unique<DeviceState>(Device, DeviceContext);
             m_pTextureCache = std::make_unique<TextureCache>(Device, DeviceContext);
-            m_pOcclusionMapCache = std::make_unique<OcclusionMapCache>(Device, DeviceContext, 3);
+            m_pOcclusionMapCache = std::make_unique<OcclusionMapCache>(Device, DeviceContext, 4);
             m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
             m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
             m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
@@ -262,6 +262,7 @@ public:
         // 0x00000002 - needs lightmapping
         // 0x00000004 - use original UE1 rendering
         // 0x00000008 - poly is a water surface
+        // 0x00000010 - needs fog
         unsigned int TexFlags = 0;
             
         int maxINode = m_pGlobalShaderConstants->GetMaxINode();
@@ -291,6 +292,17 @@ public:
             }
             pTexLight = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.LightMap, 1, PolyFlags);
             TexFlags |= 0x00000002;
+        }
+
+        const TextureConverter::TextureData* pTexFogMap = nullptr;
+        if (Surface.FogMap)
+        {
+            if (!m_pTextureCache->IsPrepared(*Surface.FogMap, 2))
+            {
+                Render();
+            }
+            pTexFogMap = &m_pTextureCache->FindOrInsertAndPrepare(*Surface.FogMap, 2, PolyFlags);
+            TexFlags |= 0x00000010;
         }
 
         // TO-DO
@@ -369,12 +381,12 @@ public:
                 //    v->TexCoord[2].x = (UCoord - Surface.DetailTexture->Pan.X)*detail->multU;
                 //    v->TexCoord[2].y = (VCoord - Surface.DetailTexture->Pan.Y)*detail->multV;
                 //}
-                //if (Surface.FogMap)
-                //{
-                //    //Fogmaps require pan correction of -.5
-                //    v->TexCoord[3].x = (UCoord - (Surface.FogMap->Pan.X - 0.5f*Surface.FogMap->UScale))*fogMap->multU;
-                //    v->TexCoord[3].y = (VCoord - (Surface.FogMap->Pan.Y - 0.5f*Surface.FogMap->VScale))*fogMap->multV;
-                //}
+                if (Surface.FogMap)
+                {
+                    //Fogmaps require pan correction of -.5
+                    v.TexCoords2.x = (UCoord - (Surface.FogMap->Pan.X - 0.5f * Surface.FogMap->UScale)) * pTexFogMap->fMultU;
+                    v.TexCoords2.y = (VCoord - (Surface.FogMap->Pan.Y - 0.5f * Surface.FogMap->VScale)) * pTexFogMap->fMultV;
+                }
                 //if (Surface.MacroTexture)
                 //{
                 //    v->TexCoord[4].x = (UCoord - Surface.MacroTexture->Pan.X)*macro->multU;
@@ -430,6 +442,9 @@ public:
 
             static_assert(sizeof(ppPts[i]->Light) >= sizeof(v.Color), "Sizes differ, can't use reinterpret_cast");
             v.Color = reinterpret_cast<decltype(v.Color)&>(ppPts[i]->Light);
+
+            static_assert(sizeof(ppPts[i]->Fog) >= sizeof(v.Fog), "Sizes differ, can't use reinterpret_cast");
+            v.Fog = reinterpret_cast<decltype(v.Fog)&>(ppPts[i]->Fog);
 
             v.TexCoords.x = ppPts[i]->U * texDiffuse.fMultU;
             v.TexCoords.y = ppPts[i]->V * texDiffuse.fMultV;

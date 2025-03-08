@@ -3,14 +3,16 @@
 
 Texture2D TexDiffuse : register(t0);
 Texture2D TexLight : register(t1);
-Texture2D TexNoise : register(t2);
-Texture2DArray TexOcclusion : register(t3);
+Texture2D TexFog : register(t2);
+Texture2D TexNoise : register(t3);
+Texture2DArray TexOcclusion : register(t4);
 
 struct SPoly
 {
     float4 Pos : Position0;
     float2 TexCoord : TexCoord0;
     float2 TexCoord1 : TexCoord1;
+    float2 TexCoord2 : TexCoord2;
     uint PolyFlags : BlendIndices0;
     uint TexFlags : BlendIndices1;
 };
@@ -20,6 +22,7 @@ struct VSOut
     float4 Pos : SV_Position;
     float2 TexCoord : TexCoord0;
     float2 TexCoord1 : TexCoord1;
+    float2 TexCoord2 : TexCoord2;
     uint PolyFlags : BlendIndices0;
     uint TexFlags : BlendIndices1;
     float4 PosView : Position1;
@@ -87,6 +90,11 @@ float4 GetOriginalPixel(const VSOut input)
     {
         const float3 Light = TexLight.Sample(SamLinear, input.TexCoord1).bgr * 2.0f;
         Color.rgb *= Light;
+    }
+    if (input.TexFlags & 0x00000010)
+    {
+        const float3 Fog = TexFog.Sample(SamLinear, input.TexCoord2).bgr * 2.0f;
+        Color.rgb += Fog;
     }
     
     Color.a = input.Pos.z;
@@ -357,6 +365,9 @@ float4 GetSurfacePixel(const VSOut input)
             
             output = GetAdvancedPixel(input, shadingCtx, matInfo);
             output += GetDynamicPixel(input, shadingCtx, matInfo);
+        
+            if (input.TexFlags & 0x00000010)
+                output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
             
             output.a = input.Pos.z;
         }

@@ -1,10 +1,10 @@
 #include "Common.hlsli"
 
-Texture2D TexNoise : register(t2);
-Texture2D TexSolid : register(t4);
-Texture2D TexWater : register(t5);
-Texture2D TexTile : register(t6);
-Texture2D TexGlass : register(t7);
+Texture2D TexNoise : register(t3);
+Texture2D TexSolid : register(t5);
+Texture2D TexWater : register(t6);
+Texture2D TexTile : register(t7);
+Texture2D TexGlass : register(t8);
 
 struct SPoly
 {

@@ -278,9 +278,9 @@ public:
         m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, nullptr);// m_pDepthStencilView.Get());        
 
         // Устанавливаем текстуры рендер-бэкенда как ресурсы для шейдера
-        // начиная с 4-го слота, чтобы не переназначать предыдущие текстуры
+        // начиная с 5-го слота, чтобы не переназначать предыдущие текстуры
         auto& srvs = m_RenderTextures->GetShaderResourceViews();
-        m_pDeviceContext->PSSetShaderResources(4, srvs.size(), &srvs.data()[0]);
+        m_pDeviceContext->PSSetShaderResources(5, srvs.size(), &srvs.data()[0]);
     }
 
     void Present()

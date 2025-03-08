@@ -18,7 +18,7 @@ using Microsoft::WRL::ComPtr;
 export class TextureCache
 {
 public:
-    static const unsigned int sm_iMaxSlots = 2; // Maximum texture slot managed by the cache
+    static const unsigned int sm_iMaxSlots = 3; // Maximum texture slot managed by the cache
 
     explicit TextureCache(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
         :m_DeviceContext(DeviceContext)
