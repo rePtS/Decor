@@ -297,7 +297,7 @@ public:
         const TextureConverter::TextureData* pTexFogMap = nullptr;
         if (Surface.FogMap)
         {
-            if (!m_pTextureCache->IsPrepared(*Surface.FogMap, 2))
+            if (!m_pTextureCache->IsPrepared(*Surface.FogMap, 1)) // using slot for lightmap, otherwise we get a flicker of fog
             {
                 Render();
             }
