@@ -45,7 +45,11 @@ float4 PSMain(const VSOut input) : SV_Target1
     const PbrM_MatInfo matInfo = PbrM_ComputeWaterInfo(input);
 
     float4 output = GetAdvancedPixel(input, shadingCtx, matInfo);
+    output += GetDynamicPixel(input, shadingCtx, matInfo);
 
+    if (input.TexFlags & 0x00000010)
+        output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
+        
     output.a = input.Pos.z;
     return output;
 }
