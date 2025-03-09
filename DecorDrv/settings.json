@@ -140,8 +140,15 @@
     "MaxINode": 12570
   },
   "02_NYC_UNDERGROUND" : {
-    "MaxINode": 4225,
+    "MaxINode": 5025,
     "WaterLevels": [-1280.0, -1120.0],
+    "Light240": 0.1,
+    "Light238": 0.1,
+    "Light239": 0.1,
+    "TriggerLight154": 0.2,
+    "TriggerLight125": 0.2,
+    "TriggerLight126": 0.2,
+    "Light347": 0.5,
     "Light32": 0.4,
     "Light13": 0.4,
     "Light43": 0.4,
