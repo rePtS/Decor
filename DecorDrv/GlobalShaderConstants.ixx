@@ -495,7 +495,7 @@ protected:
                 assert(sizeof(float) == sizeof(uint32_t));
 
                 m_Buffer.m_Data.DynamicLights[0] = { 100000.0f, 100000.0f, 100000.0f, reinterpret_cast<float&>(augLightType) };
-                m_Buffer.m_Data.DynamicLights[1] = { 0.0f, 0.0f, 0.0f, 4000.0f };
+                m_Buffer.m_Data.DynamicLights[1] = { 0.0f, 0.0f, 0.0f, 1000.0f };
                 m_Buffer.m_Data.DynamicLights[2] = { 0.0f, 0.0f, 1.0f, 0.5f };
                 dynamicLightsBufferPos += 3;
             }
