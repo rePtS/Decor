@@ -12,16 +12,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Deus Ex Debug|Win32 = Deus Ex Debug|Win32
-		Deus Ex Release|Win32 = Deus Ex Release|Win32
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Deus Ex Debug|Win32.ActiveCfg = Deus Ex Debug|Win32
-		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Deus Ex Debug|Win32.Build.0 = Deus Ex Debug|Win32
-		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Deus Ex Release|Win32.ActiveCfg = Deus Ex Release|Win32
-		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Deus Ex Release|Win32.Build.0 = Deus Ex Release|Win32
+		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Debug|Win32.Build.0 = Debug|Win32
+		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Release|Win32.ActiveCfg = Release|Win32
+		{692EF8AC-8A14-4F0D-8E58-DCBFCF6A181E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8D5440EC-A2B9-4F3E-BC89-941A41CF752C}
 	EndGlobalSection
 EndGlobal
