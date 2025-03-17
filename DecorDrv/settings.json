@@ -1,5 +1,31 @@
 {
-  "DynamicLightFNames" : ["Lamp1", "Lamp2", "Lamp3", "TriggerLight", "BarrelFire", "SecurityCamera", "Flare", "BarrelAmbrosia", "MuzzleFlash"],
+  "DynamicLightFNames" : [
+	"Gray",
+	"BarrelFire",
+	"WeaponNanoSword",
+	"DartFlare",
+	"Lamp1",
+	"ExplosionLight",
+	"PlasmaBolt",
+	"Beam__",
+	"AlarmLight",
+	"Lightbulb",
+	"CageLight",
+	"BarrelVirus",
+	"Fireball",
+	"GrayCarcass",
+	"AutoTurretGun",
+	"Flare",
+	"HighLight",
+	"Lamp3",
+	"ElectricityEmitter",
+	"MuzzleFlash",
+	"BarrelAmbrosia",
+	"Fire",
+	"SecurityCamera",
+	"Lamp2",
+	"TriggerLight"
+  ],
   "DX" : {
     "MaxINode": 10200,
     "Light0": 0.00007,
@@ -324,6 +350,12 @@
   "04_NYC_UNDERGROUND" : {
     "MaxINode": 1975,
     "WaterLevels": [-1280.0, -1120.0],
+    "Light240": 0.1,
+    "Light238": 0.1,
+    "Light239": 0.1,
+    "TriggerLight154": 0.2,
+    "TriggerLight125": 0.2,
+    "TriggerLight126": 0.2,
     "Light32": 0.4,
     "Light13": 0.4,
     "Light43": 0.4,
@@ -1223,7 +1255,9 @@
   "10_PARIS_CATACOMBS" : {
     "MaxINode": 11860,
     "Light1": 0.1,
-    "Light2": 0.1
+    "Light2": 0.1,
+    "TriggerLight0": 2.0,
+    "GlobalDynamicLight": 0.2
   },
   "10_PARIS_CATACOMBS_TUNNELS" : {
     "MaxINode": 6800,
@@ -1350,6 +1384,7 @@
   },
   "12_VANDENBERG_GAS" : {
     "MaxINode": 9660,
+    "GlobalDynamicLight": 0.2,
     "Spotlight23": 0.3,
     "Spotlight20": 0.3,
     "Spotlight21": 0.3,
