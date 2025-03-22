@@ -77,7 +77,11 @@
     "Spotlight86": 0.3,
     "Spotlight88": 0.3,
     "Light25": 0.1,
-    "Light2": 0.1
+    "Light2": 0.1,
+    "TriggerLight0": 5.0,
+    "TriggerLight1": 5.0,
+    "TriggerLight2": 5.0,
+    "TriggerLight3": 5.0
   },
   "00_TRAININGCOMBAT" : {
     "MaxINode": 5920,
@@ -137,7 +141,7 @@
   },
   "01_NYC_UNATCOISLAND" : {
     "MaxINode": 13220,
-    "WaterLevels": [-352.0],    
+    "WaterLevels": [-352.0],
     "Light360": 0.1,    
     "Light140": 0.1,    
     "Light69": 0.1
@@ -151,6 +155,7 @@
   },
   "02_NYC_BATTERYPARK" : {
     "MaxINode": 12910,
+    "WaterLevels": [208.0, -448.0],
     "Light447": 0.005,
     "Light463": 0.1
   },
@@ -837,7 +842,7 @@
     "Light15": 0.01
   },
   "06_HONGKONG_WANCHAI_MARKET" : {
-    "MaxINode": 11885,
+    "MaxINode": 11879,
     "Light16": 0.1,
     "Light68": 0.1,
     "Light431": 0.1,
@@ -1031,25 +1036,26 @@
     "Light149": 0.1,
     "Light35": 0.1,
     "Light97": 0.3,
-    "TriggerLight2": 0.003,
-    "TriggerLight4": 0.003,
-    "TriggerLight5": 0.003,
-    "TriggerLight7": 0.003,
-    "TriggerLight8": 0.003,
-    "TriggerLight15": 0.003,
-    "TriggerLight19": 0.003,
-    "TriggerLight21": 0.003,
-    "TriggerLight23": 0.003,
-    "TriggerLight27": 0.003,
-    "TriggerLight29": 0.003,
-    "TriggerLight31": 0.003,
-    "TriggerLight16": 0.3,
-    "TriggerLight20": 0.3,
-    "TriggerLight22": 0.3,
-    "TriggerLight24": 0.3,
-    "TriggerLight28": 0.3,
-    "TriggerLight30": 0.3,
-    "TriggerLight32": 0.3,
+    "TriggerLight2": 0.07,
+    "TriggerLight4": 0.07,
+    "TriggerLight5": 0.07,
+    "TriggerLight6": 0.07,
+    "TriggerLight7": 0.07,
+    "TriggerLight8": 0.07,
+    "TriggerLight15": 0.015,
+    "TriggerLight19": 0.015,
+    "TriggerLight21": 0.015,
+    "TriggerLight23": 0.015,
+    "TriggerLight27": 0.015,
+    "TriggerLight29": 0.015,
+    "TriggerLight31": 0.015,
+    "TriggerLight16": 1.5,
+    "TriggerLight20": 1.5,
+    "TriggerLight22": 1.5,
+    "TriggerLight24": 1.5,
+    "TriggerLight28": 1.5,
+    "TriggerLight30": 1.5,
+    "TriggerLight32": 1.5,
     "Light84": 0.1
   },
   "09_NYC_GRAVEYARD" : {
@@ -1256,14 +1262,13 @@
     "MaxINode": 11860,
     "Light1": 0.1,
     "Light2": 0.1,
-    "TriggerLight0": 2.0,
-    "GlobalDynamicLight": 0.2
+    "TriggerLight0": 2.0
   },
   "10_PARIS_CATACOMBS_TUNNELS" : {
     "MaxINode": 6800,
     "WaterLevels": [-328.0],
     "GlobalStaticLight": 0.2,
-    "GlobalDynamicLight": 0.1
+    "GlobalDynamicLight": 0.5
   },
   "10_PARIS_CHATEAU" : {
     "MaxINode": 9295,
@@ -1294,7 +1299,7 @@
   },
   "10_PARIS_METRO" : {
     "MaxINode": 12595,
-    "GlobalDynamicLight": 0.1,
+    "GlobalDynamicLight": 0.5,
     "Light181": 0.2,
     "Light537": 0.2,
     "Light92": 0.2,
@@ -1384,7 +1389,6 @@
   },
   "12_VANDENBERG_GAS" : {
     "MaxINode": 9660,
-    "GlobalDynamicLight": 0.2,
     "Spotlight23": 0.3,
     "Spotlight20": 0.3,
     "Spotlight21": 0.3,
@@ -1492,7 +1496,7 @@
   "14_OCEANLAB_SILO" : {
     "MaxINode": 17050,
     "WaterLevels": [-1122.0],
-    "GlobalDynamicLight": 0.05,
+    "GlobalDynamicLight": 0.25,
     "Spotlight22": 0.1,
     "Light176": 0.1,
     "Spotlight21": 0.1,

@@ -508,7 +508,7 @@ protected:
             {
                 if (IsLightActorVisible(SceneNode.Coords, light))
                 {                    
-                    float correction = 1.0f;
+                    float correction = 0.2f;
                     auto lightName = GetString(light->GetName());
                     if (settings.hasKey(GlobalDynamicLightName))
                         correction *= settings.at(GlobalDynamicLightName).ToFloat();
