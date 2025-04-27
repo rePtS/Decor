@@ -300,11 +300,11 @@ float4 GetDynamicPixel(const VSOut input,
                     // только для фонарика ГГ и работаем с ним в простарнстве камеры
                     float4 lightPosData = DynamicLights[lightBufPos + 1];
                     float4 lightDirData = DynamicLights[lightBufPos + 2];
-                    float3 posView = (float3) input.PosView;
+                    float3 posView = input.PosView.xyz;
                     lightBufPos += 3;
                 
                     // Skip spot lights that are out of range of the point being shaded.
-                    if (length((float3) lightPosData - posView) < lightPosData.w)
+                    if (length(lightPosData.xyz - posView) < lightPosData.w)
                         output += PbrM_SpotLightContrib(posView,
                                 lightPosData,
                                 lightDirData,

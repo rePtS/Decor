@@ -244,29 +244,32 @@ float4 PbrM_DirLightContrib(float3 lightDir,
     return brdf * thetaCos * luminance;    
 }
 
+float4 PbrM_ContribBase(float lightRadius, float distToSurf, float fadeFactor, float thetaCos, float4 intensity, float4 brdf)
+{
+    const float lightEdgeStart = lightRadius * (1.0f - LIGHT_EDGE_THICKNESS);
+    if (distToSurf > lightEdgeStart)
+    {
+        float edgeFactor = 1.0f - smoothstep(lightEdgeStart, lightRadius, distToSurf);
+        return brdf * thetaCos * intensity * edgeFactor / fadeFactor;
+    }
+    else
+        return brdf * thetaCos * intensity / fadeFactor;
+}
+
 float4 PbrM_PointLightContrib(float3 surfPos,
     float4 lightPos,
     float4 intensity,
     PbrM_ShadingCtx shadingCtx,
     PbrM_MatInfo matInfo)
 {
-    const float3 dirRaw = surfPos - (float3)lightPos;
-    const float  len = length(dirRaw);
-    const float3 lightDir = dirRaw / len;
-    const float  distSqr = len * len;
+    const float3 vectorToSurf = surfPos - (float3) lightPos;
+    const float distToSurf = length(vectorToSurf);
+    const float3 dirToSurf = vectorToSurf / distToSurf;
 
-    const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);    
+    const float thetaCos = ThetaCos(shadingCtx.normal, dirToSurf);
+    const float4 brdf = PbrM_BRDF(dirToSurf, shadingCtx, matInfo);
 
-    const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
-
-    const float lightEdgeStart = lightPos.w * (1.0f - LIGHT_EDGE_THICKNESS);
-    if (len > lightEdgeStart)
-    {	    
-	    float edgeFactor = 1.0f - smoothstep(lightEdgeStart, lightPos.w, len);
-	    return brdf * thetaCos * intensity * edgeFactor / distSqr;
-    }
-    else
-    	return brdf * thetaCos * intensity / distSqr;
+    return PbrM_ContribBase(lightPos.w, distToSurf, distToSurf * distToSurf, thetaCos, intensity, brdf);
 }
 
 float DoSpotCone(float4 lightDir, float3 L)
@@ -286,21 +289,20 @@ float DoSpotCone(float4 lightDir, float3 L)
 	    maxCos = lerp(minCos, 1, 0.8f);
     }
 
-/*    
-    // If the cosine angle of the light's direction 
-    // vector and the vector from the light source to the point being 
-    // shaded is less than minCos, then the spotlight contribution will be 0.
-    float minCos = cos(lightDir.w);    
-    // If the cosine angle of the light's direction vector
-    // and the vector from the light source to the point being shaded
-    // is greater than maxCos, then the spotlight contribution will be 1.
-    float maxCos = lerp(minCos, 1, 0.5f);
-*/
     float cosAngle = dot(normalize((float3)lightDir), normalize(L));
     // Blend between the maxixmum and minimum cosine angles.
     return smoothstep(minCos, maxCos, cosAngle);    
 }
 
+float DoFlashlightCone(float4 lightDir, float3 dirToSurf)
+{
+    float minCos = cos(lightDir.w);
+    float maxCos = lerp(minCos, 1, 0.8f);
+    
+    float cosAngle = dot(normalize(lightDir.xyz), normalize(dirToSurf));
+    // Blend between the maxixmum and minimum cosine angles.
+    return smoothstep(minCos, maxCos, cosAngle);
+}
 
 float4 PbrM_SpotLightContrib(float3 surfPos,
     float4 lightPosData,
@@ -309,28 +311,24 @@ float4 PbrM_SpotLightContrib(float3 surfPos,
     PbrM_ShadingCtx shadingCtx,
     PbrM_MatInfo matInfo)
 {
-    const float3 dirRaw = surfPos - (float3)lightPosData;
-    const float  len = length(dirRaw);
-    const float3 lightDir = dirRaw / len;
+    const float3 vectorToSurf = surfPos - lightPosData.xyz;
+    const float distToSurf = length(vectorToSurf);
+    const float3 dirToSurf = vectorToSurf / distToSurf;
 
-    const float spotIntensity = DoSpotCone(lightDirData, lightDir);
+    const bool isFlashLight = !any(lightPosData.xyz); // если источник света находится в той же точке, что и игрок, то это фонарик игрока
+    const float spotIntensity = isFlashLight ?
+        DoFlashlightCone(lightDirData, dirToSurf) : DoSpotCone(lightDirData, dirToSurf);
+
     if (spotIntensity == 0.0f)
         return intensity * 0.0f;
     else
     {
-        const float distSqr = len * len;
-        const float thetaCos = ThetaCos(shadingCtx.normal, lightDir);
-
-        const float4 brdf = PbrM_BRDF(lightDir, shadingCtx, matInfo);
-
-	const float lightEdgeStart = lightPosData.w * (1.0f - LIGHT_EDGE_THICKNESS);
-    	if (len > lightEdgeStart)
-    	{
-	        float edgeFactor = 1.0f - smoothstep(lightEdgeStart, lightPosData.w, len);
-	        return brdf * thetaCos * intensity * spotIntensity * edgeFactor / distSqr;
-    	}
-    	else
-    	    return brdf * thetaCos * intensity * spotIntensity / distSqr;
+        const float thetaCos = ThetaCos(shadingCtx.normal, dirToSurf);
+        const float4 brdf = PbrM_BRDF(dirToSurf, shadingCtx, matInfo);
+        const float fadeFactor = isFlashLight ?
+            100.0f * distToSurf : distToSurf * distToSurf;
+        
+        return PbrM_ContribBase(lightPosData.w, distToSurf, fadeFactor, thetaCos, intensity * spotIntensity, brdf);
     }
 }
 

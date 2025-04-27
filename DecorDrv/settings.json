@@ -292,7 +292,11 @@
     "MaxINode": 3745
   },
   "03_NYC_MOLEPEOPLE" : {
-    "MaxINode": 6140
+    "MaxINode": 6140,
+    "Light124": 0.3,
+    "Light101": 0.3,
+    "Light102": 0.3,
+    "Light103": 0.3
   },
   "03_NYC_UNATCOHQ" : {
     "MaxINode": 5330,
@@ -331,7 +335,12 @@
     "Spotlight23": 0.1,
     "Light1846" : 0.001,
     "Light1" : 0.07,
-    "Light2" : 0.07
+    "Light2" : 0.07,
+    "TriggerLight0": 0.1,
+    "TriggerLight1": 0.1,
+    "TriggerLight2": 0.1,
+    "TriggerLight3": 0.1,
+    "TriggerLight4": 0.1
   },
   "04_NYC_SMUG" : {
   },
@@ -538,7 +547,7 @@
   },
   "06_HONGKONG_MJ12LAB" : {
     "MaxINode": 12355,
-    "Light66": 0.1,    
+    "Light66": 0.1,
     "Light313": 0.1,
     "Light67": 0.1,
     "Light69": 0.1,
@@ -653,7 +662,14 @@
 
     "Light40": 0.7,
     "Light74": 0.3,
-    "Light331": 0.3
+    "Light331": 0.3,
+    "Light193": 0.1,
+    "Light33": 0.1,
+    "Light35": 0.1,
+    "Light203": 0.1,
+    "Light187": 0.1,
+    "Light188": 0.1,
+    "Light25": 0.2
   },
   "06_HONGKONG_STORAGE" : {
     "MaxINode": 8585,
