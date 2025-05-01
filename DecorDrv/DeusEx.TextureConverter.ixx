@@ -274,8 +274,6 @@ protected:
                 for (const auto* pSource = pSourceBegin; pSource != pSourceEnd; pSource++, pDest++)
                 {
                     *pDest = reinterpret_cast<uint32_t&>(Palette[*pSource]);
-                    //if (*pDest == 0x00000000)
-                    //    *pDest = 0xffff00ff;
                 }
             }
         }

@@ -836,10 +836,6 @@ protected:
     }
     m_PerTickBuffer;
 
-
-    // !!! PerFrameBuffer лучше переименовать в PerViewBuffer, а в PerFrameBuffer хранить только данные
-    // относящиеся к кадру (список статических и динамических ИС, видимых в текущем кадре)
-
     /// <summary>
     /// Prepares and stores constant buffer data
     /// related to the currently rendered polygon only
@@ -864,12 +860,6 @@ protected:
         PerComplexPolyBuffer(const PerComplexPolyBuffer&) = delete;
         PerComplexPolyBuffer& operator=(const PerComplexPolyBuffer&) = delete;
 
-        // prevDump - дамп статических ИС видимых на предыдущем кадре
-        // currentDump - дамп статических ИС видимых на текущем кадре
-        // В методе SetComplexPoly проверяем есть ли наблюдаемый ИС в currentDump, и если нет - то добавляем
-        // В методе DumpCurrentFrameStaticLightIds меняем местами prevDump и currentDump
-        // В методе GetLastFrameStaticLightIds возвращаем prevDump
-
         void SetComplexPoly(const FSceneNode& SceneNode, const FSavedPoly& Poly, const std::unordered_map<AActor*, size_t> &lightCache)
         {
             assert(Poly.NumPts >= 3);
@@ -890,11 +880,6 @@ protected:
                         AActor* l = SceneNode.Level->Model->Lights(la);
                         while (l)
                         {
-                            std::wstring name(l->GetFullName()); // TO-DO Убрать, когда будет не нужно!
-                            //auto lightId = lightCache.at(l);
-                            //if (!_currentDump.contains(lightId))
-                            //    _currentDump.insert(lightId);
-
                             m_Buffer.m_Data.StaticLightIds[lightCounter] = { lightCounter, lightCache.at(l), 0, 0 };
                             l = SceneNode.Level->Model->Lights(++la);
                             ++lightCounter;
@@ -907,10 +892,6 @@ protected:
                 }                
             }            
         }
-        
-        // TO-DO: the DumpCurrentFrameStaticLightIds method is needed to reset the cache of all static sources visible in the current frame.
-        // In the same method, we save this dump in a separate field, so that we can then get it on demand via the GetLastFrameStaticLightIds method
-        // ...
 
         void UpdateAndBind()
         {

@@ -71,10 +71,6 @@ export class RenDevBackend
     };
 
 public:
-    /// <summary>
-    /// Use HDR rendering mode
-    /// </summary>
-    const bool UseHdr = false;
 
     explicit RenDevBackend()
     {
@@ -88,12 +84,6 @@ public:
         m_RenderTextures->ReleaseDevice();
         m_pHDRTexture->ReleaseDevice();
         m_pToneMapPostProcess.reset();
-
-        //if (UseHdr)
-        //{
-        //    m_pHDRTexture->ReleaseDevice();
-        //    m_pToneMapPostProcess.reset();
-        //}
     }
 
     bool Init(const HWND hWnd)
@@ -186,16 +176,6 @@ public:
         m_pToneMapPostProcess->SetOperator(DirectX::ToneMapPostProcess::ACESFilmic);
         m_pToneMapPostProcess->SetTransferFunction(DirectX::ToneMapPostProcess::Linear);
 
-        //if (UseHdr)
-        //{
-        //    m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
-        //    m_pHDRTexture->SetDevice(m_pDevice.Get());
-
-        //    m_pToneMapPostProcess = std::make_unique<DirectX::ToneMapPostProcess>(m_pDevice.Get());
-        //    m_pToneMapPostProcess->SetOperator(DirectX::ToneMapPostProcess::ACESFilmic);
-        //    m_pToneMapPostProcess->SetTransferFunction(DirectX::ToneMapPostProcess::Linear);
-        //}
-
         return true;
     }
 
@@ -225,12 +205,6 @@ public:
         m_pHDRTexture->SizeResources(iX, iY);
         m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
 
-        //if (UseHdr)
-        //{
-        //    m_pHDRTexture->SizeResources(iX, iY);
-        //    m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
-        //}
-
         m_RenderTextures->SizeResources(iX, iY);
     }
 
@@ -246,23 +220,8 @@ public:
         for (auto rtv : rtvs)
             m_pDeviceContext->ClearRenderTargetView(rtv, ClearColor);
 
-        ClearDepth();//m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+        ClearDepth();
         m_pDeviceContext->OMSetRenderTargets(rtvs.size(), &rtvs.data()[0], m_pDepthStencilView.Get()); // Устанавливаем текстуры как цели рендеринга
-
-        //if (UseHdr)
-        //{
-        //    // Set the hdr-texture as RenderTargetView            
-        //    auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
-
-        //    m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
-        //    m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
-        //    m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, m_pDepthStencilView.Get());
-        //}
-        //else
-        //{
-        //    m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);
-        //    m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
-        //}
     }
 
     void NewCompositeFrame()
@@ -273,8 +232,7 @@ public:
         auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
 
         m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
-        //ClearDepth();
-        m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, nullptr);// m_pDepthStencilView.Get());        
+        m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, nullptr);
 
         // Устанавливаем текстуры рендер-бэкенда как ресурсы для шейдера
         // начиная с 5-го слота, чтобы не переназначать предыдущие текстуры
@@ -291,13 +249,6 @@ public:
         // Set back buffer as RenderTargetView
         m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
         m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
-
-        //if (UseHdr)
-        //{
-        //    // Set back buffer as RenderTargetView
-        //    m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
-        //    m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
-        //}
 
         m_pSwapChain->Present(0, 0);
     }

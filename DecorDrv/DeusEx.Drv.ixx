@@ -59,8 +59,7 @@ protected:
         if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
         {
             m_pGlobalShaderConstants->Bind();
-            //if (m_Backend.UseHdr)
-                m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
+            m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
             m_pDeviceState->Bind();
             m_pTextureCache->BindTextures();
             m_pOcclusionMapCache->BindMaps();
@@ -408,7 +407,6 @@ public:
             Render();
         }
 
-        //auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
         m_pGouraudRenderer->SetDrawMode(PolyFlags & PF_Translucent);
 
         m_pDeviceState->PrepareDepthStencilState(DepthStencilState);
