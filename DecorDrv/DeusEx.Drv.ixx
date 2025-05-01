@@ -19,7 +19,6 @@ import DeusEx.Renderer.Tile;
 import DeusEx.Renderer.Gouraud;
 import DeusEx.Renderer.ComplexSurface;
 import DeusEx.Renderer.Composite;
-import DeusEx.SceneManager;
 import GlobalShaderConstants;
 import Utils;
 
@@ -32,8 +31,7 @@ class UDecorRenderDevice : public URenderDevice
 #pragma warning(pop)
 
 public:
-    explicit UDecorRenderDevice() :
-        m_SceneManager(m_Backend)
+    explicit UDecorRenderDevice()
     {
         URenderDevice::SpanBased = 0;
         URenderDevice::FullscreenOnly = 0;
@@ -111,7 +109,6 @@ protected:
     }
 
     RenDevBackend m_Backend;
-    SceneManager m_SceneManager;
     std::unique_ptr<GlobalShaderConstants> m_pGlobalShaderConstants;
     std::unique_ptr<DeviceState> m_pDeviceState;
     std::unique_ptr<TileRenderer> m_pTileRenderer;
@@ -222,12 +219,6 @@ public:
         if ((FVector)FlashScale != FVector(.5, .5, .5) || (FVector)FlashFog != FVector(0, 0, 0)) // From other renderers
             flashColor = { FlashFog.X, FlashFog.Y, FlashFog.Z, Min(FlashScale.X * 2.f,1.f) };
         m_pGlobalShaderConstants->NewFrame(flashColor);
-
-        if (m_SceneManager.IsSceneRenderingEnabled())
-        {
-            m_pDeviceState->BindDefault();
-            m_SceneManager.DrawScene();
-        }
     }
 
     virtual void Unlock(const UBOOL bBlit) override
@@ -566,18 +557,14 @@ public:
 
         Render(); // need to draw everything that has not yet been drawn before changing the viewport, otherwise the objects will be drawn in the wrong place on the screen
 
-        m_SceneManager.SetViewport(*pFrame);
-        m_Backend.SetViewport(pFrame->FX, pFrame->FY, pFrame->XB, pFrame->YB);
+        m_Backend.SetViewport(pFrame->FX, pFrame->FY, pFrame->XB, pFrame->YB);        
 
         if (m_pGlobalShaderConstants->CheckLevelChange(*pFrame))
+        {
             m_pTextureCache->Flush(); // При смене уровня сбрасываем кэш текстур, иначе артефакты (на разных уровнях одинаковые текстуры используют разный Id?)
-        m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
-
-        auto levelIndex = pFrame->Level->GetOuter()->GetFName().GetIndex();
-        auto levelPathName = pFrame->Level->GetOuter()->GetPathName();
-
-        if (m_SceneManager.EnsureCurrentScene(levelIndex, levelPathName))
             m_pOcclusionMapCache->Flush();
+        }
+        m_pGlobalShaderConstants->CheckProjectionChange(*pFrame);
     }
 
     virtual UBOOL Exec(const TCHAR* const Cmd, FOutputDevice& Ar = *GLog) override

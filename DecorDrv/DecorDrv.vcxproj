@@ -101,7 +101,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="DeusEx.Renderer.Composite.ixx" />
-    <ClCompile Include="DeusEx.SceneManager.ixx" />
     <ClCompile Include="GPU.ConstantBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
@@ -116,25 +115,9 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <ClCompile Include="DeusEx.Renderer.Gouraud.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="Scene.GltfUtils.ixx" />
-    <ClCompile Include="Scene.IRenderingContext.ixx">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
-    </ClCompile>
-    <ClCompile Include="MikkTSpace.ixx">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
-    </ClCompile>
     <ClCompile Include="DeusEx.OcclusionMapCache.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="Scene.ixx" />
-    <ClCompile Include="Scene.Log.ixx" />
-    <ClCompile Include="Scene.Material.ixx" />
-    <ClCompile Include="Scene.Node.ixx" />
-    <ClCompile Include="Scene.Primitive.ixx" />
-    <ClCompile Include="Scene.TangentCalculator.ixx" />
-    <ClCompile Include="Scene.Texture.ixx" />
-    <ClCompile Include="Scene.Utils.ixx" />
     <ClCompile Include="DeusEx.TextureCache.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
@@ -159,14 +142,10 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <ClCompile Include="DeusEx.Renderer.Tile.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="TinyGltf.ixx">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ComplexSurface.hlsl" />
     <FxCompile Include="Composite.hlsl" />
-    <FxCompile Include="Scene.hlsl" />
     <FxCompile Include="Tile.hlsl" />
     <FxCompile Include="Gouraud.hlsl" />
     <FxCompile Include="TransparentGouraud.hlsl" />
@@ -177,7 +156,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <None Include="Common.hlsli" />
     <None Include="Defines.hlsli" />
     <None Include="packages.config" />
-    <None Include="SceneConstants.hlsli" />
     <None Include="CommonSurface.hlsli" />
     <None Include="settings.json" />
   </ItemGroup>

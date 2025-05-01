@@ -9,13 +9,12 @@
 
 export module GPU.RenDevBackend;
 
-import Scene.IRenderingContext;
 import Utils;
 import GPU.RenderTexture;
 
 using Microsoft::WRL::ComPtr;
 
-export class RenDevBackend : public IRenderingContext
+export class RenDevBackend
 {
     /// <summary>
     /// Collection of render textures for Multi Target Rendering
