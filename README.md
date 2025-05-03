@@ -5,10 +5,16 @@ Deus Ex Complementary Renderer - a Direct3D 11 renderer for the Deus Ex game wit
 
 ## Key features
 
-* Full per-pixel lighting. No more Gouraud shading or lightmaps!
+* Full per-pixel lighting for static geometry. No more Gouraud shading or lightmaps!
 * Using of physically based rendering principles (PBR).
-* Ability to complement the geometry of the levels with your own models from gltf files.
+* Using of High-Dynamic Range (HDR) rendering.
+* Improved rendering of water surfaces.
 * The right flashlight (finally!)
+
+## How to install
+1. Download the archived plugin.
+2. Extract the contents of the archive to the "System" folder, which is located in the root folder of the game.
+3. In the game, specify "DECoR for Windows" as the rendering device.
 
 ## Notes
 The work is still in progress. The current results are in the screenshots below
@@ -20,10 +26,16 @@ Deus Ex Complementary Renderer - рендерер для игры Deus Ex с и�
 
 ## Ключевые особенности
 
-* Полное попиксельное освещение. Больше никаких затенений Гуро или лайтмапов!
+* Попиксельное освещение для статической геометрии. Больше никаких затенений Гуро или лайтмапов!
 * Использование принципов физического рендеринга (PBR).
-* Возможность дополнять геометрию уровней вашими собственными моделями из файлов gltf.
+* Использование HDR-рендеринга.
+* Улучшенный рендеринг водных поверхностей.
 * Правильный фонарик (наконец-то!)
+
+## Инструкция по установке
+1. Скачать архив с плагином.
+2. Распаковать содержимое архива в папку «System», которая находится в корневой папке игры.
+3. В игре в качестве устройства рендеринга указать "DECoR for Windows".
 
 ## Примечания
 Работа все еще в процессе. Текущие результаты на скриншотах ниже:
