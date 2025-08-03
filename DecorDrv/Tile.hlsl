@@ -37,7 +37,7 @@ VSOut VSMain(const STile Tile, const uint VertexID : SV_VertexID)
     return Output;
 }
 
-float4 PSMain(const VSOut Input) : SV_Target2
+float4 PSMain(const VSOut Input) : SV_Target
 {
     float4 output = float4(0, 0, 0, Input.Pos.z);
     

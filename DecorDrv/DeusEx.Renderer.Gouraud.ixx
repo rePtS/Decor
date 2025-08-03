@@ -49,9 +49,6 @@ public:
         m_pInputLayout = Compiler.CreateInputLayout(InputElementDescs, _countof(InputElementDescs));
 
         m_pPixelShader = Compiler.CompilePixelShader();
-
-        ShaderCompiler TransparentCompiler(m_Device, L"DecorDrv\\TransparentGouraud.hlsl");
-        m_pTransparentPixelShader = TransparentCompiler.CompilePixelShader();
     }
 
     GouraudRenderer(const GouraudRenderer&) = delete;
@@ -78,7 +75,6 @@ public:
         assert(m_pInputLayout);
         assert(m_pVertexShader);
         assert(m_pPixelShader);
-        assert(m_pTransparentPixelShader);
 
         m_DeviceContext.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
         m_DeviceContext.IASetInputLayout(m_pInputLayout.Get());
@@ -91,11 +87,8 @@ public:
         m_DeviceContext.VSSetShader(m_pVertexShader.Get(), nullptr, 0);
         m_DeviceContext.GSSetShader(nullptr, nullptr, 0);
         //m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
-
-        if (m_DrawTransparent)
-            m_DeviceContext.PSSetShader(m_pTransparentPixelShader.Get(), nullptr, 0);
-        else
-            m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
+        
+        m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
     }
 
     void Draw()
@@ -122,7 +115,6 @@ protected:
     ComPtr<ID3D11InputLayout> m_pInputLayout;
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
-    ComPtr<ID3D11PixelShader> m_pTransparentPixelShader;
 
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;
     DynamicGPUBuffer<unsigned short, D3D11_BIND_FLAG::D3D11_BIND_INDEX_BUFFER> m_IndexBuffer;

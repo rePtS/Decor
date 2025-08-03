@@ -37,6 +37,7 @@ public:
 
     bool Init()
     {
+        return true;
     }
 
     DEPTH_STENCIL_STATE GetDepthStencilStateForPolyFlags(const DWORD PolyFlags) const

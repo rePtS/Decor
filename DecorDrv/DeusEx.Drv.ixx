@@ -18,7 +18,6 @@ import DeusEx.OcclusionMapCache;
 import DeusEx.Renderer.Tile;
 import DeusEx.Renderer.Gouraud;
 import DeusEx.Renderer.ComplexSurface;
-import DeusEx.Renderer.Composite;
 import GlobalShaderConstants;
 import Utils;
 
@@ -112,8 +111,7 @@ protected:
     std::unique_ptr<DeviceState> m_pDeviceState;
     std::unique_ptr<TileRenderer> m_pTileRenderer;
     std::unique_ptr<GouraudRenderer> m_pGouraudRenderer;
-    std::unique_ptr<ComplexSurfaceRenderer> m_pComplexSurfaceRenderer;
-    std::unique_ptr<CompositeRenderer> m_pCompositeRenderer;
+    std::unique_ptr<ComplexSurfaceRenderer> m_pComplexSurfaceRenderer;    
     std::unique_ptr<TextureCache> m_pTextureCache;
     std::unique_ptr<OcclusionMapCache> m_pOcclusionMapCache;
     JSON m_Settings;
@@ -158,8 +156,7 @@ public:
             m_pOcclusionMapCache = std::make_unique<OcclusionMapCache>(Device, DeviceContext, 4);
             m_pTileRenderer = std::make_unique<TileRenderer>(Device, DeviceContext);
             m_pGouraudRenderer = std::make_unique<GouraudRenderer>(Device, DeviceContext);
-            m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);
-            m_pCompositeRenderer = std::make_unique<CompositeRenderer>(Device, DeviceContext);
+            m_pComplexSurfaceRenderer = std::make_unique<ComplexSurfaceRenderer>(Device, DeviceContext);            
         }
         catch (const Utils::ComException& ex)
         {
@@ -225,10 +222,7 @@ public:
         m_pGlobalShaderConstants->NewTick();
 
         Render();
-            
-        m_Backend.NewCompositeFrame(); // устанавливаем текстуры рендер-бэкенда как ресурсы для шейдера, а HDRTexture как цель рендеринга
-        m_pCompositeRenderer->Bind(); // привязываем шейдер, вершинный буфер, индексный буфер
-        m_pCompositeRenderer->Draw(); // рисуем однин прямоугольник на весь экран
+                    
 
         if (bBlit)
         {
@@ -308,9 +302,7 @@ public:
         auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
 
         if (waterFlag)
-            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Water);
-        else if ((PolyFlags & PF_Translucent) && !(PolyFlags & PF_AutoUPan)) // исключаем PF_AutoUPan - обычное такой флаг у неба, которое тоже прозрачное, но имеет проблемы с отрисовкой
-            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Transparent);
+            m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Water);        
         else
             m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Solid);
 

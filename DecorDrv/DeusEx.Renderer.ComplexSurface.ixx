@@ -58,9 +58,6 @@ public:
 
         ShaderCompiler WaterPixelCompiler(m_Device, L"DecorDrv\\WaterSurface.hlsl");
         m_pWaterPixelShader = WaterPixelCompiler.CompilePixelShader();
-
-        ShaderCompiler TransparentPixelCompiler(m_Device, L"DecorDrv\\TransparentSurface.hlsl");
-        m_pTransparentPixelShader = TransparentPixelCompiler.CompilePixelShader();
     }
 
     ComplexSurfaceRenderer(const ComplexSurfaceRenderer&) = delete;
@@ -105,9 +102,6 @@ public:
             case ComplexSurfaceRenderer::DM_Water:
                 m_DeviceContext.PSSetShader(m_pWaterPixelShader.Get(), nullptr, 0);
                 break;
-            case ComplexSurfaceRenderer::DM_Transparent:
-                m_DeviceContext.PSSetShader(m_pTransparentPixelShader.Get(), nullptr, 0);
-                break;
             default:
                 m_DeviceContext.PSSetShader(m_pPixelShader.Get(), nullptr, 0);
                 break;
@@ -139,7 +133,6 @@ protected:
     ComPtr<ID3D11VertexShader> m_pVertexShader;
     ComPtr<ID3D11PixelShader> m_pPixelShader;
     ComPtr<ID3D11PixelShader> m_pWaterPixelShader;
-    ComPtr<ID3D11PixelShader> m_pTransparentPixelShader;
     ComPtr<ID3D11GeometryShader> m_pGeometryShader;
 
     DynamicGPUBuffer<Vertex, D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER> m_VertexBuffer;

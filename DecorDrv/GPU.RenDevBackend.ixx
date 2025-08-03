@@ -15,60 +15,7 @@ import GPU.RenderTexture;
 using Microsoft::WRL::ComPtr;
 
 export class RenDevBackend
-{
-    /// <summary>
-    /// Collection of render textures for Multi Target Rendering
-    /// </summary>
-    class RenderTextureCollection
-    {
-        ComPtr<ID3D11Device> m_device;
-
-        std::vector<RenderTexture> m_RenderTextures;
-        std::vector<ID3D11RenderTargetView*> m_pRenderTargetViews;
-        std::vector<ID3D11ShaderResourceView*> m_pShaderResourceViews;
-
-    public:
-        RenderTextureCollection(ID3D11Device* device)
-        {
-            m_device = device;
-        }
-
-        void AddRenderTexture(DXGI_FORMAT format)
-        {
-            RenderTexture renderTexture(format);
-            renderTexture.SetDevice(m_device.Get());
-
-            m_RenderTextures.push_back(std::move(renderTexture));
-            m_pRenderTargetViews.push_back(renderTexture.GetRenderTargetView());
-            m_pShaderResourceViews.push_back(renderTexture.GetShaderResourceView());
-        }
-
-        void SizeResources(size_t width, size_t height)
-        {
-            for (size_t i = 0; i < m_RenderTextures.size(); ++i)
-            {
-                m_RenderTextures[i].SizeResources(width, height);
-                m_pRenderTargetViews[i] = m_RenderTextures[i].GetRenderTargetView();
-                m_pShaderResourceViews[i] = m_RenderTextures[i].GetShaderResourceView();
-            }
-        }
-
-        void ReleaseDevice() noexcept
-        {
-            for (auto& texture : m_RenderTextures)
-                texture.ReleaseDevice();
-        }
-
-        const std::vector<ID3D11RenderTargetView*> &GetRenderTargetViews()
-        {
-            return m_pRenderTargetViews;
-        }
-
-        std::vector<ID3D11ShaderResourceView*> &GetShaderResourceViews()
-        {
-            return m_pShaderResourceViews;
-        }
-    };
+{    
 
 public:
 
@@ -81,7 +28,6 @@ public:
     
     ~RenDevBackend()
     {
-        m_RenderTextures->ReleaseDevice();
         m_pHDRTexture->ReleaseDevice();
         m_pToneMapPostProcess.reset();
     }
@@ -162,13 +108,7 @@ public:
         );
 
         Utils::LogMessagef(L"Adapter: %s.", AdapterDesc.Description);
-
-        m_RenderTextures = std::make_unique<RenderTextureCollection>(m_pDevice.Get());
-        m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
-        m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
-        m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R8G8B8A8_UNORM);
-        m_RenderTextures->AddRenderTexture(DXGI_FORMAT_R16G16B16A16_FLOAT);
-
+        
         m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
         m_pHDRTexture->SetDevice(m_pDevice.Get());
 
@@ -204,8 +144,6 @@ public:
 
         m_pHDRTexture->SizeResources(iX, iY);
         m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
-
-        m_RenderTextures->SizeResources(iX, iY);
     }
 
     void NewFrame()
@@ -215,30 +153,13 @@ public:
 
         const float ClearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-        // Очищаем текстуры
-        const auto& rtvs = m_RenderTextures->GetRenderTargetViews();
-        for (auto rtv : rtvs)
-            m_pDeviceContext->ClearRenderTargetView(rtv, ClearColor);
-
-        ClearDepth();
-        m_pDeviceContext->OMSetRenderTargets(rtvs.size(), &rtvs.data()[0], m_pDepthStencilView.Get()); // Устанавливаем текстуры как цели рендеринга
-    }
-
-    void NewCompositeFrame()
-    {
-        const float ClearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-        // Set the hdr-texture as RenderTargetView
+        // Set the hdr-texture as RenderTargetView            
         auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
 
         m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
-        m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, nullptr);
-
-        // Устанавливаем текстуры рендер-бэкенда как ресурсы для шейдера
-        // начиная с 5-го слота, чтобы не переназначать предыдущие текстуры
-        auto& srvs = m_RenderTextures->GetShaderResourceViews();
-        m_pDeviceContext->PSSetShaderResources(5, srvs.size(), &srvs.data()[0]);
-    }
+        m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+        m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, m_pDepthStencilView.Get());        
+    }    
 
     void Present()
     {
@@ -452,8 +373,6 @@ protected:
     ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
 
     DXGI_SWAP_CHAIN_DESC m_SwapChainDesc;
-
-    std::unique_ptr<RenderTextureCollection> m_RenderTextures;
 
     std::unique_ptr<RenderTexture> m_pHDRTexture;
     std::unique_ptr<DirectX::ToneMapPostProcess> m_pToneMapPostProcess;

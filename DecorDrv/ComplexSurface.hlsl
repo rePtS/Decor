@@ -5,7 +5,7 @@ SPoly VSMain(const SPoly Input)
     return Input;
 }
 
-float4 PSMain(const VSOut input) : SV_Target0
+float4 PSMain(const VSOut input) : SV_Target
 {
     return GetSurfacePixel(input);
 }

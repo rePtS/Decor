@@ -37,7 +37,7 @@ VSOut VSMain(const SPoly Input)
     return Output;
 }
 
-float4 PSMain(const VSOut input) : SV_Target3
+float4 PSMain(const VSOut input) : SV_Target
 {
     float4 Color = float4(input.Color, 1.0f);
 

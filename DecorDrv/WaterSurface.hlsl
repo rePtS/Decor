@@ -31,7 +31,7 @@ PbrM_MatInfo PbrM_ComputeWaterInfo(VSOut input)
     return matInfo;
 }
 
-float4 PSMain(const VSOut input) : SV_Target1
+float4 PSMain(const VSOut input) : SV_Target
 {
     if (input.PolyFlags & PF_Masked)
     {
