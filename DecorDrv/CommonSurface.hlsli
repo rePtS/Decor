@@ -96,8 +96,8 @@ float4 GetOriginalPixel(const VSOut input)
         const float3 Fog = TexFog.Sample(SamLinear, input.TexCoord2).bgr * 2.0f;
         Color.rgb += Fog;
     }
-    
-    Color.a = input.Pos.z;
+
+    Color.a = input.Pos.z * DepthFactor;
     return Color;
 }
 
@@ -342,26 +342,6 @@ float4 GetDynamicPixel(const VSOut input,
     return output;
 }
 
-static const float4 _WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f);
-static const float _WaterFogDensity = 1.1f;
-
-bool IsUnderwater(float screenY)
-{
-    return (FrameControl & 1) && (screenY > ScreenWaterLevel);
-}
-
-float4 AddUnderWaterFog(float4 color, float distance, float screenY)
-{
-    if (IsUnderwater(screenY))
-    {
-        float depth = (1.0f / distance) * 0.001f;
-        float fogFactor = exp2(-_WaterFogDensity * depth * 5.0f);
-        return lerp(_WaterFogColor * 2.0f, color, fogFactor) + float4(0, 0, 0.04f, 0);
-    }
-    else
-        return color;
-}
-
 float4 GetSurfacePixel(const VSOut input)
 {
     float4 output = float4(0, 0, 0, 0);
@@ -374,7 +354,7 @@ float4 GetSurfacePixel(const VSOut input)
             clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
         
         if (input.PolyFlags & PF_Unlit)
-            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z);
+            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z * DepthFactor);
         else
         {
             PbrM_ShadingCtx shadingCtx;
@@ -388,12 +368,11 @@ float4 GetSurfacePixel(const VSOut input)
         
             if (input.TexFlags & 0x00000010)
                 output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
-                   
-            //float y = input.Pos.y / fRes.y;
-            //output = AddUnderWaterFog(output, input.Pos.z, y);
-            output.a = input.Pos.z;
+
+            output.rgb = AddUnderWaterFog(output, input.Pos.z, input.Pos.y).rgb;
+            output.a = input.Pos.z * DepthFactor;
         }
     }
     
-    return output;    
+    return output;
 }

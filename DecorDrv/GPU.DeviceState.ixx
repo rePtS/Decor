@@ -19,7 +19,7 @@ export class DeviceState
 public:
     enum class RASTERIZER_STATE { DEFAULT, WIREFRAME, COUNT };
     enum class DEPTH_STENCIL_STATE { DEFAULT, NO_WRITE, COUNT };
-    enum class BLEND_STATE { DEFAULT, MODULATE, TRANSLUCENT, TRANSLUCENT_FAKE_MULTIPASS, ALPHABLEND, INVIS, COUNT }; // TODO: for invis, just disable pixel shader
+    enum class BLEND_STATE { DEFAULT, MODULATE, TRANSLUCENT, TRANSLUCENT_FAKE_MULTIPASS, ALPHABLEND, INVIS, WATER, COUNT }; // TODO: for invis, just disable pixel shader
     enum class SAMPLER_STATE { LINEAR, POINT, COUNT };
 
     explicit DeviceState(ID3D11Device& Device, ID3D11DeviceContext& DeviceContext)
@@ -218,6 +218,8 @@ protected:
         BlendModulate.RenderTarget[0].SrcBlend = D3D11_BLEND::D3D11_BLEND_DEST_COLOR;
         BlendModulate.RenderTarget[0].DestBlend = D3D11_BLEND::D3D11_BLEND_SRC_COLOR;
         BlendModulate.RenderTarget[0].BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+        BlendModulate.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;
+        BlendModulate.RenderTarget[0].DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
 
         D3D11_BLEND_DESC& BlendTranslucent = Descs[static_cast<size_t>(BLEND_STATE::TRANSLUCENT)];
         BlendTranslucent = BlendDefault;
@@ -244,6 +246,13 @@ protected:
         BlendInvis = BlendDefault;
         BlendInvis.RenderTarget[0].BlendEnable = FALSE;
         BlendInvis.RenderTarget[0].RenderTargetWriteMask = 0; //This is as fast as disabling the pixel shader
+
+        D3D11_BLEND_DESC& BlendWater = Descs[static_cast<size_t>(BLEND_STATE::WATER)];
+        BlendWater = BlendDefault;
+        BlendWater.RenderTarget[0].BlendEnable = TRUE;
+        BlendWater.RenderTarget[0].SrcBlend = D3D11_BLEND::D3D11_BLEND_ONE;
+        BlendWater.RenderTarget[0].DestBlend = D3D11_BLEND::D3D11_BLEND_DEST_ALPHA;
+        BlendWater.RenderTarget[0].BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
 
         CreateStates(Descs, m_BlendStates, &ID3D11Device::CreateBlendState);
     }

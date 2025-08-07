@@ -49,7 +49,7 @@ float4 PSMain(const VSOut input) : SV_Target
     if (input.PolyFlags & PF_Modulated)
     {
         Color = TexDiffuse.Sample(SamLinear, input.TexCoord);
-        Color.a = input.Pos.z;
+        Color.a = input.Pos.z * DepthFactor;
         return Color;
     }
     
@@ -62,7 +62,9 @@ float4 PSMain(const VSOut input) : SV_Target
     
     Color.rgb *= Diffuse;
     Color.rgb += input.Fog;
-    Color.a = input.Pos.z;
+    
+    Color = AddUnderWaterFog(Color, input.Pos.z, input.Pos.y);
+    Color.a = input.Pos.z * DepthFactor;
     
     return Color;
 }

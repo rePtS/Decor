@@ -232,10 +232,12 @@ public:
 
     virtual void DrawComplexSurface(FSceneNode* const pFrame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) override
     {
-        // assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn
+        // assert(m_bNoTilesDrawnYet); //Want to be sure that tiles are the last thing to be drawn        
+
+        auto waterFlag = Surface.Texture->bRealtime && (Surface.PolyFlags & PF_Portal);
 
         const DWORD PolyFlags = Surface.PolyFlags;
-        const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
+        const auto& BlendState = waterFlag ? DeviceState::BLEND_STATE::WATER : m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
         const auto& DepthStencilState = m_pDeviceState->GetDepthStencilStateForPolyFlags(PolyFlags);
         if (!m_pDeviceState->IsBlendStatePrepared(BlendState) || !m_pDeviceState->IsDepthStencilStatePrepared(DepthStencilState))
         {
@@ -297,9 +299,7 @@ public:
             const int mapId = pFrame->Level->Model->Surfs(surfId).iLightMap;
             if (mapId >= 0)
                 m_pOcclusionMapCache->FindOrInsertAndPrepare(*pFrame->Level->Model, mapId);
-        }
-
-        auto waterFlag = Surface.Texture->bRealtime && (PolyFlags & PF_Portal /*&& PolyFlags & PF_Translucent*/);
+        }        
 
         if (waterFlag)
             m_pComplexSurfaceRenderer->SetDrawMode(ComplexSurfaceRenderer::DM_Water);        

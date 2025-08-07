@@ -358,3 +358,24 @@ float4 ApplyViewMatrix(float4 vec)
     
     return vec;
 }
+
+static const float4 WaterFogColor = float4(0.025f, 0.024f, 0.021f, 1.0f);
+static const float WaterFogDensity = 1.1f;
+static const float DepthFactor = 50.0f;
+
+bool IsUnderwater(float screenY)
+{
+    return (FrameControl & 1) && (screenY / fRes.y > ScreenWaterLevel);
+}
+
+float4 AddUnderWaterFog(float4 color, float distance, float screenY)
+{
+    if (IsUnderwater(screenY))
+    {
+        float depth = (1.0f / distance) * 0.001f;
+        float fogFactor = exp2(-WaterFogDensity * depth * 5.0f);
+        return lerp(WaterFogColor * 2.0f, color, fogFactor) + float4(0, 0, 0.04f, 0);
+    }
+    else
+        return color;
+}

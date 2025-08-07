@@ -7,24 +7,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Utils.ixx" />
-    <ClCompile Include="TinyGltf.ixx" />
     <ClCompile Include="GPU.DynamicBuffer.ixx" />
-    <ClCompile Include="Scene.IRenderingContext.ixx" />
     <ClCompile Include="GPU.ConstantBuffer.ixx" />
-    <ClCompile Include="Scene.ixx" />
-    <ClCompile Include="Scene.Primitive.ixx" />
-    <ClCompile Include="Scene.Node.ixx" />
-    <ClCompile Include="Scene.Texture.ixx" />
-    <ClCompile Include="Scene.Material.ixx" />
-    <ClCompile Include="Scene.Log.ixx" />
-    <ClCompile Include="Scene.GltfUtils.ixx" />
-    <ClCompile Include="Scene.Utils.ixx" />
-    <ClCompile Include="Scene.TangentCalculator.ixx" />
     <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx" />
     <ClCompile Include="GPU.DeviceState.ixx" />
     <ClCompile Include="GlobalShaderConstants.ixx" />
     <ClCompile Include="DeusEx.Renderer.Gouraud.ixx" />
-    <ClCompile Include="MikkTSpace.ixx" />
     <ClCompile Include="DeusEx.OcclusionMapCache.ixx" />
     <ClCompile Include="GPU.RenDevBackend.ixx" />
     <ClCompile Include="GPU.ShaderCompiler.ixx" />
@@ -32,9 +20,7 @@
     <ClCompile Include="DeusEx.TextureConverter.ixx" />
     <ClCompile Include="DeusEx.Renderer.Tile.ixx" />
     <ClCompile Include="DeusEx.Drv.ixx" />
-    <ClCompile Include="DeusEx.SceneManager.ixx" />
     <ClCompile Include="GPU.RenderTexture.ixx" />
-    <ClCompile Include="DeusEx.Renderer.Composite.ixx" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Gouraud.hlsl">
@@ -44,12 +30,6 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ComplexSurface.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Scene.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Composite.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="WaterSurface.hlsl">
@@ -67,9 +47,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Defines.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="SceneConstants.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="packages.config" />

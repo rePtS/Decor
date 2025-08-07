@@ -100,7 +100,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <ClCompile Include="DeusEx.Renderer.ComplexSurface.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
-    <ClCompile Include="DeusEx.Renderer.Composite.ixx" />
     <ClCompile Include="GPU.ConstantBuffer.ixx">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
     </ClCompile>
@@ -145,7 +144,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ComplexSurface.hlsl" />
-    <FxCompile Include="Composite.hlsl" />
     <FxCompile Include="Tile.hlsl" />
     <FxCompile Include="Gouraud.hlsl" />
     <FxCompile Include="TransparentGouraud.hlsl" />
