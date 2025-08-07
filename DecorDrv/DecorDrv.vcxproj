@@ -146,8 +146,6 @@ xcopy "$(SolutionDir)DecorDrv\*.hlsl*" "C:\Games\Deus Ex\System\DecorDrv" /Y
     <FxCompile Include="ComplexSurface.hlsl" />
     <FxCompile Include="Tile.hlsl" />
     <FxCompile Include="Gouraud.hlsl" />
-    <FxCompile Include="TransparentGouraud.hlsl" />
-    <FxCompile Include="TransparentSurface.hlsl" />
     <FxCompile Include="WaterSurface.hlsl" />
   </ItemGroup>
   <ItemGroup>

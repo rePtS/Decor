@@ -35,12 +35,6 @@
     <FxCompile Include="WaterSurface.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="TransparentGouraud.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="TransparentSurface.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">

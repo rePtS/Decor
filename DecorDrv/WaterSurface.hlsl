@@ -50,7 +50,7 @@ float4 PSMain(const VSOut input) : SV_Target
     if (input.TexFlags & 0x00000010)
         output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
 
-    output = AddUnderWaterFog(output, input.Pos.z, input.Pos.y);
+    output = AddUnderWaterFog(output, input.Pos.z, input.Pos.y) + FlashColor;
     output.a = input.Pos.z * DepthFactor;
     return output;
 }

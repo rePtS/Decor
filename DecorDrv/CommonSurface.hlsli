@@ -347,14 +347,14 @@ float4 GetSurfacePixel(const VSOut input)
     float4 output = float4(0, 0, 0, 0);
     
     if (input.TexFlags & 0x00000004)
-        output = GetOriginalPixel(input);
+        output = GetOriginalPixel(input) + FlashColor;
     else
     {
         if (input.PolyFlags & PF_Masked)
             clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
         
         if (input.PolyFlags & PF_Unlit)
-            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z * DepthFactor);
+            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z * DepthFactor) + FlashColor;
         else
         {
             PbrM_ShadingCtx shadingCtx;
@@ -369,7 +369,7 @@ float4 GetSurfacePixel(const VSOut input)
             if (input.TexFlags & 0x00000010)
                 output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
 
-            output.rgb = AddUnderWaterFog(output, input.Pos.z, input.Pos.y).rgb;
+            output = AddUnderWaterFog(output, input.Pos.z, input.Pos.y) + FlashColor;
             output.a = input.Pos.z * DepthFactor;
         }
     }

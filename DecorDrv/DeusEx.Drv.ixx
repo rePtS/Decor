@@ -211,9 +211,9 @@ public:
         m_pGouraudRenderer->NewFrame();
         m_pComplexSurfaceRenderer->NewFrame();            
 
-        DirectX::XMVECTOR flashColor = { 0.f, 0.f, 0.f, 0.f };
-        if ((FVector)FlashScale != FVector(.5, .5, .5) || (FVector)FlashFog != FVector(0, 0, 0)) // From other renderers
-            flashColor = { FlashFog.X, FlashFog.Y, FlashFog.Z, Min(FlashScale.X * 2.f,1.f) };
+        DirectX::XMVECTOR flashColor = { 0.f, 0.f, 0.f, 0.f };        
+        if (FlashFog.X > 0 || (FlashFog.Y > 0 && FlashFog.Z / FlashFog.Y < 3.0f)) // filter weird blue underwater color
+            flashColor = { FlashFog.X, FlashFog.Y, FlashFog.Z, 0 };
         m_pGlobalShaderConstants->NewFrame(flashColor);
     }
 
