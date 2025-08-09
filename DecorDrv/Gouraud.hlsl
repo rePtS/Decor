@@ -47,8 +47,8 @@ float4 PSMain(const VSOut input) : SV_Target
     }
 
     if (input.PolyFlags & PF_Modulated)
-    {
-        Color = TexDiffuse.Sample(SamLinear, input.TexCoord) + FlashColor;
+    {        
+        Color = TexDiffuse.Sample(SamLinear, input.TexCoord);
         Color.a = input.Pos.z * DepthFactor;
         return Color;
     }
