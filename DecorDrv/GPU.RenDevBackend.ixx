@@ -28,7 +28,6 @@ public:
     
     ~RenDevBackend()
     {
-        m_pHDRTexture->ReleaseDevice();
         m_pToneMapPostProcess.reset();
     }
 
@@ -54,13 +53,13 @@ public:
         m_SwapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER::DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
         m_SwapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING::DXGI_MODE_SCALING_UNSPECIFIED;
         m_SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        m_SwapChainDesc.Flags = 0;
+        m_SwapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
         m_SwapChainDesc.OutputWindow = hWnd;
         m_SwapChainDesc.Windowed = TRUE;
         m_SwapChainDesc.SampleDesc.Count = 1;
         m_SwapChainDesc.SampleDesc.Quality = 0;
-        m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL    
-        //Todo: waitable swap chain IDXGISwapChain2::GetFrameLatencyWaitableObject
+        m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL
+        //Todo: waitable swap chain IDXGISwapChain2::GetFrameLatencyWaitableObject        
 
         Utils::ThrowIfFailed(
             D3D11CreateDeviceAndSwapChain(
@@ -82,7 +81,7 @@ public:
         Utils::SetResourceName(m_pDeviceContext, "MainDeviceContext");
         Utils::SetResourceName(m_pSwapChain, "MainSwapChain");
 
-        Utils::LogMessagef(L"Device created with Feature Level %x.", FeatureLevel);
+        Utils::LogMessagef(L"Device created with Feature Level %x.", FeatureLevel);        
 
         Utils::ThrowIfFailed(
             m_pDevice.As(&m_pDXGIDevice),
@@ -108,7 +107,14 @@ public:
         );
 
         Utils::LogMessagef(L"Adapter: %s.", AdapterDesc.Description);
-        
+
+        ComPtr<IDXGIFactory> pFactory;
+        Utils::ThrowIfFailed(
+            m_pAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&pFactory),
+            "Failed to get DXGI factory."
+        );
+        pFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_WINDOW_CHANGES); // Stop DXGI from interfering with the game
+
         m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
         m_pHDRTexture->SetDevice(m_pDevice.Get());
 
@@ -119,7 +125,7 @@ public:
         return true;
     }
 
-    void SetRes(const unsigned int iX, const unsigned int iY)
+    void SetRes(const unsigned int iX, const unsigned int iY, bool fullScreen)
     {
         assert(m_pSwapChain);
 
@@ -128,6 +134,24 @@ public:
 
         m_pBackBufferRTV = nullptr;
         m_pDepthStencilView = nullptr;
+
+        // Set fullscreen resolution
+        if (fullScreen)
+        {
+            DXGI_MODE_DESC fullscreenMode = m_SwapChainDesc.BufferDesc;
+            
+            Utils::ThrowIfFailed(
+                m_pSwapChain->SetFullscreenState(TRUE, NULL),
+                "Failed to switch to full-screen."
+            );
+
+            Utils::ThrowIfFailed(
+                m_pSwapChain->ResizeTarget(&fullscreenMode),
+                "Failed to set full-screen resolution."
+            );
+
+            m_SwapChainDesc.BufferDesc = fullscreenMode;
+        }
 
         Utils::ThrowIfFailed(
             m_pSwapChain->ResizeBuffers(
@@ -171,7 +195,7 @@ public:
         m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
         m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
 
-        m_pSwapChain->Present(0, 0);
+        m_pSwapChain->Present(1, 0);
     }
 
     /// <summary>
@@ -199,63 +223,7 @@ public:
     }
 
     ID3D11Device& GetDevice() { return *m_pDevice.Get(); }
-    ID3D11DeviceContext& GetDeviceContext() { return *m_pDeviceContext.Get(); }
-
-    bool CreateVertexShader(WCHAR* szFileName,
-        LPCSTR szEntryPoint,
-        LPCSTR szShaderModel,
-        ID3DBlob*& pVsBlob,
-        ID3D11VertexShader*& pVertexShader) const
-    {
-        HRESULT hr = S_OK;
-
-        if (!CompileShader(szFileName, szEntryPoint, szShaderModel, &pVsBlob))
-        {
-            //Log::Error(L"The FX file failed to compile.");
-            return false;
-        }
-
-        hr = m_pDevice->CreateVertexShader(pVsBlob->GetBufferPointer(),
-            pVsBlob->GetBufferSize(),
-            nullptr,
-            &pVertexShader);
-        if (FAILED(hr))
-        {
-            //Log::Error(L"mDevice->CreateVertexShader failed.");
-            pVsBlob->Release();
-            return false;
-        }
-
-        return true;
-    }
-
-    bool CreatePixelShader(WCHAR* szFileName,
-        LPCSTR szEntryPoint,
-        LPCSTR szShaderModel,
-        ID3D11PixelShader*& pPixelShader) const
-    {
-        HRESULT hr = S_OK;
-        ID3DBlob* pPSBlob;
-
-        if (!CompileShader(szFileName, szEntryPoint, szShaderModel, &pPSBlob))
-        {
-            //Log::Error(L"The FX file failed to compile.");
-            return false;
-        }
-
-        hr = m_pDevice->CreatePixelShader(pPSBlob->GetBufferPointer(),
-            pPSBlob->GetBufferSize(),
-            nullptr,
-            &pPixelShader);
-        pPSBlob->Release();
-        if (FAILED(hr))
-        {
-            //Log::Error(L"mDevice->CreatePixelShader failed.");
-            return false;
-        }
-
-        return true;
-    }
+    ID3D11DeviceContext& GetDeviceContext() { return *m_pDeviceContext.Get(); }   
 
     bool GetWindowSize(uint32_t& width, uint32_t& height) const
     {
@@ -319,46 +287,6 @@ protected:
         Utils::SetResourceName(m_pDepthStencilView, "DepthStencilView");
         
         m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthStencilView.Get());
-    }
-
-    bool CompileShader(WCHAR* szFileName,
-        LPCSTR szEntryPoint,
-        LPCSTR szShaderModel,
-        ID3DBlob** ppBlobOut) const
-
-    {
-        HRESULT hr = S_OK;
-
-        DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
-#if defined( DEBUG ) || defined( _DEBUG )
-        // Set the D3DCOMPILE_DEBUG flag to embed debug information in the shaders.
-        // Setting this flag improves the shader debugging experience, but still allows 
-        // the shaders to be optimized and to run exactly the way they will run in 
-        // the release configuration of this program.
-        dwShaderFlags |= D3DCOMPILE_DEBUG;
-#endif
-
-        ID3DBlob* pErrorBlob;
-        hr = D3DCompileFromFile(szFileName, nullptr, nullptr, szEntryPoint, szShaderModel,
-            dwShaderFlags, 0, ppBlobOut, &pErrorBlob);
-        if (FAILED(hr))
-        {
-            //if (pErrorBlob)
-            //    Log::Error(L"CompileShader: D3DX11CompileFromFile failed: \n%S",
-            //        (char*)pErrorBlob->GetBufferPointer());
-            if (pErrorBlob)
-                pErrorBlob->Release();
-            return false;
-        }
-
-        //if (pErrorBlob)
-        //    Log::Debug(L"CompileShader: D3DX11CompileFromFile: \n%S",
-        //        (char*)pErrorBlob->GetBufferPointer());
-
-        if (pErrorBlob)
-            pErrorBlob->Release();
-
-        return true;
     }
 
     D3D11_VIEWPORT m_Viewport;

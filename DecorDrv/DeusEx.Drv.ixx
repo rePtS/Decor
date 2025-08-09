@@ -145,6 +145,8 @@ public:
                 return false;
             }
 
+            URenderDevice::PrecacheOnFlip = 1; // Turned on to immediately recache on init (prevents lack of textures after fullscreen switch)
+
             InitJsonSettings();
 
             auto& Device = m_Backend.GetDevice();
@@ -175,7 +177,7 @@ public:
 
         // Without BLIT_HardwarePaint, game doesn't trigger us when resizing
         // Without BLIT_Direct3D renderer only ever gets one draw call, and SetRes() isn't called on window resize
-        if (!URenderDevice::Viewport->ResizeViewport(EViewportBlitFlags::BLIT_HardwarePaint | EViewportBlitFlags::BLIT_Direct3D, iNewX, iNewY, iNewColorBytes))
+        if (!URenderDevice::Viewport->ResizeViewport(bFullscreen ? (BLIT_Fullscreen | BLIT_Direct3D) : (BLIT_HardwarePaint | BLIT_Direct3D), iNewX, iNewY, iNewColorBytes))
         {
             Utils::LogWarningf(L"Viewport resize failed (%d x %d).", iNewX, iNewY);
             return false;
@@ -183,7 +185,7 @@ public:
 
         try
         {
-            m_Backend.SetRes(iNewX, iNewY);
+            m_Backend.SetRes(iNewX, iNewY, bFullscreen != 0);
         }
         catch (const Utils::ComException& ex)
         {
