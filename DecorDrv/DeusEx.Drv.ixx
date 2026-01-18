@@ -58,7 +58,8 @@ protected:
         if (m_pTileRenderer->IsMapped() || m_pGouraudRenderer->IsMapped() || m_pComplexSurfaceRenderer->IsMapped())
         {
             m_pGlobalShaderConstants->Bind();
-            m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
+            if (RenDevBackend::UseHdr)
+                m_pDeviceState->BindSamplerStates(); // Need to bind samplers states every frame as we use post process tonemapping
             m_pDeviceState->Bind();
             m_pTextureCache->BindTextures();
             m_pOcclusionMapCache->BindMaps();
@@ -443,7 +444,7 @@ public:
         assert(m_pDeviceState);
         m_bNoTilesDrawnYet = false;
 
-        //SetSceneNode(pFrame); //Set scene node fix.
+        SetSceneNode(pFrame); //Set scene node fix.
 
         const auto& BlendState = m_pDeviceState->GetBlendStateForPolyFlags(PolyFlags);
 

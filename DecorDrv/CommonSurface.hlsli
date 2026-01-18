@@ -342,19 +342,27 @@ float4 GetDynamicPixel(const VSOut input,
     return output;
 }
 
+float4 GetFlashColor(const VSOut input)
+{
+    if (!(input.PolyFlags & (PF_Translucent | PF_Modulated)))
+        return FlashColor;
+    else
+        return float4(0, 0, 0, 0);
+}
+
 float4 GetSurfacePixel(const VSOut input)
 {
     float4 output = float4(0, 0, 0, 0);
     
     if (input.TexFlags & 0x00000004)
-        output = GetOriginalPixel(input) + FlashColor;
+        output = GetOriginalPixel(input) + GetFlashColor(input);
     else
     {
         if (input.PolyFlags & PF_Masked)
             clip(TexDiffuse.Sample(SamPoint, input.TexCoord).a - 0.5f);
         
         if (input.PolyFlags & PF_Unlit)
-            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z * DepthFactor) + FlashColor;
+            output = float4(TexDiffuse.Sample(SamLinear, input.TexCoord).rgb, input.Pos.z * DepthFactor) + GetFlashColor(input);
         else
         {
             PbrM_ShadingCtx shadingCtx;
@@ -369,7 +377,7 @@ float4 GetSurfacePixel(const VSOut input)
             if (input.TexFlags & 0x00000010)
                 output += TexFog.Sample(SamLinear, input.TexCoord2).bgra * 2.0f;
 
-            output = AddUnderWaterFog(output, input.Pos.z, input.Pos.y) + FlashColor;
+            output = AddUnderWaterFog(output, input.Pos.z, input.Pos.y) + GetFlashColor(input);
             output.a = input.Pos.z * DepthFactor;
         }
     }

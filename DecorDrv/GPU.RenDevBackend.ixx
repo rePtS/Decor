@@ -19,6 +19,11 @@ export class RenDevBackend
 
 public:
 
+    /// <summary>
+    /// Use HDR rendering mode
+    /// </summary>
+    static const bool UseHdr = true;
+
     explicit RenDevBackend()
     {
     }
@@ -28,7 +33,11 @@ public:
     
     ~RenDevBackend()
     {
-        m_pToneMapPostProcess.reset();
+        if (UseHdr)
+        {
+            m_pHDRTexture->ReleaseDevice();
+            m_pToneMapPostProcess.reset();
+        }
     }
 
     bool Init(const HWND hWnd)
@@ -44,7 +53,7 @@ public:
         const D3D_FEATURE_LEVEL FeatureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
         D3D_FEATURE_LEVEL FeatureLevel;
 
-        m_SwapChainDesc.BufferCount = 1;
+        m_SwapChainDesc.BufferCount = 2;
         m_SwapChainDesc.BufferDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
         m_SwapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
         m_SwapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
@@ -58,7 +67,7 @@ public:
         m_SwapChainDesc.Windowed = TRUE;
         m_SwapChainDesc.SampleDesc.Count = 1;
         m_SwapChainDesc.SampleDesc.Quality = 0;
-        m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_DISCARD; //Todo: Win8 DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL
+        m_SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
         //Todo: waitable swap chain IDXGISwapChain2::GetFrameLatencyWaitableObject        
 
         Utils::ThrowIfFailed(
@@ -114,13 +123,16 @@ public:
             "Failed to get DXGI factory."
         );
         pFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_WINDOW_CHANGES); // Stop DXGI from interfering with the game
+        
+        if (UseHdr)
+        {
+            m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
+            m_pHDRTexture->SetDevice(m_pDevice.Get());
 
-        m_pHDRTexture = std::make_unique<RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
-        m_pHDRTexture->SetDevice(m_pDevice.Get());
-
-        m_pToneMapPostProcess = std::make_unique<DirectX::ToneMapPostProcess>(m_pDevice.Get());
-        m_pToneMapPostProcess->SetOperator(DirectX::ToneMapPostProcess::ACESFilmic);
-        m_pToneMapPostProcess->SetTransferFunction(DirectX::ToneMapPostProcess::Linear);
+            m_pToneMapPostProcess = std::make_unique<DirectX::ToneMapPostProcess>(m_pDevice.Get());
+            m_pToneMapPostProcess->SetOperator(DirectX::ToneMapPostProcess::ACESFilmic);
+            m_pToneMapPostProcess->SetTransferFunction(DirectX::ToneMapPostProcess::Linear);
+        }
 
         return true;
     }
@@ -151,7 +163,7 @@ public:
             );
 
             m_SwapChainDesc.BufferDesc = fullscreenMode;
-        }
+        }        
 
         Utils::ThrowIfFailed(
             m_pSwapChain->ResizeBuffers(
@@ -165,25 +177,40 @@ public:
         );        
 
         CreateRenderTargetViews();
-
-        m_pHDRTexture->SizeResources(iX, iY);
-        m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
+        
+        if (UseHdr)
+        {
+            m_pHDRTexture->SizeResources(iX, iY);
+            m_pToneMapPostProcess->SetHDRSourceTexture(m_pHDRTexture->GetShaderResourceView());
+        }
     }
-
+    
     void NewFrame()
     {
-        assert(m_pDeviceContext);        
-        assert(m_pDepthStencilView);                
+        assert(m_pDeviceContext);
+        assert(m_pBackBufferRTV);
+        assert(m_pDepthStencilView);
 
         const float ClearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-        // Set the hdr-texture as RenderTargetView            
-        auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
+        if (UseHdr)
+        {
+            ID3D11ShaderResourceView* const nullSRV[128] = { nullptr };
+            m_pDeviceContext->PSSetShaderResources(0, 128, nullSRV);
 
-        m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
-        m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
-        m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, m_pDepthStencilView.Get());        
-    }    
+            // Set the hdr-texture as RenderTargetView            
+            auto hdrRenderTarget = m_pHDRTexture->GetRenderTargetView();
+
+            m_pDeviceContext->ClearRenderTargetView(hdrRenderTarget, ClearColor);
+            m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+            m_pDeviceContext->OMSetRenderTargets(1, &hdrRenderTarget, m_pDepthStencilView.Get());
+        }
+        else
+        {
+            m_pDeviceContext->ClearRenderTargetView(m_pBackBufferRTV.Get(), ClearColor);
+            m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_FLAG::D3D11_CLEAR_DEPTH | D3D11_CLEAR_FLAG::D3D11_CLEAR_STENCIL, 0.0f, 0);
+        }
+    }
 
     void Present()
     {
@@ -191,11 +218,20 @@ public:
         assert(m_pBackBufferRTV);
         assert(m_pDeviceContext);
 
-        // Set back buffer as RenderTargetView
-        m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
-        m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
+        if (UseHdr)
+        {
+            // Clear geometry shader, as ToneMapPostProcess doesn`t use it
+            m_pDeviceContext->GSSetShader(nullptr, nullptr, 0);
 
-        m_pSwapChain->Present(1, 0);
+            // Set back buffer as RenderTargetView
+            m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), nullptr);
+            m_pToneMapPostProcess->Process(m_pDeviceContext.Get());
+        }
+
+        m_pSwapChain->Present(0, 0);
+
+        // Need to set render target every frame if DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL is used
+        m_pDeviceContext->OMSetRenderTargets(1, m_pBackBufferRTV.GetAddressOf(), m_pDepthStencilView.Get());
     }
 
     /// <summary>
